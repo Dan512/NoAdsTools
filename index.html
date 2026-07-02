@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>NoAdsTools — Free browser tools, nothing uploaded</title>
+  <meta name="description" content="Free, private browser tools — image and PDF utilities that run entirely on your device. No upload, no account, no ads.">
+  <meta name="theme-color" content="#0f1410">
+  <link rel="canonical" href="https://noadstools.com/">
+  <!-- Theme-aware favicons (reuse the editor's set; a shared/root relocation is a later cleanup). -->
+  <link rel="icon" type="image/png" sizes="32x32"   href="/photo-editor/img/favicon-light-32.png"  media="(prefers-color-scheme: light)">
+  <link rel="icon" type="image/png" sizes="192x192" href="/photo-editor/img/favicon-light-192.png" media="(prefers-color-scheme: light)">
+  <link rel="icon" type="image/png" sizes="32x32"   href="/photo-editor/img/favicon-dark-32.png"   media="(prefers-color-scheme: dark)">
+  <link rel="icon" type="image/png" sizes="192x192" href="/photo-editor/img/favicon-dark-192.png"  media="(prefers-color-scheme: dark)">
+  <link rel="icon" type="image/png" sizes="192x192" href="/photo-editor/img/favicon-light-192.png">
+  <link rel="apple-touch-icon" href="/photo-editor/img/apple-touch-icon.png" sizes="180x180">
+  <link rel="stylesheet" href="/shared/shell.css">
+  <link rel="stylesheet" href="/home.css">
+
+  <meta property="og:title" content="NoAdsTools — Free browser tools, nothing uploaded">
+  <meta property="og:description" content="Free, private browser tools that run entirely in your browser. No upload, no account, no ads.">
+  <meta property="og:url" content="https://noadstools.com/">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="NoAdsTools">
+  <meta property="og:locale" content="en_US">
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="NoAdsTools — Free browser tools, nothing uploaded">
+  <meta name="twitter:description" content="Free, private browser tools that run entirely in your browser. No upload, no account, no ads.">
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "name": "NoAdsTools",
+    "url": "https://noadstools.com/",
+    "description": "Free, private browser tools that run entirely on your device. No upload, no account, no ads."
+  }
+  </script>
+</head>
+<body>
+  <main id="home">
+    <section class="hero">
+      <h1 class="hero-title">Free browser tools.</h1>
+      <p class="hero-sub">Your files never leave your device.</p>
+    </section>
+
+    <nav class="category-pills" aria-label="Filter tools by category">
+      <button type="button" class="pill is-active" data-filter="all" aria-pressed="true">All</button>
+      <button type="button" class="pill" data-filter="image" aria-pressed="false">Image</button>
+      <button type="button" class="pill" data-filter="pdf" aria-pressed="false">PDF</button>
+      <button type="button" class="pill" data-filter="generator" aria-pressed="false">Generators</button>
+      <button type="button" class="pill" data-filter="dev" aria-pressed="false">Developer</button>
+    </nav>
+
+    <!-- Static tool grid = the SEO crawl path. Hand-authored to match shared/tools.js
+         (edit both together when a tool's status flips). Live tools are <a>; planned
+         tools are non-clickable "Soon" tiles. -->
+    <div class="tool-grid">
+      <a class="tool-card" data-cat="image" href="/photo-editor/">
+        <span class="tool-name">Photo Editor</span>
+        <span class="tool-blurb">Crop, resize, redact, remove backgrounds, batch-export — in your browser.</span>
+      </a>
+      <div class="tool-card is-soon" data-cat="image" aria-disabled="true">
+        <span class="tool-name">Remove EXIF data</span>
+        <span class="tool-blurb">Strip location and camera metadata from photos. Nothing uploaded.</span>
+        <span class="tool-soon">Soon</span>
+      </div>
+      <div class="tool-card is-soon" data-cat="image" aria-disabled="true">
+        <span class="tool-name">HEIC to JPG</span>
+        <span class="tool-blurb">Convert iPhone HEIC photos to JPG, entirely on your device.</span>
+        <span class="tool-soon">Soon</span>
+      </div>
+      <div class="tool-card is-soon" data-cat="image" aria-disabled="true">
+        <span class="tool-name">Compress images</span>
+        <span class="tool-blurb">Shrink JPG, PNG, and WebP files without uploading them.</span>
+        <span class="tool-soon">Soon</span>
+      </div>
+      <div class="tool-card is-soon" data-cat="pdf" aria-disabled="true">
+        <span class="tool-name">Image to PDF</span>
+        <span class="tool-blurb">Combine images into a single PDF, locally.</span>
+        <span class="tool-soon">Soon</span>
+      </div>
+      <div class="tool-card is-soon" data-cat="generator" aria-disabled="true">
+        <span class="tool-name">QR Code Generator</span>
+        <span class="tool-blurb">Make QR codes. No tracking, no account.</span>
+        <span class="tool-soon">Soon</span>
+      </div>
+    </div>
+  </main>
+
+  <script type="module" src="/home.js"></script>
+</body>
+</html>

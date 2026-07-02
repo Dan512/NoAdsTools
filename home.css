@@ -1,0 +1,92 @@
+/* home.css — homepage-only styles (hero, category pills, tool grid, Soon tiles).
+   Chrome + tokens come from /shared/shell.css (linked first). Colorblind-safe:
+   pill/soon state uses weight/fill/label, never hue alone. */
+
+#home {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: var(--space-2xl) var(--space-xl) var(--space-4xl);
+}
+
+.hero {
+  margin: var(--space-2xl) 0 var(--space-3xl);
+}
+.hero-title {
+  margin: 0;
+  font-size: var(--t-3xl);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+.hero-sub {
+  margin: var(--space-sm) 0 0;
+  font-size: var(--t-lg);
+  color: var(--text-secondary);
+}
+
+.category-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+  margin: 0 0 var(--space-xl);
+}
+.category-pills .pill {
+  padding: var(--space-xs) var(--space-md);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-pill);
+  background: var(--surface);
+  color: var(--text-secondary);
+  font-size: var(--t-sm);
+  cursor: pointer;
+}
+.category-pills .pill:hover { background: var(--surface-2); }
+/* Active state: filled + bold + darker text — three non-hue signals. */
+.category-pills .pill.is-active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-contrast);
+  font-weight: 500;
+}
+
+.tool-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: var(--space-md);
+}
+
+.tool-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  padding: var(--space-lg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  background: var(--surface);
+  text-decoration: none;
+  color: inherit;
+  position: relative;
+}
+a.tool-card:hover {
+  border-color: var(--border-strong);
+  background: var(--surface-2);
+}
+.tool-name { font-weight: 600; }
+.tool-blurb { font-size: var(--t-sm); color: var(--text-muted); }
+
+/* Soon tiles: muted + a text "Soon" badge (not clickable; distinction is label +
+   opacity + cursor, never color alone). */
+.tool-card.is-soon {
+  opacity: 0.62;
+  cursor: default;
+}
+.tool-soon {
+  align-self: flex-start;
+  margin-top: var(--space-xs);
+  padding: 2px var(--space-sm);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-pill);
+  font-size: var(--t-xs);
+  font-weight: 500;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}

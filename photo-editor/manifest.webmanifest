@@ -1,0 +1,28 @@
+{
+  "name": "NoAdsTools Photo Editor",
+  "short_name": "NoAdsTools",
+  "description": "Privacy-first browser image editor. Image files never leave your device.",
+  "start_url": "/photo-editor/",
+  "scope": "/photo-editor/",
+  "display": "standalone",
+  "background_color": "#fbf8f2",
+  "theme_color": "#23624a",
+  "icons": [
+    { "src": "/photo-editor/img/icon-192.png",          "type": "image/png", "sizes": "192x192", "purpose": "any" },
+    { "src": "/photo-editor/img/icon-512.png",          "type": "image/png", "sizes": "512x512", "purpose": "any" },
+    { "src": "/photo-editor/img/icon-512-maskable.png", "type": "image/png", "sizes": "512x512", "purpose": "maskable" }
+  ],
+  "share_target": {
+    "action": "/photo-editor/?share-target",
+    "method": "POST",
+    "enctype": "multipart/form-data",
+    "params": {
+      "files": [
+        {
+          "name": "image",
+          "accept": ["image/*", "image/heic", "image/heif"]
+        }
+      ]
+    }
+  }
+}

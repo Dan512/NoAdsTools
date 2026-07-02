@@ -1,0 +1,468 @@
+/* shared/shell.css — the platform shell: design tokens, base element styles,
+   and the always-on chrome (topbar + footer + their controls). Loaded by EVERY
+   page BEFORE the page's own CSS, so the cascade order matches the pre-extraction
+   single stylesheet. Tokens are the single source of truth — do not redefine them
+   in a tool's CSS. (Popover/dialog/prose styling for the shared settings/privacy
+   modules is NOT here yet — it stays in photo-editor/css/style.css until Plan C
+   extracts it alongside the first new tool.) */
+
+:root {
+  color-scheme: light dark;
+  /* Native form controls (range, checkbox, …) inherit the brand color so we
+     don't need per-control tinting. Set globally; individual surfaces can
+     override on the rare case they need a different hue. */
+  accent-color: var(--accent);
+
+  /* --- Color tokens (OKLCH) --- */
+  --bg:               light-dark(oklch(0.985 0.003 90),   oklch(0.16 0.008 160));
+  --surface:          light-dark(oklch(1     0    0),     oklch(0.20 0.008 160));
+  --surface-2:        light-dark(oklch(0.97  0.004 100),  oklch(0.23 0.008 160));
+  --text:             light-dark(oklch(0.18  0.005 160),  oklch(0.96 0.005 100));
+  --text-muted:       light-dark(oklch(0.45  0.006 160),  oklch(0.66 0.006 160));
+  --text-secondary:   light-dark(oklch(0.32  0.006 160),  oklch(0.82 0.006 160));
+  --border:           light-dark(oklch(0.90  0.005 120),  oklch(0.27 0.008 160));
+  --border-strong:    light-dark(oklch(0.82  0.005 120),  oklch(0.34 0.008 160));
+  --accent:           light-dark(oklch(0.42  0.08  160),  oklch(0.72 0.06  160));
+  --accent-hover:     light-dark(oklch(0.36  0.08  160),  oklch(0.78 0.06  160));
+  --accent-contrast:  light-dark(oklch(0.99  0.003 90),   oklch(0.12 0.005 160));
+  --danger:           light-dark(oklch(0.50  0.18  28),   oklch(0.72 0.16  28));
+  --warn:             light-dark(oklch(0.62  0.16  70),   oklch(0.80 0.13  70));
+  --focus-ring:       light-dark(oklch(0.55  0.13  160 / 0.7), oklch(0.78 0.10 160 / 0.8));
+
+  /* --- Spacing (4pt) --- */
+  --space-xs:  4px;
+  --space-sm:  8px;
+  --space-md: 12px;
+  --space-lg: 16px;
+  --space-xl: 24px;
+  --space-2xl: 32px;
+  --space-3xl: 48px;
+  --space-4xl: 64px;
+  --space-5xl: 96px;
+
+  /* --- Radius --- */
+  --radius-card: 4px;
+  --radius-control: 6px;
+  --radius-pill: 999px;
+
+  /* --- Typography --- */
+  --font-sans: 'Onest', system-ui, -apple-system, sans-serif;
+  --font-numeric-features: 'tnum' 1, 'kern' 1, 'ss01' 1;
+  /* Type scale (rem; product UI, NOT fluid) */
+  --t-xs:  0.75rem;
+  --t-sm:  0.875rem;
+  --t-md:  1rem;
+  --t-lg:  1.25rem;
+  --t-xl:  1.5rem;
+  --t-2xl: 1.875rem;
+  --t-3xl: 2.25rem;
+
+  /* --- Motion --- */
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-out-strong: cubic-bezier(0.16, 1, 0.3, 1);
+  --dur-fast: 120ms;
+  --dur-med:  220ms;
+  --dur-slow: 360ms;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root { --dur-fast: 0ms; --dur-med: 0ms; --dur-slow: 0ms; }
+}
+
+html { color-scheme: var(--color-scheme); }
+html[data-theme="light"] { color-scheme: light; }
+html[data-theme="dark"]  { color-scheme: dark; }
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-sans);
+  font-size: var(--t-md);
+  font-feature-settings: var(--font-numeric-features);
+  letter-spacing: -0.005em;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+/* Visually-hidden utility — for headings and labels that exist only for AT.
+   Keeps the element in the accessibility tree (so axe + screen readers see it)
+   but pulls it out of the visual layout. The 1px clipped square pattern is
+   safer than `display: none` (which removes from a11y tree entirely). */
+.visually-hidden {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  margin: -1px !important;
+  padding: 0 !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  clip-path: inset(50%) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+}
+
+/* --- Base layout (chrome only — components land in later phases) --- */
+
+header.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  height: 56px;
+  padding: 0 var(--space-xl);
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
+}
+
+.topbar .wordmark {
+  /* Demoted from <h1> for SEO/a11y: the content <h1> now lives in the queue
+     intro section. Reset <p>'s default vertical margins; keep visual size
+     identical to the prior h1. */
+  margin: 0;
+  font-size: var(--t-lg);
+  font-weight: 600;
+}
+
+.topbar .spacer {
+  flex: 1;
+}
+
+.topbar .controls {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+footer {
+  padding: var(--space-lg) var(--space-xl);
+  border-top: 1px solid var(--border);
+  color: var(--text-muted);
+  font-size: var(--t-sm);
+}
+
+/* Header Privacy link (desktop only) — pairs with the .header-divider span
+   and the #privacy-toggle-header button. The .header-only-desktop class on
+   each makes them visible only at the desktop breakpoint; mobile keeps the
+   footer with its full set of links. */
+.topbar .header-link {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font: inherit;
+  font-size: var(--t-sm);
+  padding: var(--space-xs) var(--space-sm);
+  cursor: pointer;
+  border-radius: var(--radius-control);
+}
+.topbar .header-link:hover { color: var(--text); background-color: var(--surface-2); }
+.topbar .header-divider {
+  color: var(--text-muted);
+  margin: 0 var(--space-xs);
+}
+
+/* Desktop: hide body footer, show header links. */
+@media (min-width: 768px) {
+  body > footer { display: none; }
+}
+/* Mobile: hide header-only links, keep footer. */
+@media (max-width: 767px) {
+  .topbar .header-only-desktop { display: none; }
+}
+
+:where(button) {
+  background: none;
+  border: none;
+  color: var(--text);
+  cursor: pointer;
+  padding: var(--space-sm) var(--space-md);
+  border-radius: var(--radius-control);
+  font: inherit;
+  transition: color var(--dur-fast) var(--ease-out),
+              background-color var(--dur-fast) var(--ease-out);
+}
+
+:where(button):hover {
+  background-color: var(--surface-2);
+}
+
+:where(button).btn-primary {
+  background-color: var(--accent);
+  color: var(--accent-contrast);
+}
+
+:where(button).btn-primary:hover {
+  background-color: var(--accent-hover);
+}
+
+/* Topbar wordmark link (used on subpages) */
+.topbar .wordmark a {
+  color: inherit;
+  text-decoration: none;
+}
+
+/* Tip link styled like a button in the topbar */
+.btn-tip {
+  display: inline-flex;
+  align-items: center;
+  padding: var(--space-sm) var(--space-md);
+  border-radius: var(--radius-control);
+  color: var(--text);
+  text-decoration: none;
+  transition: color var(--dur-fast) var(--ease-out),
+              background-color var(--dur-fast) var(--ease-out);
+}
+
+.btn-tip:hover {
+  background-color: var(--surface-2);
+}
+
+/* The tip button shows two strings — full and short — chosen by viewport
+   width. Both are translated independently via data-i18n so each locale
+   can supply its own short form. */
+.btn-tip .tip-short { display: none; }
+.btn-tip .tip-full  { display: inline; }
+@media (max-width: 480px) {
+  .btn-tip .tip-short { display: inline; }
+  .btn-tip .tip-full  { display: none; }
+}
+
+/* Flag image inside the language toggle button. Sized to match the button's
+   visual weight; subtle border so the flag has a defined edge on any
+   background. */
+#lang-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+#lang-toggle[hidden] { display: none; }
+#lang-toggle .lang-flag {
+  display: block;
+  width: 20px;
+  height: 14px;
+  border: 1px solid var(--border);
+  border-radius: 2px;
+  object-fit: cover;
+}
+
+/* Theme toggle in the topbar (sun/moon). Match visual weight of the gear and
+   language buttons — same sizing and font scaling. */
+#theme-toggle {
+  font-size: var(--t-md);
+  line-height: 1;
+}
+
+/* Footer link layout */
+footer {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+footer a,
+footer button {
+  /* Identical layout boxes — without this, <button> sits at a slightly
+     different baseline than <a> on mobile because they have different
+     intrinsic display + line-height defaults. */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  color: var(--text-muted);
+  text-decoration: none;
+  padding: var(--space-xs) var(--space-sm);
+}
+
+footer a:hover,
+footer button:hover {
+  color: var(--text);
+  background-color: transparent;
+}
+
+/* --- Platform chrome additions (0B-4) --- */
+/* The wordmark is now a brand-link ("NoAdsTools") + the current tool name.
+   The brand-link inherits the wordmark size/weight; the tool name is the same
+   size but muted + lighter, so "NoAdsTools" reads as the platform and the tool
+   name as the subtitle — distinction by weight + color, not hue alone. */
+/* (base `.topbar .wordmark a` reset lives at the "Topbar wordmark link" rule
+   earlier in this file; here we only add the hover.) */
+.topbar .wordmark a:hover { color: var(--accent); }
+.topbar .wordmark-tool {
+  color: var(--text-muted);
+  font-weight: 400;
+}
+.topbar .wordmark-tool::before {
+  content: "/";
+  margin: 0 var(--space-xs);
+  color: var(--border-strong);
+}
+
+/* Tools dropdown: the toggle reuses .header-link; the list is an absolutely
+   positioned popover under it. Hidden via [hidden]; shown by topbar.js. */
+.topbar .tools-menu { position: relative; }
+.topbar .tools-menu-list {
+  position: absolute;
+  top: calc(100% + var(--space-xs));
+  left: 0;
+  z-index: 20;
+  min-width: 200px;
+  display: flex;
+  flex-direction: column;
+  padding: var(--space-xs);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  box-shadow: 0 6px 24px light-dark(oklch(0 0 0 / 0.12), oklch(0 0 0 / 0.4));
+}
+.topbar .tools-menu-list[hidden] { display: none; }
+/* RTL (e.g. ar): mirror the dropdown to the right edge of its anchor. */
+[dir="rtl"] .topbar .tools-menu-list { left: auto; right: 0; }
+.topbar .tools-menu-item {
+  display: block;
+  padding: var(--space-sm) var(--space-md);
+  color: var(--text);
+  text-decoration: none;
+  border-radius: var(--radius-control);
+  font-size: var(--t-sm);
+}
+.topbar .tools-menu-item:hover { background-color: var(--surface-2); }
+.topbar .tools-menu-item[aria-current="page"] { color: var(--accent); font-weight: 500; }
+.topbar .tools-menu-all {
+  margin-top: var(--space-xs);
+  border-top: 1px solid var(--border);
+  border-radius: 0;
+  color: var(--text-muted);
+}
+
+@media (pointer: coarse) {
+  /* (moved from style.css) enlarge chrome touch targets on touch devices */
+  .topbar button,
+  .topbar a {
+    min-width: 44px;
+    min-height: 44px;
+  }
+  footer button,
+  footer a {
+    min-height: 44px;
+    padding: var(--space-sm) var(--space-md);
+  }
+}
+
+/* Static prose pages (privacy.html, 404.html) + the in-app privacy panel */
+.prose {
+  max-width: 65ch;
+  margin: var(--space-2xl) auto;
+  padding: 0 var(--space-xl);
+  line-height: 1.6;
+}
+
+.prose h1 {
+  font-size: var(--t-2xl);
+  font-weight: 600;
+  margin: 0 0 var(--space-lg);
+}
+
+.prose h2 {
+  font-size: var(--t-lg);
+  font-weight: 600;
+  margin: var(--space-2xl) 0 var(--space-sm);
+}
+
+.prose p,
+.prose ul {
+  margin: 0 0 var(--space-md);
+}
+
+.prose ul {
+  padding-left: var(--space-xl);
+}
+
+.prose li {
+  margin-bottom: var(--space-xs);
+}
+
+.prose .lead {
+  font-size: var(--t-lg);
+  color: var(--text-secondary);
+}
+
+.prose a {
+  color: var(--accent);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.prose a:hover {
+  color: var(--accent-hover);
+}
+
+/* --- Privacy panel modal (Phase 12B) ------------------------------------ */
+.privacy-panel-dialog {
+  max-width: min(720px, 90vw);
+  max-height: 85vh;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  background: var(--surface);
+  color: var(--text);
+  /* The browser positions <dialog> via offsetTop/Left; we want a margin so
+     keyboard-focus on the close button doesn't run into the viewport edge. */
+  margin: auto;
+  /* Dialog itself never scrolls — only the inner .prose does. Otherwise both
+     the dialog and the prose end up with scrollbars when content overflows
+     (visible as two stacked tracks in the top-right corner). */
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+.privacy-panel-dialog::backdrop {
+  background: rgba(0, 0, 0, 0.5);
+}
+.privacy-panel-dialog .prose {
+  padding: var(--space-2xl);
+  max-width: 65ch;
+  margin: 0 auto;
+  overflow-y: auto;
+  /* Flex inside the dialog handles height — no fixed max-height needed. */
+  flex: 1;
+  min-height: 0;
+  /* Make sure links inside list items inherit the prose anchor color. */
+  position: relative;
+}
+.privacy-panel-dialog .dialog-close {
+  position: absolute;
+  top: var(--space-md);
+  right: var(--space-md);
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: transparent;
+  font-size: var(--t-xl);
+  line-height: 1;
+  color: var(--text-muted);
+  cursor: pointer;
+  /* Sit above the article content so it remains clickable when the prose
+     scrolls. */
+  z-index: 1;
+}
+.privacy-panel-dialog .dialog-close:hover {
+  color: var(--text);
+}
+.privacy-panel-dialog .privacy-static-link {
+  margin-top: var(--space-xl);
+  padding-top: var(--space-lg);
+  border-top: 1px solid var(--border);
+  font-size: var(--t-sm);
+  color: var(--text-muted);
+}

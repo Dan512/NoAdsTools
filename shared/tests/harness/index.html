@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>NoAdsTools shell harness</title>
+  <!-- Loads ONLY the shared shell stylesheet — no editor CSS. If the chrome
+       renders styled here, shell.css is self-sufficient. -->
+  <link rel="stylesheet" href="/shared/shell.css">
+</head>
+<body>
+  <main id="workspace">
+    <p style="padding: 2rem;">Shell harness — topbar + footer are injected by shared modules with no editor code.</p>
+  </main>
+
+  <script type="module">
+    import { registerTranslations, initI18n } from '/shared/i18n.js';
+    import { injectTopbar } from '/shared/topbar.js';
+    import { injectFooter } from '/shared/footer.js';
+    import { initSettings } from '/shared/settings.js';
+    import { registerPrivacyRows, initPrivacy } from '/shared/privacy.js';
+
+    // A minimal EN dictionary covering the shared-chrome + global-settings +
+    // a demo privacy section. This mimics an EN-first new tool: the shared
+    // modules reference these keys, and a consumer supplies them. (The size of
+    // this dict — ~26 keys — is the signal that Plan C should do the i18n
+    // chrome-dict split so tools don't each re-declare chrome strings.)
+    registerTranslations({ en: {
+      brandName: 'NoAdsTools', toolsMenu: 'Tools', allTools: 'All tools',
+      language: 'Language', themeToggle: 'Toggle theme', settings: 'Settings',
+      tip: 'Support this site', tipShort: 'Support', privacy: 'Privacy',
+      source: 'Source', tipFooter: 'Support this site', close: 'Close',
+      settingsTheme: 'Theme', settingsThemeAria: 'Theme',
+      settingsThemeAuto: 'Auto', settingsThemeLight: 'Light', settingsThemeDark: 'Dark',
+      settingsShowTheme: 'Show theme button', settingsShowThemeAria: 'Show theme button',
+      settingsShowLanguage: 'Show language picker', settingsShowLanguageAria: 'Show language picker',
+      settingsRestoreDefaults: 'Restore defaults', settingsRestoreDefaultsAria: 'Restore defaults',
+      harnessPrivacyTitle: 'Privacy', harnessPrivacyLead: 'This harness runs entirely in your browser.',
+      harnessFetchHeading: 'What this demo fetches', harnessFetchList: '<li>Only the shared shell scripts and styles.</li>',
+    } });
+
+    // Inject the chrome (no editor). toolId is a placeholder not in the manifest.
+    injectTopbar({ toolId: 'harness' });
+    injectFooter({ toolId: 'harness' });
+    initI18n();
+    initSettings({ toolId: 'harness' });
+    registerPrivacyRows([
+      { headingKey: 'harnessFetchHeading', bodyKey: 'harnessFetchList', kind: 'list' },
+    ]);
+    initPrivacy({ titleKey: 'harnessPrivacyTitle', leadKey: 'harnessPrivacyLead' });
+
+    document.documentElement.dataset.bootReady = '1';
+  </script>
+</body>
+</html>

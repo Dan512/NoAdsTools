@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>NoAdsTools — Privacy</title>
+  <meta name="description" content="Privacy disclosure for NoAdsTools. Images never leave your device. No analytics, no cookies, no third-party CDNs.">
+  <meta name="theme-color" content="#0f1410">
+  <link rel="canonical" href="https://noadstools.com/photo-editor/privacy.html">
+  <!-- Theme-aware favicons (see index.html for full notes). -->
+  <link rel="icon" type="image/png" sizes="32x32"   href="/photo-editor/img/favicon-light-32.png"  media="(prefers-color-scheme: light)">
+  <link rel="icon" type="image/png" sizes="192x192" href="/photo-editor/img/favicon-light-192.png" media="(prefers-color-scheme: light)">
+  <link rel="icon" type="image/png" sizes="32x32"   href="/photo-editor/img/favicon-dark-32.png"   media="(prefers-color-scheme: dark)">
+  <link rel="icon" type="image/png" sizes="192x192" href="/photo-editor/img/favicon-dark-192.png"  media="(prefers-color-scheme: dark)">
+  <link rel="icon" type="image/png" sizes="192x192" href="/photo-editor/img/favicon-light-192.png">
+  <link rel="apple-touch-icon" href="/photo-editor/img/apple-touch-icon.png" sizes="180x180">
+  <link rel="stylesheet" href="/shared/shell.css">
+  <link rel="stylesheet" href="css/style.css">
+
+  <!-- Open Graph -->
+  <meta property="og:title" content="NoAdsTools — Privacy">
+  <meta property="og:description" content="Privacy-first browser image editor. Crop, resize, adjust, redact, remove backgrounds, batch-export to ZIP or PDF, import HEIC. Image files never leave your device.">
+  <meta property="og:url" content="https://noadstools.com/photo-editor/privacy.html">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="NoAdsTools">
+  <meta property="og:locale" content="en_US">
+
+  <!-- Twitter card -->
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="NoAdsTools — Privacy">
+  <meta name="twitter:description" content="Privacy-first browser image editor. Crop, resize, adjust, redact, remove backgrounds, batch-export to ZIP or PDF, import HEIC. Image files never leave your device.">
+</head>
+<body>
+  <header class="topbar">
+    <p class="wordmark"><a href="/photo-editor/" data-i18n="brandName">NoAdsTools</a></p>
+    <div class="spacer"></div>
+  </header>
+
+  <main>
+    <article class="prose">
+      <h1>Privacy</h1>
+
+      <p class="lead">NoAdsTools processes images entirely in your browser. Image files never leave your device — there is no upload, no server-side rendering, and no cloud round-trip.</p>
+
+      <h2>What this site fetches (from this origin only)</h2>
+      <ul>
+        <li>HTML, CSS, JavaScript, and self-hosted Onest fonts.</li>
+        <li>The JSZip library (~97&nbsp;KB) — ONLY when you click "Export queue (ZIP)" for the first time. Vendored from <a href="https://stuk.github.io/jszip/" target="_blank" rel="noopener">stuk.github.io/jszip</a>, served from this origin. Used to package your batch exports into a single ZIP locally — no network traffic.</li>
+        <li>The jsPDF library (~420&nbsp;KB) — ONLY when you click PDF export for the first time. Vendored from <a href="https://github.com/parallax/jsPDF" target="_blank" rel="noopener">github.com/parallax/jsPDF</a> (npm), served from this origin. Used to build PDF files from your images locally — no network traffic.</li>
+        <li>The libheif HEIC/HEIF decoder (~1.1&nbsp;MB JavaScript + WebAssembly) — ONLY when you first import a <code>.heic</code> or <code>.heif</code> file. Vendored from <a href="https://github.com/catdad-experiments/libheif-js" target="_blank" rel="noopener">github.com/catdad-experiments/libheif-js</a> (which packages <a href="https://github.com/strukturag/libheif" target="_blank" rel="noopener">strukturag/libheif</a>), served from this origin. Cached by your browser thereafter.</li>
+        <li>Self-hosted ML model files for background removal (the <a href="https://github.com/imgly/background-removal-js" target="_blank" rel="noopener">@imgly/background-removal</a> ISNET fp16 model + <a href="https://github.com/microsoft/onnxruntime" target="_blank" rel="noopener">ONNX Runtime Web</a> WASM kernels — both the CPU SIMD path and the WebGPU/JSEP path so the model can run on the GPU when available). These files (~118&nbsp;MB total) are part of the site code, shipped from this repository — they are NOT a separate first-use download from a third party. Your browser fetches them only the first time you click "Remove background", from this origin, and caches them thereafter. The browser pulls only the kernels it actually needs — CPU-only browsers never download the WebGPU variant, and vice versa.</li>
+        <li>Self-hosted ML model file for face auto-detection (a <a href="https://github.com/google/mediapipe" target="_blank" rel="noopener">MediaPipe BlazeFace</a> ONNX export, re-distributed by <a href="https://huggingface.co/qualcomm/MediaPipe-Face-Detection" target="_blank" rel="noopener">Qualcomm AI Hub Models</a>, Apache-2.0). The graph (~78&nbsp;KB) + external weights (~517&nbsp;KB) are part of the site code, shipped from this repository. Your browser fetches them only the first time you click "Auto-detect faces" in the redact tool, from this origin, after a one-time consent prompt. Cached by your browser thereafter. Inference uses the same ONNX Runtime Web bundle already vendored for background removal — no additional runtime download.</li>
+        <li>Self-hosted OCR engine for text auto-detection (<a href="https://github.com/naptha/tesseract.js" target="_blank" rel="noopener">Tesseract.js v7</a> + <a href="https://github.com/naptha/tesseract.js-core" target="_blank" rel="noopener">tesseract.js-core v7</a>, both Apache-2.0, plus the English <code>eng.traineddata</code> LSTM model from <a href="https://github.com/tesseract-ocr/tessdata_fast" target="_blank" rel="noopener">tessdata_fast</a>, Apache-2.0). The library (~174&nbsp;KB JS + ~20&nbsp;MB of LSTM-only WebAssembly variants; your browser only downloads the single variant matching its SIMD support) plus the gzipped English model (~1.9&nbsp;MB) are part of the site code, shipped from this repository. Your browser fetches them only the first time you click "Detect text" in the redact tool, from this origin, after a one-time consent prompt. Cached by your browser thereafter. OCR runs entirely in your browser — recognized text never leaves your device.</li>
+        <li>The favicon and logo SVG.</li>
+      </ul>
+
+      <h2>What this site does NOT do</h2>
+      <ul>
+        <li>No third-party CDNs (no Google Fonts, no jsDelivr, no cdnjs, no Cloudflare-served libraries).</li>
+        <li>No analytics or telemetry (no Google Analytics, Plausible, Fathom, Mixpanel, gtag, fbq, or similar).</li>
+        <li>No cookies. No fingerprinting. No localStorage data shared off-device.</li>
+        <li>No upload of your images, masks, or edits. No "save to cloud" feature exists.</li>
+        <li>When you share images to NoAdsTools from your phone's share sheet (Android only), those images stream directly into the in-browser queue. They are not uploaded; no network request is made with the image content.</li>
+      </ul>
+
+      <h2>External links that open on click</h2>
+      <ul>
+        <li>GitHub source repository — only if you click the "Source" link in the footer.</li>
+        <li>Ko-fi tip page — only if you click "Tip" or "Support this site".</li>
+        <li>Nothing else; verify in DevTools &rarr; Network.</li>
+      </ul>
+
+      <h2>Local storage</h2>
+      <p>Your preferences (language, theme, default export format and quality, overlay outline visibility, brush smoothing, thumbnail auto-refresh, and which topbar controls are visible) are saved in your browser's localStorage. You can clear them anytime via your browser's site-data tools.</p>
+      <p>The keys we set are: <code>noadstools_lang</code>, <code>noadstools:settings:global</code>, <code>noadstools:settings:photo-editor</code>, <code>noadstools_bgremove_consent</code>, <code>noadstools_heic_consent</code>, <code>noadstools_face_detect_consent</code>, <code>noadstools_text_detect_consent_v1</code>, <code>noadstools_target_size</code>, <code>noadstools_upload_ready</code>, and <code>noadstools_watermark</code>. None of them contain image data.</p>
+
+      <h2>AI translations</h2>
+      <p>The UI is translated into 15 languages with the help of AI tools. Errors may exist; please report them in the GitHub issue tracker.</p>
+
+      <h2>Open source</h2>
+      <p>Licensed under GNU AGPL v3.0. Source repository: <a href="https://github.com/Dan512/NoAdsTools" target="_blank" rel="noopener">https://github.com/Dan512/NoAdsTools</a>.</p>
+
+      <h2>Support this site</h2>
+      <p>If this is useful, <a href="https://ko-fi.com/noadsdude" target="_blank" rel="noopener">tip via Ko-fi</a>.</p>
+    </article>
+  </main>
+
+  <footer>
+    <a href="/photo-editor/" data-i18n="home">Home</a>
+    <span aria-hidden="true">·</span>
+    <a href="https://github.com/Dan512/NoAdsTools" target="_blank" rel="noopener"
+       data-i18n="source" title="Source code on GitHub">Source</a>
+    <span aria-hidden="true">·</span>
+    <a href="https://ko-fi.com/noadsdude" target="_blank" rel="noopener" data-i18n="tipFooter">Support this site</a>
+  </footer>
+</body>
+</html>

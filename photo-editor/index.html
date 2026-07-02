@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Photo Editor · NoAdsTools — batch image editing in your browser</title>
+  <meta name="description" content="A privacy-first image editor and batch processor that runs entirely in your browser. No uploads, no tracking.">
+  <meta name="theme-color" content="#0f1410">
+  <link rel="canonical" href="https://noadstools.com/photo-editor/">
+  <link rel="manifest" href="/photo-editor/manifest.webmanifest">
+  <!-- Theme-aware favicons. Browsers pick by the user's OS prefers-color-scheme:
+       light variant has a white interior, dark variant a black one; both share
+       the red prohibition ring + "Ads" wordmark. Two sizes per theme so
+       browsers can pick the closest match without scaling artefacts (32px for
+       classic desktop tabs, 192px for HiDPI / address-bar previews). -->
+  <link rel="icon" type="image/png" sizes="32x32"   href="/photo-editor/img/favicon-light-32.png"  media="(prefers-color-scheme: light)">
+  <link rel="icon" type="image/png" sizes="192x192" href="/photo-editor/img/favicon-light-192.png" media="(prefers-color-scheme: light)">
+  <link rel="icon" type="image/png" sizes="32x32"   href="/photo-editor/img/favicon-dark-32.png"   media="(prefers-color-scheme: dark)">
+  <link rel="icon" type="image/png" sizes="192x192" href="/photo-editor/img/favicon-dark-192.png"  media="(prefers-color-scheme: dark)">
+  <!-- Fallback for browsers that ignore the `media` attribute on icon links
+       (older Firefox, some embedded WebKit). Pick the light variant — most
+       browser-chrome backgrounds default to light. -->
+  <link rel="icon" type="image/png" sizes="192x192" href="/photo-editor/img/favicon-light-192.png">
+  <link rel="apple-touch-icon" href="/photo-editor/img/apple-touch-icon.png" sizes="180x180">
+  <link rel="stylesheet" href="/shared/shell.css">
+  <link rel="stylesheet" href="css/style.css">
+
+  <!-- Build stamp. Bump VERSION on every deploy so you can verify in
+       DevTools console which version actually loaded. If you don't see
+       this exact string in the console after a hard refresh, you're
+       seeing a cached older version (browser, GitHub Pages CDN, or a
+       proxy in between).
+       Versioning convention: v{MAJOR}.{MINOR}.{PATCH} where PATCH is
+       zero-padded two digits — bump PATCH for every shipped change, no
+       matter how small. Reset PATCH when bumping MINOR. -->
+  <script>
+    window.__NOADSTOOLS_VERSION__ = 'v1.2.10';
+    window.__NOADSTOOLS_BUILD__ = window.__NOADSTOOLS_VERSION__ + ' — 2026-07-01';
+    console.log('%c[NoAdsTools build] ' + window.__NOADSTOOLS_BUILD__, 'color:#4a9; font-weight:600;');
+  </script>
+
+  <!-- Open Graph (Facebook, LinkedIn, Discord, Slack previews) -->
+  <meta property="og:title" content="NoAdsTools Photo Editor — Batch image editing in your browser">
+  <meta property="og:description" content="Privacy-first browser image editor. Crop, resize, adjust, redact, remove backgrounds, batch-export to ZIP or PDF, import HEIC. Image files never leave your device.">
+  <meta property="og:url" content="https://noadstools.com/photo-editor/">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="NoAdsTools">
+  <meta property="og:locale" content="en_US">
+
+  <!-- Twitter card -->
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="NoAdsTools Photo Editor — Batch image editing in your browser">
+  <meta name="twitter:description" content="Privacy-first browser image editor. Crop, resize, adjust, redact, remove backgrounds, batch-export to ZIP or PDF, import HEIC. Image files never leave your device.">
+
+  <!-- Structured data: WebApplication -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "NoAdsTools Photo Editor",
+    "url": "https://noadstools.com/photo-editor/",
+    "description": "Privacy-first browser image editor. Crop, resize, adjust, redact, remove backgrounds, batch-export to ZIP or PDF, import HEIC. Image files never leave your device.",
+    "applicationCategory": "MultimediaApplication",
+    "operatingSystem": "Any (browser-based)",
+    "browserRequirements": "Requires a modern browser with WebAssembly support.",
+    "isAccessibleForFree": true,
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "USD"
+    },
+    "license": "https://www.gnu.org/licenses/agpl-3.0.html",
+    "sameAs": [
+      "https://github.com/Dan512/NoAdsTools"
+    ]
+  }
+  </script>
+</head>
+<body>
+  <main id="workspace">
+    <section id="queue-view" class="view"></section>
+    <section id="editor-view" class="view" hidden></section>
+  </main>
+
+  <!-- Import map: resolves bare specifiers used by vendored libraries.
+       `onnxruntime-web` (CPU execution provider) and `onnxruntime-web/webgpu`
+       (GPU execution provider) are imported by `js/vendor/bgremove/index.mjs`
+       (the @imgly background-removal bundle); without this map the dynamic
+       `import("onnxruntime-web")` / `import("onnxruntime-web/webgpu")` calls
+       would fail in a vanilla browser.  All vendored libs are served from
+       this origin — no third-party CDN. -->
+  <script type="importmap">
+  {
+    "imports": {
+      "onnxruntime-web":        "/photo-editor/js/vendor/onnxruntime-web/ort.bundle.min.mjs",
+      "onnxruntime-web/webgpu": "/photo-editor/js/vendor/onnxruntime-web/ort.webgpu.bundle.min.mjs"
+    }
+  }
+  </script>
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>

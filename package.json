@@ -1,0 +1,21 @@
+{
+  "name": "noadstools",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test --test-reporter=spec \"photo-editor/tests/unit/**/*.test.js\" \"shared/tests/unit/**/*.test.js\"",
+    "test:watch": "node --test --watch --test-reporter=spec \"photo-editor/tests/unit/**/*.test.js\" \"shared/tests/unit/**/*.test.js\"",
+    "test:browser": "playwright test",
+    "test:browser:headed": "playwright test --headed",
+    "test:browser:install": "playwright install --with-deps chromium webkit firefox",
+    "serve": "node scripts/serve.js",
+    "publish:dry": "node scripts/publish.mjs --dry-run",
+    "publish:public": "node scripts/publish.mjs"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "^4.10.0",
+    "@playwright/test": "^1.49.0",
+    "axe-core": "^4.10.0",
+    "playwright": "^1.49.0"
+  }
+}

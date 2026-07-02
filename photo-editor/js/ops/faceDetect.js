@@ -1,0 +1,641 @@
+// js/ops/faceDetect.js — auto face detection via vendored BlazeFace ONNX.
+//
+// Used by the redact tool's "Detect faces" button to seed the canvas with
+// one mask redact per detected face. Pure local inference — the model
+// weights are vendored under js/vendor/blazeface/ (one-time download via
+// scripts/install-blazeface.mjs); after install nothing leaves the browser.
+//
+// Pipeline:
+//   1. Lazy-load onnxruntime-web (already vendored for bg-remove). First
+//      call also asks for one-time consent (mirrors HEIC + bg-remove
+//      patterns); subsequent calls reuse the cached session.
+//   2. Preprocess: letterbox the source bitmap into 256×256, normalize
+//      pixels to [0, 1], pack into NCHW float32. Letterboxing (not
+//      stretching) is critical — faces in landscape photos get distorted
+//      under a naive stretch-fit, which kills detection scores.
+//   3. Run inference. Two output tensor pairs (coords + scores), split by
+//      anchor stride: 512 anchors at stride 16, 384 anchors at stride 32,
+//      896 total. Full-range BlazeFace — covers faces up to ~5 m away,
+//      which suits the common use cases (family group photos, screenshots
+//      with webcam thumbnails).
+//   4. Decode each anchor's prediction into a bbox + score, applying
+//      sigmoid to the raw logit scores. Filter by score threshold.
+//   5. NMS by IoU to dedupe overlapping detections.
+//   6. Un-letterbox: convert from 256×256 input space back to source
+//      pixel space.
+//
+// Returns an array of source-pixel-space rectangles ready to wrap in
+// redact overlays.
+
+import { showFaceConsentModal } from './faceConsent.js';
+import { probeCapabilities } from '../../../shared/capabilities.js';
+
+// --- Consent + load gating ------------------------------------------------
+
+export const CONSENT_KEY = 'noadstools_face_detect_consent';
+// Bump when re-vendoring the model so previously-consented users get
+// re-prompted with the new download-size disclosure.
+export const VENDOR_HASH = 'qualcomm-mediapipe-face-0.54.0';
+const VENDOR_SIZE_LABEL = '~600 KB';
+
+let consentOverrideForTest = null;          // 'grant' | 'deny' | null
+let sessionPromise = null;                  // Promise<{ run, decode }>
+let testSessionForTest = null;              // injected by _setSessionForTest
+
+const MODEL_URL = '/photo-editor/js/vendor/blazeface/face_detector.onnx';
+// The .onnx references its weight tensor data via the standard ONNX
+// external-data mechanism (a side file living in the same directory).
+// When we hand ORT a URL for the .onnx, it does NOT auto-fetch the
+// companion .data file — that produces:
+//   "Failed to load external data file 'face_detector.data',
+//    error: Module.MountedFiles is not available."
+// Fix: pre-fetch both files as bytes and pass the .data explicitly via
+// the SessionOptions.externalData option. The path string MUST match
+// what's stored inside the .onnx (basename, no leading slash).
+const MODEL_DATA_URL  = '/photo-editor/js/vendor/blazeface/face_detector.data';
+const MODEL_DATA_NAME = 'face_detector.data';
+// We vendor TWO ORT bundles (see index.html import map):
+//   - 'onnxruntime-web'        → CPU bundle, WASM embedded, no external fetch.
+//   - 'onnxruntime-web/webgpu' → WebGPU bundle, also self-contained.
+//
+// The CPU bundle does NOT include the JSEP WASM that ORT needs when you
+// ask for the WebGPU executionProvider — it will 404 trying to fetch
+// `/ort-wasm-simd-threaded.jsep.wasm`, and the subsequent CPU-only retry
+// inherits the broken initWasm() state. The fix: pick the bundle
+// up-front based on caps.webGPU, and ONLY request the executionProviders
+// the chosen bundle actually supports.
+const ORT_CPU_SPECIFIER    = 'onnxruntime-web';
+const ORT_WEBGPU_SPECIFIER = 'onnxruntime-web/webgpu';
+
+const INPUT_SIZE = 256;
+const IOU_THRESHOLD   = 0.3;   // intra-scan NMS — dedupe BlazeFace's per-face multi-box emissions
+const MAX_DETECTIONS  = 50;
+
+// Tile-based multi-scale scanning. For large source images, BlazeFace's
+// 256×256 letterbox downsamples small/distant faces below its trained
+// range (≈40 px). Running the model on overlapping sub-tiles in addition
+// to the global scan catches those faces. Results are merged in source-
+// pixel space via a final NMS pass at TILE_MERGE_IOU.
+//
+// Cost: 1 + N tile passes per image. We use a 2×2 tile grid with 25%
+// overlap so each tile is roughly (long edge / 1.6) wide — total 5
+// inference passes. Skipped entirely for images with long edge ≤ TILE_TRIGGER_PX.
+const TILE_TRIGGER_PX = 1024;
+const TILE_OVERLAP    = 0.25;  // 25% padding into neighbor cells
+const TILE_MERGE_IOU  = 0.5;   // more permissive than per-scan NMS so adjacent faces both survive
+
+// Sigmoid-space score thresholds for the three sensitivity presets exposed
+// to the UI. Lower = more detections (including some false positives);
+// higher = fewer detections (but more confident, may miss occluded /
+// non-frontal faces). 'normal' is the working default for typical photos.
+//
+// Empirical anchors:
+//   0.65 strict  → only very confident, head-on, unoccluded faces
+//   0.4  normal  → good balance for everyday photos
+//   0.25 loose   → catches group-photo cases (kids in crowns, partial
+//                   side profiles, lower-res faces) at the cost of an
+//                   occasional false positive on face-like patterns
+export const SCORE_THRESHOLDS = Object.freeze({
+  strict: 0.65,
+  normal: 0.40,
+  loose:  0.25,
+});
+const DEFAULT_SCORE_THRESHOLD = SCORE_THRESHOLDS.normal;
+
+function thresholdForSensitivity(level) {
+  if (level && Object.prototype.hasOwnProperty.call(SCORE_THRESHOLDS, level)) {
+    return SCORE_THRESHOLDS[level];
+  }
+  return DEFAULT_SCORE_THRESHOLD;
+}
+
+// --- Anchor grid ----------------------------------------------------------
+//
+// Full-range BlazeFace for 256×256 input has two prediction heads:
+//   - stride 16 → 16×16 grid × 2 anchors/cell = 512 anchors → box_coords_1 / box_scores_1
+//   - stride 32 →  8×8 grid × 6 anchors/cell = 384 anchors → box_coords_2 / box_scores_2
+// All anchors at a given cell share the same center; the model learns to
+// emit different bboxes per anchor index. We precompute once.
+const ANCHORS_HEAD_1 = buildAnchors(16, 16, 2);
+const ANCHORS_HEAD_2 = buildAnchors(8,  32, 6);
+
+function buildAnchors(gridSize, stride, anchorsPerCell) {
+  const out = new Float32Array(gridSize * gridSize * anchorsPerCell * 2);
+  let i = 0;
+  for (let y = 0; y < gridSize; y++) {
+    for (let x = 0; x < gridSize; x++) {
+      const cx = (x + 0.5) * stride;
+      const cy = (y + 0.5) * stride;
+      for (let a = 0; a < anchorsPerCell; a++) {
+        out[i++] = cx;
+        out[i++] = cy;
+      }
+    }
+  }
+  return out; // [cx0, cy0, cx1, cy1, ...] in pixel-space of the 256×256 input
+}
+
+// --- Public API ------------------------------------------------------------
+
+/**
+ * Read-only check: do we already have stored consent for this model
+ * version? Used by the redact tool to skip the modal on repeat clicks.
+ */
+export function hasStoredConsent() {
+  if (consentOverrideForTest === 'grant') return true;
+  if (consentOverrideForTest === 'deny')  return false;
+  try {
+    return localStorage.getItem(CONSENT_KEY) === VENDOR_HASH;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Show the consent modal if needed, return true on grant. Persists the
+ * grant in localStorage (keyed by VENDOR_HASH so a future re-vendoring
+ * re-prompts).
+ */
+export async function ensureFaceConsent() {
+  if (consentOverrideForTest === 'grant') return true;
+  if (consentOverrideForTest === 'deny')  return false;
+  if (hasStoredConsent()) return true;
+  const granted = await showFaceConsentModal({ sizeLabel: VENDOR_SIZE_LABEL });
+  if (granted) {
+    try { localStorage.setItem(CONSENT_KEY, VENDOR_HASH); }
+    catch { /* private mode etc. — best-effort */ }
+  }
+  return granted;
+}
+
+/**
+ * Detect faces in `bitmap`. Resolves to an array of axis-aligned rects in
+ * SOURCE-PIXEL space — { x, y, w, h, score } — sorted by descending score
+ * after NMS.
+ *
+ * Throws 'face_consent_declined' if the user cancels the consent modal.
+ *
+ * @param {ImageBitmap | HTMLCanvasElement | OffscreenCanvas} bitmap
+ * @param {{ sensitivity?: 'strict' | 'normal' | 'loose' }} [opts]
+ * @returns {Promise<Array<{x: number, y: number, w: number, h: number, score: number}>>}
+ */
+export async function detectFaces(bitmap, opts = {}) {
+  if (!bitmap || !bitmap.width || !bitmap.height) return [];
+  const granted = await ensureFaceConsent();
+  if (!granted) throw new Error('face_consent_declined');
+
+  const session = await loadSession();
+  const threshold = thresholdForSensitivity(opts.sensitivity);
+
+  // 1. Global scan: the whole image letterboxed into 256×256. Catches
+  //    larger faces near image-center.
+  const globalRects = await scanRegion(session, bitmap, null, threshold);
+
+  // 2. Tile scan: split into a 2×2 overlapping grid when the image is
+  //    big enough that the global downsample destroys small faces.
+  //    Skipped for small images (the global scan is already optimal).
+  const tiles = generateTiles(bitmap.width, bitmap.height);
+  const tileRects = [];
+  for (const tile of tiles) {
+    const rects = await scanRegion(session, bitmap, tile, threshold);
+    for (const r of rects) tileRects.push(r);
+  }
+
+  // 3. Merge global + tile results. They're all already in source-pixel
+  //    space (each scanRegion call returned source-space rects), so we
+  //    NMS at a permissive IoU — same face appearing in multiple scans
+  //    has very high overlap (~0.9+) and dedupes cleanly; adjacent
+  //    faces with natural 30-40% overlap both survive.
+  const all = globalRects.concat(tileRects);
+  const merged = nmsSourceSpace(all, TILE_MERGE_IOU).slice(0, MAX_DETECTIONS);
+  return merged;
+}
+
+// Run one full detect pass on either the whole bitmap (region === null)
+// or a sub-region. Returns rects in SOURCE-PIXEL coordinates regardless.
+async function scanRegion(session, bitmap, region, scoreThreshold) {
+  const W = region ? region.w : bitmap.width;
+  const H = region ? region.h : bitmap.height;
+  const offsetX = region ? region.x : 0;
+  const offsetY = region ? region.y : 0;
+  const { tensor, scale, dx, dy } = preprocess(bitmap, region);
+  const outputs = await session.run(tensor);
+  const detections = decode(outputs, scoreThreshold);
+  const localRects = nms(detections, IOU_THRESHOLD)
+    .slice(0, MAX_DETECTIONS)
+    .map(d => unLetterbox(d, W, H, scale, dx, dy));
+  // Translate from region-local pixel coords back to source-pixel coords.
+  return localRects.map(r => ({
+    x: r.x + offsetX,
+    y: r.y + offsetY,
+    w: r.w,
+    h: r.h,
+    score: r.score,
+  }));
+}
+
+// Build a 2×2 tile grid with 25% overlap covering the source bitmap.
+// Returns [] for small images (no tiling needed). Tiles overlap their
+// neighbors by TILE_OVERLAP of cell size so faces straddling the seam
+// get caught in at least one tile.
+function generateTiles(srcW, srcH) {
+  if (Math.max(srcW, srcH) <= TILE_TRIGGER_PX) return [];
+
+  // 2×2 grid: each "cell" is half the image; each tile extends the
+  // cell into its neighbors by TILE_OVERLAP × cellSize on each inner edge.
+  const halfW = Math.ceil(srcW / 2);
+  const halfH = Math.ceil(srcH / 2);
+  const padX  = Math.round(halfW * TILE_OVERLAP);
+  const padY  = Math.round(halfH * TILE_OVERLAP);
+
+  const left   = 0;
+  const right  = Math.max(0, halfW - padX);
+  const top    = 0;
+  const bottom = Math.max(0, halfH - padY);
+  const topInnerH    = Math.min(srcH, halfH + padY);
+  const leftInnerW   = Math.min(srcW, halfW + padX);
+  const rightTileW   = srcW - right;
+  const bottomTileH  = srcH - bottom;
+
+  return [
+    // Top-left
+    { x: left,  y: top,    w: leftInnerW, h: topInnerH },
+    // Top-right
+    { x: right, y: top,    w: rightTileW, h: topInnerH },
+    // Bottom-left
+    { x: left,  y: bottom, w: leftInnerW, h: bottomTileH },
+    // Bottom-right
+    { x: right, y: bottom, w: rightTileW, h: bottomTileH },
+  ];
+}
+
+// NMS over source-space rects ({x, y, w, h, score}). Separate from the
+// nms() used inside scanRegion (which works on x_min/x_max-style
+// detections) because shape differs.
+function nmsSourceSpace(rects, iouThreshold) {
+  const arr = rects.slice().sort((a, b) => b.score - a.score);
+  const kept = [];
+  for (const r of arr) {
+    let overlap = false;
+    for (const k of kept) {
+      if (iouRectXYWH(r, k) > iouThreshold) { overlap = true; break; }
+    }
+    if (!overlap) kept.push(r);
+  }
+  return kept;
+}
+
+function iouRectXYWH(a, b) {
+  const aL = a.x, aR = a.x + a.w, aT = a.y, aB = a.y + a.h;
+  const bL = b.x, bR = b.x + b.w, bT = b.y, bB = b.y + b.h;
+  const xMin = Math.max(aL, bL);
+  const yMin = Math.max(aT, bT);
+  const xMax = Math.min(aR, bR);
+  const yMax = Math.min(aB, bB);
+  if (xMax <= xMin || yMax <= yMin) return 0;
+  const inter = (xMax - xMin) * (yMax - yMin);
+  const aArea = a.w * a.h;
+  const bArea = b.w * b.h;
+  return inter / (aArea + bArea - inter);
+}
+
+/**
+ * Batch face detection: iterate `imageIds`, lazy-decode each bitmap via the
+ * supplied `getBitmap` function, run detectFaces against the (already-
+ * consented) session, and pass per-image rects to `onImageDone`. The
+ * caller is responsible for writing the resulting overlays into state (we
+ * stay decoupled so the caller can wrap everything in one history
+ * transaction).
+ *
+ * The decode-detect-discard loop is sequential to avoid OOM on phones —
+ * decoding 50 bitmaps simultaneously would blow through memory.
+ *
+ * @param {string[]} imageIds
+ * @param {(id: string) => Promise<ImageBitmap | null>} getBitmap
+ * @param {{
+ *   sensitivity?: 'strict'|'normal'|'loose',
+ *   onProgress?: (msg: {done: number, total: number, imageId: string}) => void,
+ *   shouldAbort?: () => boolean,
+ *   onImageDone?: (imageId: string, rects: Array<object>) => void,
+ * }} [opts]
+ * @returns {Promise<{ totalFaces: number, imagesScanned: number, aborted: boolean }>}
+ */
+export async function detectFacesBatch(imageIds, getBitmap, opts = {}) {
+  const ids = Array.isArray(imageIds) ? imageIds : [];
+  const total = ids.length;
+  if (total === 0) return { totalFaces: 0, imagesScanned: 0, aborted: false };
+
+  const granted = await ensureFaceConsent();
+  if (!granted) throw new Error('face_consent_declined');
+
+  const onProgress = typeof opts.onProgress === 'function' ? opts.onProgress : () => {};
+  const onImageDone = typeof opts.onImageDone === 'function' ? opts.onImageDone : () => {};
+  const shouldAbort = typeof opts.shouldAbort === 'function' ? opts.shouldAbort : () => false;
+
+  // Warm the session once before iterating (saves N-1 redundant probes).
+  await loadSession();
+
+  let totalFaces = 0;
+  let scanned = 0;
+  for (const id of ids) {
+    if (shouldAbort()) {
+      return { totalFaces, imagesScanned: scanned, aborted: true };
+    }
+    onProgress({ done: scanned, total, imageId: id });
+    let bitmap = null;
+    try {
+      bitmap = await getBitmap(id);
+      if (!bitmap) { scanned++; continue; }
+      const rects = await detectFaces(bitmap, opts);
+      totalFaces += rects.length;
+      onImageDone(id, rects);
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.warn(`detectFacesBatch: image ${id} failed`, err);
+    }
+    scanned++;
+  }
+  onProgress({ done: total, total, imageId: '' });
+  return { totalFaces, imagesScanned: scanned, aborted: false };
+}
+
+// --- Session lifecycle ----------------------------------------------------
+
+async function loadSession() {
+  if (testSessionForTest) return testSessionForTest;
+  if (sessionPromise) return sessionPromise;
+  sessionPromise = (async () => {
+    // Probe WebGPU support before choosing a bundle. If the device has
+    // navigator.gpu we load the WebGPU bundle (faster inference); else we
+    // load the CPU bundle (still ~200 ms for BlazeFace — plenty fast).
+    //
+    // CRITICAL: the CPU bundle does NOT include the JSEP WASM. Requesting
+    // executionProviders: ['webgpu', ...] against the CPU bundle triggers
+    // an external WASM fetch for /ort-wasm-simd-threaded.jsep.wasm that
+    // 404s, and the CPU-only retry inside ORT fails because initWasm()
+    // is already in a broken state. So we ONLY pass executionProviders
+    // the loaded bundle can actually serve.
+    let caps;
+    try { caps = await probeCapabilities(); }
+    catch { caps = { webGPU: false }; }
+    const useGpu = !!caps.webGPU;
+    const specifier = useGpu ? ORT_WEBGPU_SPECIFIER : ORT_CPU_SPECIFIER;
+    const providers = useGpu ? ['webgpu', 'cpu'] : ['cpu'];
+
+    let ort;
+    try {
+      ort = await import(/* @vite-ignore */ specifier);
+    } catch (err) {
+      sessionPromise = null;
+      throw new Error('face_ort_load_failed: ' + (err && err.message ? err.message : err));
+    }
+
+    // Pre-fetch both the .onnx and its companion .data file as bytes.
+    // Doing this here (instead of letting ORT's URL loader try) lets us
+    // pass the external-data buffer explicitly via the externalData
+    // option, which is the only way ORT-Web supports external weights.
+    let modelBytes, dataBytes;
+    try {
+      const [modelRes, dataRes] = await Promise.all([
+        fetch(MODEL_URL),
+        fetch(MODEL_DATA_URL),
+      ]);
+      if (!modelRes.ok) throw new Error(`model fetch ${modelRes.status}`);
+      if (!dataRes.ok)  throw new Error(`weights fetch ${dataRes.status}`);
+      [modelBytes, dataBytes] = await Promise.all([
+        modelRes.arrayBuffer(),
+        dataRes.arrayBuffer(),
+      ]);
+    } catch (err) {
+      sessionPromise = null;
+      throw new Error('face_model_fetch_failed: ' + (err && err.message ? err.message : err));
+    }
+
+    const sessionOptions = {
+      executionProviders: providers,
+      graphOptimizationLevel: 'all',
+      externalData: [
+        { data: new Uint8Array(dataBytes), path: MODEL_DATA_NAME },
+      ],
+    };
+
+    let inferenceSession;
+    try {
+      inferenceSession = await ort.InferenceSession.create(new Uint8Array(modelBytes), sessionOptions);
+    } catch (err) {
+      // If we requested WebGPU and it failed (e.g. adapter disappeared
+      // post-probe), we CAN'T just retry against the same module — once
+      // ORT's WASM init is broken there's no recovery. Re-import the CPU
+      // bundle fresh and try again with the bytes we already fetched.
+      if (useGpu) {
+        try {
+          const cpuOrt = await import(/* @vite-ignore */ ORT_CPU_SPECIFIER);
+          inferenceSession = await cpuOrt.InferenceSession.create(new Uint8Array(modelBytes), {
+            ...sessionOptions,
+            executionProviders: ['cpu'],
+            // externalData buffers were consumed by the first try; rebuild a fresh view.
+            externalData: [{ data: new Uint8Array(dataBytes), path: MODEL_DATA_NAME }],
+          });
+          ort = cpuOrt;
+        } catch (cpuErr) {
+          sessionPromise = null;
+          throw new Error('face_session_create_failed: ' + (cpuErr && cpuErr.message ? cpuErr.message : cpuErr));
+        }
+      } else {
+        sessionPromise = null;
+        throw new Error('face_session_create_failed: ' + (err && err.message ? err.message : err));
+      }
+    }
+    return {
+      async run(tensor) {
+        const inputTensor = new ort.Tensor('float32', tensor, [1, 3, INPUT_SIZE, INPUT_SIZE]);
+        const result = await inferenceSession.run({ image: inputTensor });
+        return result;
+      },
+    };
+  })();
+  return sessionPromise;
+}
+
+// --- Preprocess -----------------------------------------------------------
+//
+// Letterbox the source bitmap (or a sub-region of it) into 256×256 with
+// black padding so the aspect ratio is preserved (a stretched landscape
+// photo squashes faces vertically and drops detection scores). Pixels
+// normalized to [0, 1] and packed CHW (matches the model's NCHW input
+// layout).
+//
+// `region` is optional — when supplied, only that source-pixel rectangle
+// is letterboxed (used by tile-based scanning). The returned `scale`,
+// `dx`, `dy` are relative to the region, NOT the whole bitmap; callers
+// add the region offset back when mapping rects to source space.
+function preprocess(bitmap, region) {
+  const srcX = region ? region.x : 0;
+  const srcY = region ? region.y : 0;
+  const W = region ? region.w : bitmap.width;
+  const H = region ? region.h : bitmap.height;
+  const scale = Math.min(INPUT_SIZE / W, INPUT_SIZE / H);
+  const sw = Math.round(W * scale);
+  const sh = Math.round(H * scale);
+  const dx = Math.floor((INPUT_SIZE - sw) / 2);
+  const dy = Math.floor((INPUT_SIZE - sh) / 2);
+
+  const c = createCanvas(INPUT_SIZE, INPUT_SIZE);
+  const ctx = c.getContext('2d');
+  // Black letterbox bars — match MediaPipe's default behavior.
+  ctx.fillStyle = '#000';
+  ctx.fillRect(0, 0, INPUT_SIZE, INPUT_SIZE);
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = 'high';
+  // 9-arg drawImage handles both the full-bitmap path (srcX=srcY=0,
+  // W=bitmap.width) and the tile-region path identically.
+  ctx.drawImage(bitmap, srcX, srcY, W, H, dx, dy, sw, sh);
+  const imageData = ctx.getImageData(0, 0, INPUT_SIZE, INPUT_SIZE);
+  const pixels = imageData.data;
+  const plane = INPUT_SIZE * INPUT_SIZE;
+  const tensor = new Float32Array(3 * plane);
+  // RGBA → NCHW float [0, 1]. Skipping alpha.
+  for (let i = 0; i < plane; i++) {
+    tensor[0 * plane + i] = pixels[i * 4 + 0] / 255; // R
+    tensor[1 * plane + i] = pixels[i * 4 + 1] / 255; // G
+    tensor[2 * plane + i] = pixels[i * 4 + 2] / 255; // B
+  }
+  return { tensor, scale, dx, dy };
+}
+
+function createCanvas(w, h) {
+  if (typeof OffscreenCanvas !== 'undefined') {
+    try { return new OffscreenCanvas(w, h); } catch { /* fall through */ }
+  }
+  const c = document.createElement('canvas');
+  c.width = w; c.height = h;
+  return c;
+}
+
+// --- Decode ----------------------------------------------------------------
+//
+// Walk both prediction heads, sigmoid-activate the score logits, filter
+// against the supplied threshold, and turn each surviving anchor's
+// regressor into a normalized [0, 1] bbox in the 256×256 input space.
+// The regressor encoding is pixel-space-relative-to-anchor — i.e.
+// cx = anchor.cx + dx — which matches MediaPipe's original BlazeFace
+// decoder.
+function decode(outputs, scoreThreshold) {
+  const detections = [];
+  decodeHead(outputs.box_coords_1.data, outputs.box_scores_1.data, ANCHORS_HEAD_1, detections, scoreThreshold);
+  decodeHead(outputs.box_coords_2.data, outputs.box_scores_2.data, ANCHORS_HEAD_2, detections, scoreThreshold);
+  return detections;
+}
+
+function decodeHead(coords, scores, anchors, out, scoreThreshold) {
+  const n = scores.length;
+  for (let i = 0; i < n; i++) {
+    const score = sigmoid(scores[i]);
+    if (score < scoreThreshold) continue;
+    const c = i * 16;
+    const ax = anchors[i * 2 + 0];
+    const ay = anchors[i * 2 + 1];
+    const dxRaw = coords[c + 0];
+    const dyRaw = coords[c + 1];
+    const dw    = coords[c + 2];
+    const dh    = coords[c + 3];
+    const cx = ax + dxRaw;
+    const cy = ay + dyRaw;
+    const w  = Math.abs(dw);
+    const h  = Math.abs(dh);
+    if (w <= 0 || h <= 0) continue;
+    out.push({
+      // Normalized [0, 1] coords against the 256×256 letterboxed input.
+      x_min: (cx - w / 2) / INPUT_SIZE,
+      y_min: (cy - h / 2) / INPUT_SIZE,
+      x_max: (cx + w / 2) / INPUT_SIZE,
+      y_max: (cy + h / 2) / INPUT_SIZE,
+      score,
+    });
+  }
+}
+
+function sigmoid(x) {
+  // Numerically stable form — avoids overflow on large positive logits.
+  if (x >= 0) {
+    const z = Math.exp(-x);
+    return 1 / (1 + z);
+  } else {
+    const z = Math.exp(x);
+    return z / (1 + z);
+  }
+}
+
+// --- NMS -------------------------------------------------------------------
+//
+// Greedy NMS: sort by descending score, keep boxes that don't overlap any
+// already-kept box by more than IOU_THRESHOLD. ~30 lines, no fancy data
+// structures — at most ~50 candidates after thresholding so O(N²) is fine.
+function nms(detections, iouThreshold) {
+  detections.sort((a, b) => b.score - a.score);
+  const kept = [];
+  for (const det of detections) {
+    let overlap = false;
+    for (const k of kept) {
+      if (iou(det, k) > iouThreshold) { overlap = true; break; }
+    }
+    if (!overlap) kept.push(det);
+  }
+  return kept;
+}
+
+function iou(a, b) {
+  const xMin = Math.max(a.x_min, b.x_min);
+  const yMin = Math.max(a.y_min, b.y_min);
+  const xMax = Math.min(a.x_max, b.x_max);
+  const yMax = Math.min(a.y_max, b.y_max);
+  if (xMax <= xMin || yMax <= yMin) return 0;
+  const inter = (xMax - xMin) * (yMax - yMin);
+  const aArea = (a.x_max - a.x_min) * (a.y_max - a.y_min);
+  const bArea = (b.x_max - b.x_min) * (b.y_max - b.y_min);
+  return inter / (aArea + bArea - inter);
+}
+
+// --- Un-letterbox ----------------------------------------------------------
+//
+// Map a detection from 256×256-normalized [0, 1] coords back into the
+// source bitmap's pixel space, accounting for the letterbox offset + scale
+// applied during preprocess. Output rect is {x, y, w, h} suitable for
+// wrapping in a redact overlay.
+function unLetterbox(det, srcW, srcH, scale, dx, dy) {
+  // Step 1: normalized [0, 1] of 256×256 → pixel coords in 256×256 space.
+  const ix_min = det.x_min * INPUT_SIZE;
+  const iy_min = det.y_min * INPUT_SIZE;
+  const ix_max = det.x_max * INPUT_SIZE;
+  const iy_max = det.y_max * INPUT_SIZE;
+  // Step 2: subtract letterbox offsets, scale back to source.
+  const sx_min = (ix_min - dx) / scale;
+  const sy_min = (iy_min - dy) / scale;
+  const sx_max = (ix_max - dx) / scale;
+  const sy_max = (iy_max - dy) / scale;
+  // Step 3: clamp to source bounds (a bbox that extends slightly past the
+  // image edge isn't useful for a redact, and the renderer would clip it
+  // anyway).
+  const x = Math.max(0, Math.min(srcW, sx_min));
+  const y = Math.max(0, Math.min(srcH, sy_min));
+  const w = Math.max(0, Math.min(srcW, sx_max) - x);
+  const h = Math.max(0, Math.min(srcH, sy_max) - y);
+  return { x, y, w, h, score: det.score };
+}
+
+// --- Test escape hatches --------------------------------------------------
+
+export function _setConsentForTest(mode) {
+  consentOverrideForTest = mode || null;
+}
+
+export function _setSessionForTest(sess) {
+  testSessionForTest = sess || null;
+}
+
+export function _resetForTest() {
+  consentOverrideForTest = null;
+  sessionPromise = null;
+  testSessionForTest = null;
+  try { localStorage.removeItem(CONSENT_KEY); } catch { /* ignore */ }
+}
