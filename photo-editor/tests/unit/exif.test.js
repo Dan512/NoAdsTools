@@ -1,6 +1,6 @@
 // tests/unit/exif.test.js — unit tests for the metadata detector.
 //
-// The detector lives in js/exif.js. It's a hand-rolled parser that walks
+// The detector lives in shared/exif.js. It's a hand-rolled parser that walks
 // JPEG markers, PNG chunks, and WebP RIFF chunks looking for EXIF, XMP, and
 // GPS evidence. We DO NOT decode any payloads — only detect presence.
 //
@@ -12,7 +12,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
 // Blob is available in Node 24 globally. arrayBuffer() is supported.
-import { hasMetadata, extractExifSegment, injectExifIntoJpeg, extractExifFromHeif } from '../../js/exif.js';
+import { hasMetadata, extractExifSegment, injectExifIntoJpeg, extractExifFromHeif } from '../../../shared/exif.js';
 
 // --- Fixture builders ---------------------------------------------------
 //

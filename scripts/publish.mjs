@@ -49,6 +49,7 @@ const INCLUDE = [
   'LICENSE',
   'README.md',
   'THIRD-PARTY.md',
+  'vendor/',
 
   // The shared shell (AGPL corresponding source, incl. its tests + harness)
   'shared/',

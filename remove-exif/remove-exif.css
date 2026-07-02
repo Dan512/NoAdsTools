@@ -1,0 +1,68 @@
+/* remove-exif.css — tool-only styles. Tokens/chrome come from /shared/shell.css.
+   Colorblind-safe: the GPS warning row uses an icon + bold label, the verified
+   row a ✓ + label — state never rides hue alone. */
+#tool { max-width: 720px; margin: 0 auto; padding: var(--space-2xl) var(--space-xl) var(--space-4xl); }
+#tool h1 { margin: 0 0 var(--space-sm); font-size: var(--t-2xl); font-weight: 600; }
+.tool-lead { margin: 0 0 var(--space-xl); color: var(--text-secondary); font-size: var(--t-lg); }
+
+.dropzone {
+  border: 2px dashed var(--border-strong);
+  border-radius: var(--radius-card);
+  padding: var(--space-2xl);
+  text-align: center;
+  background: var(--surface);
+}
+.dropzone.is-drag { border-color: var(--accent); background: var(--surface-2); }
+.dropzone p { margin: 0 0 var(--space-sm); }
+.dropzone-hint { color: var(--text-muted); font-size: var(--t-sm); }
+.file-label {
+  position: relative;
+  display: inline-block;
+  padding: var(--space-sm) var(--space-lg);
+  border-radius: var(--radius-control);
+  background: var(--accent);
+  color: var(--accent-contrast);
+  font-weight: 500;
+  cursor: pointer;
+}
+/* Visually hidden, NOT display:none — the input stays focusable and in the
+   a11y tree so keyboard users can Tab to it and press Enter/Space.
+   Same clip pattern as shell.css's .visually-hidden utility. */
+.file-label input {
+  position: absolute !important;
+  width: 1px !important; height: 1px !important;
+  margin: -1px !important; padding: 0 !important;
+  border: 0 !important; clip: rect(0 0 0 0) !important;
+  clip-path: inset(50%) !important; overflow: hidden !important;
+  white-space: nowrap !important;
+}
+.file-label:focus-within { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+
+.results { margin: var(--space-xl) 0; }
+.results-actions { display: flex; gap: var(--space-sm); margin-bottom: var(--space-md); }
+.results-actions button {
+  border: 1px solid var(--border-strong);
+  background: var(--surface);
+  padding: var(--space-sm) var(--space-lg);
+  border-radius: var(--radius-control);
+}
+#result-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--space-md); }
+.result-row {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  background: var(--surface);
+  padding: var(--space-lg);
+}
+.result-name { font-weight: 600; margin-bottom: var(--space-sm); overflow-wrap: anywhere; }
+.report { display: flex; flex-direction: column; gap: var(--space-xs); font-size: var(--t-sm); }
+.report-gps { font-weight: 600; }
+.report-gps.is-found::before { content: "⚠ "; }
+.report-gps.is-clear::before { content: "— "; color: var(--text-muted); }
+.verified-clean { font-weight: 600; margin-top: var(--space-sm); }
+.verified-clean::before { content: "✓ "; }
+.result-note { color: var(--text-muted); font-size: var(--t-sm); }
+.result-error { color: var(--danger); font-weight: 500; }
+.result-row .download-one { margin-top: var(--space-sm); }
+.tool-copy { margin-top: var(--space-3xl); }
+.faq dt { font-weight: 600; margin-top: var(--space-lg); }
+.faq dd { margin: var(--space-xs) 0 0; color: var(--text-secondary); }

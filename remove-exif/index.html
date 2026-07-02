@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Remove EXIF Data — Free, No Upload · NoAdsTools</title>
+  <meta name="description" content="Remove EXIF metadata — GPS location, camera model, timestamps — from JPG, PNG, and WebP photos. Free, runs entirely in your browser, pixels untouched. No upload, no account.">
+  <meta name="theme-color" content="#0f1410">
+  <link rel="canonical" href="https://noadstools.com/remove-exif/">
+  <link rel="icon" type="image/png" sizes="192x192" href="/photo-editor/img/favicon-light-192.png">
+  <link rel="stylesheet" href="/shared/shell.css">
+  <link rel="stylesheet" href="./remove-exif.css">
+
+  <meta property="og:title" content="Remove EXIF Data — Free, No Upload">
+  <meta property="og:description" content="Strip GPS location and camera metadata from photos, entirely in your browser. Lossless — pixels untouched.">
+  <meta property="og:url" content="https://noadstools.com/remove-exif/">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="NoAdsTools">
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="Remove EXIF Data — Free, No Upload">
+  <meta name="twitter:description" content="Strip GPS location and camera metadata from photos, entirely in your browser. Lossless — pixels untouched.">
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "NoAdsTools Remove EXIF Data",
+    "url": "https://noadstools.com/remove-exif/",
+    "description": "Remove EXIF metadata (GPS location, camera details, timestamps) from JPG, PNG, and WebP images entirely in your browser. Lossless: image pixels are untouched.",
+    "applicationCategory": "MultimediaApplication",
+    "operatingSystem": "Any (browser-based)",
+    "browserRequirements": "Any modern browser. No install, no account.",
+    "isAccessibleForFree": true,
+    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+    "license": "https://www.gnu.org/licenses/agpl-3.0.html"
+  }
+  </script>
+</head>
+<body>
+  <main id="tool">
+    <h1>Remove EXIF data</h1>
+    <p class="tool-lead">Strip location, camera, and timestamp metadata from photos — entirely in your browser. Your images never leave your device, and the pixels are untouched.</p>
+
+    <section class="dropzone" id="dropzone">
+      <p><strong>Drag photos here</strong>, paste, or</p>
+      <label class="file-label">Choose files<input id="file-input" type="file" accept="image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp" multiple></label>
+      <p class="dropzone-hint">JPG, PNG, WebP · multiple files welcome · nothing is uploaded</p>
+    </section>
+
+    <div id="results" class="results" hidden>
+      <div class="results-actions">
+        <button type="button" id="download-all">Download all</button>
+        <button type="button" id="download-zip">Download ZIP</button>
+        <button type="button" id="clear-all">Clear</button>
+      </div>
+      <ul id="result-list"></ul>
+    </div>
+
+    <section class="prose tool-copy">
+      <h2>What is EXIF data?</h2>
+      <p>Every photo from a phone or camera carries hidden metadata called EXIF: where the photo was taken (GPS coordinates), when, on what device, with what settings, and often which software touched it. Share the file and you share all of that with it. A photo posted from your home can reveal your home's coordinates to anyone who checks.</p>
+      <h2>How this tool works — and why it's private</h2>
+      <p>This page removes metadata by editing the file's bytes directly in your browser: the metadata blocks are cut out, and everything else — including every pixel — is copied through untouched. Nothing is re-compressed, so there is zero quality loss. And because the work happens on your device, your photos are never uploaded anywhere: you can load this page, disconnect from the internet, and it still works. After cleaning, the tool re-scans its own output and shows you a "verified clean" check.</p>
+      <p>The full source code is <a href="https://github.com/Dan512/NoAdsTools" target="_blank" rel="noopener">public on GitHub</a> (AGPL-3.0), and the privacy panel in the footer lists everything this page loads.</p>
+      <h2>What gets removed — and what stays</h2>
+      <p>Removed: EXIF (including GPS), XMP, IPTC/Photoshop blocks, text comments, PNG timestamps, and any data appended after the image ends (motion-photo video clips can carry their own GPS). Kept: everything that affects how your image looks — color profiles (ICC), rendering settings, and the image data itself, byte for byte.</p>
+
+      <h2>Questions</h2>
+      <dl class="faq">
+        <dt>Are my photos uploaded to a server?</dt>
+        <dd>No. The cleaning happens in your browser using JavaScript this page loads from its own site. You can verify: open your browser's DevTools Network tab while using the tool — no image data leaves your device.</dd>
+        <dt>Does it remove GPS location?</dt>
+        <dd>Yes. GPS coordinates live in the EXIF block, which is removed entirely. The report tells you whether location data was present before cleaning.</dd>
+        <dt>Does image quality change?</dt>
+        <dd>No. Unlike tools that re-save the image, this tool removes only the metadata bytes. The image data is copied through unchanged — the cleaned file's pixels are identical to the original's.</dd>
+        <dt>Can I clean multiple photos at once?</dt>
+        <dd>Yes — drop as many as you like, then download them individually, all at once, or as a single ZIP.</dd>
+        <dt>What about "motion photos"?</dt>
+        <dd>Some phones (Samsung, Google) append a short video after the photo — with its own location track. This tool removes that trailing data and tells you when it did. The still image is untouched; the motion effect is lost, by design.</dd>
+        <dt>What about HEIC photos from iPhones?</dt>
+        <dd>Not yet — HEIC needs converting first, and a free HEIC to JPG tool is coming to NoAdsTools soon.</dd>
+      </dl>
+
+      <h2>Related tools</h2>
+      <p><a href="/photo-editor/">Photo Editor</a> — crop, resize, redact, and batch-edit images (it also strips metadata on export). HEIC to JPG — coming soon.</p>
+    </section>
+  </main>
+
+  <script type="module" src="./js/main.js"></script>
+</body>
+</html>

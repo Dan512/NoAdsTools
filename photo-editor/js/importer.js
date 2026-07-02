@@ -6,7 +6,7 @@ import { escapeHtml } from '../../shared/escape.js';
 import { t } from './i18n.js';
 import { loadHeicDecoder } from './vendor/heic-loader.js';
 import { decodeHeicBatch } from './heicPool.js';
-import { extractExifFromHeif } from './exif.js';
+import { extractExifFromHeif } from '../../shared/exif.js';
 
 const ACCEPTED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
 // HEIC/HEIF go through the lazy libheif-js path (see vendor/heic-loader.js).
@@ -326,7 +326,7 @@ async function importOne(file, caps) {
       // EXIF segment extracted from a HEIC source at import time (null for
       // every other format). The exporter consults this when the user has
       // opted to keep metadata + the output is JPEG. See
-      // js/exif.js#extractExifFromHeif + js/exporter.js#maybePreserveExif.
+      // shared/exif.js#extractExifFromHeif + js/exporter.js#maybePreserveExif.
       exifSegment: stashedExifSegment,
       // True iff the original (pre-decode) input was HEIC/HEIF. HEIC importers
       // re-encode to PNG for storage, so `type` reads 'image/png' downstream

@@ -26,7 +26,7 @@ import { EncodeError } from './codec.js';
 import { escapeHtml } from '../../shared/escape.js';
 import { loadJSZip } from './vendor/jszip-loader.js';
 import { t } from './i18n.js';
-import { extractExifSegment, injectExifIntoJpeg } from './exif.js';
+import { extractExifSegment, injectExifIntoJpeg } from '../../shared/exif.js';
 import { bisectQuality, bisectQualityWithResize } from './ops/targetSize.js';
 import { shouldDownscale } from './ops/uploadReady.js';
 
@@ -1296,7 +1296,7 @@ function warnIfNeeded(img, caps) {
  *   1. `img.source.exifSegment` — pre-extracted at import time, currently
  *      set only for HEIC sources (the HEIF container's `Exif` item gets
  *      transcoded into a JPEG-compatible segment via extractExifFromHeif
- *      in js/exif.js). HEIC pixels are re-encoded as PNG at import, so by
+ *      in shared/exif.js). HEIC pixels are re-encoded as PNG at import, so by
  *      the time we get here `source.blob` no longer contains the original
  *      metadata — but the stashed segment does.
  *   2. Extracted on the spot from `img.source.blob` — works for JPEG

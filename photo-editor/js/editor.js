@@ -40,7 +40,7 @@ import { TARGET_SIZE_PRESETS, getActiveTargetBytes } from './targetSizePresets.j
 import { getSmartDefaultFormat } from './ops/formatSmart.js';
 import { renderForExport } from './render/exportRenderer.js';
 import { showToast } from './errors.js';
-import { hasMetadata } from './exif.js';
+import { hasMetadata } from '../../shared/exif.js';
 import { escapeHtml } from '../../shared/escape.js';
 import { t } from './i18n.js';
 

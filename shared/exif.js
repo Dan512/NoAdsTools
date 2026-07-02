@@ -1,4 +1,4 @@
-// js/exif.js — minimal metadata detector for exported Blobs.
+// shared/exif.js — minimal metadata detector + EXIF segment surgery (zero-dep, pure). Moved from photo-editor/js/ in SP3; used by the editor (export verify / EXIF-preserve) and the remove-exif tool ("verified clean" oracle).
 //
 // Purpose: when the user clicks "Verify last export", read the bytes of the
 // most recently exported Blob and check whether ANY metadata (EXIF / XMP /

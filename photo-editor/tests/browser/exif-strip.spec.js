@@ -18,7 +18,7 @@ import { test, expect } from '@playwright/test';
 // as binary files. The strategy: build a JPEG byte array in JS that
 // contains a real EXIF + GPS APP1 segment, wrap it in a File, import it
 // through the normal pipeline. After export, decode the exported Blob's
-// bytes with js/exif.js#hasMetadata and assert the expected presence /
+// bytes with shared/exif.js#hasMetadata and assert the expected presence /
 // absence.
 
 async function resetApp(page) {
@@ -93,7 +93,7 @@ async function importJpegWithExif(page) {
     const blob = new Blob([out], { type: 'image/jpeg' });
     const file = new File([blob], 'gps-photo.jpg', { type: 'image/jpeg' });
 
-    const { hasMetadata } = await import('/photo-editor/js/exif.js');
+    const { hasMetadata } = await import('/shared/exif.js');
     const sourceCheck = await hasMetadata(blob);
     window.__exifFixtureCheck = sourceCheck;
 
@@ -149,7 +149,7 @@ test('PNG export (default strip): contains NO EXIF, NO XMP, NO GPS', async ({ pa
     const { update } = await import('/photo-editor/js/state.js');
     update(s => { s.export.format = 'png'; });
     const blob = await exportSingle(id);
-    const { hasMetadata } = await import('/photo-editor/js/exif.js');
+    const { hasMetadata } = await import('/shared/exif.js');
     return await hasMetadata(blob);
   }, id);
 
@@ -170,7 +170,7 @@ test('JPG export (default strip): contains NO EXIF, NO XMP, NO GPS', async ({ pa
     const { update } = await import('/photo-editor/js/state.js');
     update(s => { s.export.format = 'jpeg'; s.export.quality = 0.9; });
     const blob = await exportSingle(id);
-    const { hasMetadata } = await import('/photo-editor/js/exif.js');
+    const { hasMetadata } = await import('/shared/exif.js');
     return await hasMetadata(blob);
   }, id);
 
@@ -194,7 +194,7 @@ test('WebP export (default strip): contains NO EXIF, NO XMP, NO GPS (where suppo
     const { update } = await import('/photo-editor/js/state.js');
     update(s => { s.export.format = 'webp'; s.export.quality = 0.9; });
     const blob = await exportSingle(id);
-    const { hasMetadata } = await import('/photo-editor/js/exif.js');
+    const { hasMetadata } = await import('/shared/exif.js');
     const check = await hasMetadata(blob);
     return { skipped: false, check };
   }, id);
@@ -226,7 +226,7 @@ test('JPG export with stripMetadata=false: EXIF + GPS survive (v1.1.2)', async (
       s.export.stripMetadata = false;
     });
     const blob = await exportSingle(id);
-    const { hasMetadata } = await import('/photo-editor/js/exif.js');
+    const { hasMetadata } = await import('/shared/exif.js');
     return await hasMetadata(blob);
   }, id);
 
@@ -249,7 +249,7 @@ test('PNG export with stripMetadata=false: still strips (cross-format preservati
       s.export.stripMetadata = false;
     });
     const blob = await exportSingle(id);
-    const { hasMetadata } = await import('/photo-editor/js/exif.js');
+    const { hasMetadata } = await import('/shared/exif.js');
     return await hasMetadata(blob);
   }, id);
 

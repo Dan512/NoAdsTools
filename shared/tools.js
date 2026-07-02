@@ -28,7 +28,7 @@ export const TOOLS = Object.freeze([
     status: 'live' },
   { slug: 'remove-exif', title: 'Remove EXIF data', category: 'image',
     blurb: 'Strip location and camera metadata from photos. Nothing uploaded.',
-    status: 'planned' },
+    status: 'live' },
   { slug: 'heic-to-jpg', title: 'HEIC to JPG', category: 'image',
     blurb: 'Convert iPhone HEIC photos to JPG, entirely on your device.',
     status: 'planned' },
