@@ -1,0 +1,106 @@
+/* heic-to-jpg.css — tool-only styles. Tokens/chrome come from /shared/shell.css.
+   Colorblind-safe: converted rows lead with a ✓ + bold label, errors with
+   wording + weight — state never rides hue alone. */
+#tool { max-width: 720px; margin: 0 auto; padding: var(--space-2xl) var(--space-xl) var(--space-4xl); }
+#tool h1 { margin: 0 0 var(--space-sm); font-size: var(--t-2xl); font-weight: 600; }
+.tool-lead { margin: 0 0 var(--space-xl); color: var(--text-secondary); font-size: var(--t-lg); }
+
+.dropzone {
+  border: 2px dashed var(--border-strong);
+  border-radius: var(--radius-card);
+  padding: var(--space-2xl);
+  text-align: center;
+  background: var(--surface);
+}
+.dropzone.is-drag { border-color: var(--accent); background: var(--surface-2); }
+.dropzone p { margin: 0 0 var(--space-sm); }
+.dropzone-hint { color: var(--text-muted); font-size: var(--t-sm); }
+.file-label {
+  position: relative;
+  display: inline-block;
+  padding: var(--space-sm) var(--space-lg);
+  border-radius: var(--radius-control);
+  background: var(--accent);
+  color: var(--accent-contrast);
+  font-weight: 500;
+  cursor: pointer;
+}
+/* Visually hidden, NOT display:none — the input stays focusable and in the
+   a11y tree so keyboard users can Tab to it and press Enter/Space.
+   Same clip pattern as shell.css's .visually-hidden utility. */
+.file-label input {
+  position: absolute !important;
+  width: 1px !important; height: 1px !important;
+  margin: -1px !important; padding: 0 !important;
+  border: 0 !important; clip: rect(0 0 0 0) !important;
+  clip-path: inset(50%) !important; overflow: hidden !important;
+  white-space: nowrap !important;
+}
+.file-label:focus-within { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+
+/* The honest 1.1 MB disclosure sits right under the dropzone — quiet, muted. */
+.decoder-note { margin: var(--space-sm) 0 0; color: var(--text-muted); font-size: var(--t-sm); text-align: center; }
+
+.options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-lg);
+  align-items: flex-start;
+  margin: var(--space-lg) 0;
+  padding: var(--space-lg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  background: var(--surface);
+}
+.option-quality { display: flex; flex-direction: column; gap: var(--space-xs); font-weight: 500; }
+.option-quality select {
+  padding: var(--space-xs) var(--space-sm);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-control);
+  background: var(--surface);
+  color: inherit;
+  font: inherit;
+}
+.option-keep label { display: flex; gap: var(--space-sm); align-items: baseline; font-weight: 500; cursor: pointer; }
+.option-keep-hint { margin: var(--space-xs) 0 0; color: var(--text-muted); font-size: var(--t-sm); }
+
+.results { margin: var(--space-xl) 0; }
+.results-actions { display: flex; gap: var(--space-sm); margin-bottom: var(--space-md); }
+.results-actions button {
+  border: 1px solid var(--border-strong);
+  background: var(--surface);
+  padding: var(--space-sm) var(--space-lg);
+  border-radius: var(--radius-control);
+}
+#result-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--space-md); }
+.result-row {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  background: var(--surface);
+  padding: var(--space-lg);
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: var(--space-xs) var(--space-lg);
+}
+.result-thumb {
+  grid-row: span 2;
+  width: 64px; height: 64px;
+  object-fit: cover;
+  border-radius: var(--radius-control);
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  align-self: start;
+}
+/* Rows start without a thumbnail (it appears after decode); keep the grid
+   from collapsing weirdly while the placeholder column is empty. */
+.result-row:not(.has-thumb) { grid-template-columns: 1fr; }
+.result-name { font-weight: 600; overflow-wrap: anywhere; }
+.report { display: flex; flex-direction: column; gap: var(--space-xs); font-size: var(--t-sm); }
+.convert-ok { font-weight: 600; }
+.convert-ok::before { content: "✓ "; }
+.result-note { color: var(--text-muted); }
+.result-error { color: var(--danger); font-weight: 500; }
+.result-row .download-one { margin-top: var(--space-sm); align-self: start; }
+.tool-copy { margin-top: var(--space-3xl); }
+.faq dt { font-weight: 600; margin-top: var(--space-lg); }
+.faq dd { margin: var(--space-xs) 0 0; color: var(--text-secondary); }

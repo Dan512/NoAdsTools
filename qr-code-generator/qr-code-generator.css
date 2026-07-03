@@ -1,0 +1,100 @@
+/* qr-code-generator.css — tool-only styles. Tokens/chrome come from
+   /shared/shell.css. Colorblind-safe: the active tab is filled + bolder +
+   aria-pressed (the homepage pill pattern); errors carry an icon + weight —
+   state never rides hue alone. */
+#tool { max-width: 720px; margin: 0 auto; padding: var(--space-2xl) var(--space-xl) var(--space-4xl); }
+#tool h1 { margin: 0 0 var(--space-sm); font-size: var(--t-2xl); font-weight: 600; }
+.tool-lead { margin: 0 0 var(--space-xl); color: var(--text-secondary); font-size: var(--t-lg); }
+
+/* Mode tabs — the homepage pill pattern: active = filled + weight, not hue alone. */
+.mode-tabs { display: flex; gap: var(--space-sm); margin-bottom: var(--space-lg); }
+.mode-tabs .pill {
+  padding: var(--space-xs) var(--space-lg);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-pill);
+  background: var(--surface);
+  color: var(--text-secondary);
+  font-size: var(--t-sm);
+  cursor: pointer;
+}
+.mode-tabs .pill:hover { background: var(--surface-2); }
+.mode-tabs .pill.is-active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-contrast);
+  font-weight: 600;
+}
+
+/* display:flex would defeat the hidden attribute (author styles beat the UA's
+   [hidden]{display:none}) — restore it explicitly. */
+.panel[hidden] { display: none; }
+.panel {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  background: var(--surface);
+  padding: var(--space-lg);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+.field { display: flex; flex-direction: column; gap: var(--space-xs); }
+.field-label { font-size: var(--t-sm); font-weight: 600; }
+.field-hint { margin: 0; font-size: var(--t-sm); color: var(--text-muted); }
+.panel textarea,
+.panel input[type="text"],
+.panel select,
+.options-row select {
+  font: inherit;
+  color: inherit;
+  background: var(--surface-2);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-control);
+  padding: var(--space-sm);
+}
+.panel textarea { resize: vertical; min-height: 4.5em; }
+.panel input[type="text"]:disabled { opacity: 0.55; cursor: not-allowed; }
+.check-label { display: flex; align-items: center; gap: var(--space-sm); font-size: var(--t-sm); }
+
+.options-row { display: flex; flex-wrap: wrap; gap: var(--space-lg); margin-top: var(--space-lg); }
+.options-row .field { min-width: 12rem; }
+.options-hint { margin: var(--space-xs) 0 0; font-size: var(--t-sm); color: var(--text-muted); }
+
+.preview {
+  margin-top: var(--space-xl);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  background: var(--surface);
+  padding: var(--space-xl);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-md);
+  text-align: center;
+}
+.qr-empty { margin: 0; color: var(--text-muted); }
+/* Error state: icon + weight + color — never hue alone. */
+.qr-error { margin: 0; color: var(--danger); font-weight: 600; }
+.qr-error::before { content: "⚠ "; }
+/* The canvas backing store is 256/512/1024 px (the download size); on screen
+   it scales down to fit. Pixelated keeps modules crisp when scaled. */
+#qr-canvas {
+  width: min(320px, 100%);
+  height: auto;
+  image-rendering: pixelated;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-control);
+  background: #fff; /* a QR needs a light quiet zone in BOTH themes */
+}
+.qr-meta { margin: 0; font-size: var(--t-sm); color: var(--text-muted); }
+.download-row { display: flex; gap: var(--space-sm); }
+.download-row button {
+  border: 1px solid var(--border-strong);
+  background: var(--surface);
+  padding: var(--space-sm) var(--space-lg);
+  border-radius: var(--radius-control);
+}
+.download-row button:disabled { opacity: 0.55; cursor: not-allowed; }
+
+.tool-copy { margin-top: var(--space-3xl); }
+.faq dt { font-weight: 600; margin-top: var(--space-lg); }
+.faq dd { margin: var(--space-xs) 0 0; color: var(--text-secondary); }

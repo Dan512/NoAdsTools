@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>HEIC to JPG Converter — Free, No Upload · NoAdsTools</title>
+  <meta name="description" content="Convert iPhone HEIC/HEIF photos to JPG entirely in your browser. Free, no upload, no account. Metadata stripped by default — keep it with one toggle.">
+  <meta name="theme-color" content="#0f1410">
+  <link rel="canonical" href="https://noadstools.com/heic-to-jpg/">
+  <link rel="icon" type="image/png" sizes="192x192" href="/photo-editor/img/favicon-light-192.png">
+  <link rel="stylesheet" href="/shared/shell.css">
+  <link rel="stylesheet" href="./heic-to-jpg.css">
+
+  <meta property="og:title" content="HEIC to JPG Converter — Free, No Upload">
+  <meta property="og:description" content="Convert iPhone HEIC photos to JPG entirely in your browser. Nothing is uploaded; metadata is stripped by default.">
+  <meta property="og:url" content="https://noadstools.com/heic-to-jpg/">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="NoAdsTools">
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="HEIC to JPG Converter — Free, No Upload">
+  <meta name="twitter:description" content="Convert iPhone HEIC photos to JPG entirely in your browser. Nothing is uploaded; metadata is stripped by default.">
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "NoAdsTools HEIC to JPG Converter",
+    "url": "https://noadstools.com/heic-to-jpg/",
+    "description": "Convert iPhone HEIC/HEIF photos to JPG entirely in your browser. No upload, no account. Photo metadata (EXIF/GPS) is stripped by default, with an optional keep toggle.",
+    "applicationCategory": "MultimediaApplication",
+    "operatingSystem": "Any (browser-based)",
+    "browserRequirements": "Any modern browser. No install, no account.",
+    "isAccessibleForFree": true,
+    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+    "license": "https://www.gnu.org/licenses/agpl-3.0.html"
+  }
+  </script>
+</head>
+<body>
+  <main id="tool">
+    <h1>HEIC to JPG converter</h1>
+    <p class="tool-lead">Convert iPhone HEIC photos to JPG — entirely in your browser. Your photos never leave your device: no upload, no account, no tracking.</p>
+
+    <section class="dropzone" id="dropzone">
+      <p><strong>Drag HEIC photos here</strong>, paste, or</p>
+      <label class="file-label">Choose files<input id="file-input" type="file" accept="image/heic,image/heif,.heic,.heif" multiple></label>
+      <p class="dropzone-hint">HEIC, HEIF · multiple files welcome · nothing is uploaded</p>
+    </section>
+    <p class="decoder-note">First convert loads a 1.1 MB decoder — from this site, nothing leaves your browser.</p>
+
+    <div class="options">
+      <label class="option-quality" for="quality">JPG quality
+        <select id="quality">
+          <option value="0.92" selected>High (recommended)</option>
+          <option value="0.98">Maximum (largest files)</option>
+          <option value="0.85">Smaller files</option>
+        </select>
+      </label>
+      <div class="option-keep">
+        <label><input type="checkbox" id="keep-metadata"> Keep photo info (date, camera, location)</label>
+        <p class="option-keep-hint">Off = the converted photo carries no EXIF/GPS.</p>
+      </div>
+    </div>
+
+    <div id="results" class="results" hidden>
+      <div class="results-actions">
+        <button type="button" id="download-all">Download all</button>
+        <button type="button" id="download-zip">Download ZIP</button>
+        <button type="button" id="clear-all">Clear</button>
+      </div>
+      <ul id="result-list"></ul>
+    </div>
+
+    <section class="prose tool-copy">
+      <h2>What is a HEIC file?</h2>
+      <p>HEIC (High Efficiency Image Container) is the format iPhones and many newer Android phones use to save photos. It stores the same picture in roughly half the space of a JPG — which is great on your phone, and a nuisance everywhere else. Plenty of websites, older programs, Windows machines, and printing services still refuse HEIC files. Converting to JPG makes the photo openable everywhere, at the cost of a somewhat larger file.</p>
+
+      <h2>How this converter works — and why it's private</h2>
+      <p>Most "free HEIC converters" upload your photos to a server, convert them there, and keep who-knows-what. This page doesn't. Your first conversion loads a 1.1 MB open-source decoder (libheif, compiled to WebAssembly) from this site — after that, everything happens on your own device. You can load this page, disconnect from the internet, and it still converts. Drop as many photos as you like; each becomes a JPG you can download individually, all at once, or as a single ZIP.</p>
+      <p>The full source code is <a href="https://github.com/Dan512/NoAdsTools" target="_blank" rel="noopener">public on GitHub</a> (AGPL-3.0), and the privacy panel in the footer lists everything this page loads.</p>
+
+      <h2>What happens to the photo's metadata</h2>
+      <p>HEIC photos from a phone carry hidden metadata (EXIF): GPS coordinates of where the photo was taken, the exact time, the camera model, and more. By default this converter does <strong>not</strong> carry that into the JPG — the converted file comes out clean, which is the safer choice for anything you're about to share. If you want to keep the date, camera details, and location (say, for your own archive), switch on <em>"Keep photo info"</em> before converting and the original EXIF is copied into the JPG byte-for-byte. Already have JPGs with metadata you want gone? Use our <a href="/remove-exif/">Remove EXIF data</a> tool.</p>
+
+      <h2>Questions</h2>
+      <dl class="faq">
+        <dt>Are my photos uploaded to a server?</dt>
+        <dd>No. The conversion runs in your browser using a decoder this page loads from its own site. You can verify: open your browser's DevTools Network tab while converting — no image data leaves your device.</dd>
+        <dt>Does converting lose quality?</dt>
+        <dd>HEIC and JPG are both lossy formats, so a conversion re-encodes the image. At the default "High" quality (92%) the difference is invisible in normal use. Pick "Maximum" if every last detail matters, or "Smaller files" to save space.</dd>
+        <dt>What happens to location and camera data?</dt>
+        <dd>It's stripped by default — the converted JPG carries no EXIF or GPS. Turn on "Keep photo info" to copy the original metadata into the JPG instead. If a photo has no metadata to begin with, the tool says so and converts it anyway.</dd>
+        <dt>Can I convert many photos at once?</dt>
+        <dd>Yes — drop as many as you like, then download them one by one, all at once, or packaged as a single ZIP.</dd>
+        <dt>What if my file is already a JPG or PNG?</dt>
+        <dd>The tool tells you there's nothing to convert — no fake processing. If what you actually want is the metadata removed from a JPG or PNG, that's the <a href="/remove-exif/">Remove EXIF data</a> tool's job.</dd>
+        <dt>Why does my iPhone save photos as HEIC in the first place?</dt>
+        <dd>Space. HEIC compresses about twice as efficiently as JPG, so your phone fits twice the photos. You can also make the phone shoot JPG directly: Settings → Camera → Formats → "Most Compatible".</dd>
+      </dl>
+
+      <h2>Related tools</h2>
+      <p><a href="/remove-exif/">Remove EXIF data</a> — strip location and camera metadata from JPG, PNG, and WebP photos. <a href="/photo-editor/">Photo Editor</a> — crop, resize, redact, and batch-edit images (it opens HEIC files too).</p>
+    </section>
+  </main>
+
+  <script type="module" src="./js/main.js"></script>
+</body>
+</html>

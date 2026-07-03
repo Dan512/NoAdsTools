@@ -31,16 +31,16 @@ export const TOOLS = Object.freeze([
     status: 'live' },
   { slug: 'heic-to-jpg', title: 'HEIC to JPG', category: 'image',
     blurb: 'Convert iPhone HEIC photos to JPG, entirely on your device.',
-    status: 'planned' },
+    status: 'live' },
   { slug: 'compress-images', title: 'Compress images', category: 'image',
     blurb: 'Shrink JPG, PNG, and WebP files without uploading them.',
     status: 'planned' },
   { slug: 'image-to-pdf', title: 'Image to PDF', category: 'pdf',
     blurb: 'Combine images into a single PDF, locally.',
-    status: 'planned' },
+    status: 'live' },
   { slug: 'qr-code-generator', title: 'QR Code Generator', category: 'generator',
     blurb: 'Make QR codes. No tracking, no account.',
-    status: 'planned' },
+    status: 'live' },
 ]);
 
 export function liveTools() {

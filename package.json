@@ -3,8 +3,8 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "test": "node --test --test-reporter=spec \"photo-editor/tests/unit/**/*.test.js\" \"shared/tests/unit/**/*.test.js\" \"remove-exif/tests/unit/**/*.test.js\"",
-    "test:watch": "node --test --watch --test-reporter=spec \"photo-editor/tests/unit/**/*.test.js\" \"shared/tests/unit/**/*.test.js\" \"remove-exif/tests/unit/**/*.test.js\"",
+    "test": "node --test --test-reporter=spec \"photo-editor/tests/unit/**/*.test.js\" \"shared/tests/unit/**/*.test.js\" \"remove-exif/tests/unit/**/*.test.js\" \"heic-to-jpg/tests/unit/**/*.test.js\" \"qr-code-generator/tests/unit/**/*.test.js\"",
+    "test:watch": "node --test --watch --test-reporter=spec \"photo-editor/tests/unit/**/*.test.js\" \"shared/tests/unit/**/*.test.js\" \"remove-exif/tests/unit/**/*.test.js\" \"heic-to-jpg/tests/unit/**/*.test.js\" \"qr-code-generator/tests/unit/**/*.test.js\"",
     "test:browser": "playwright test",
     "test:browser:headed": "playwright test --headed",
     "test:browser:install": "playwright install --with-deps chromium webkit firefox",

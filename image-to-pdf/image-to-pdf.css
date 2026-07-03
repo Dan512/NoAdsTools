@@ -1,0 +1,109 @@
+/* image-to-pdf.css — tool-only styles. Tokens/chrome come from /shared/shell.css.
+   Colorblind-safe: row state never rides hue alone — the Move/Remove buttons
+   carry glyph + word labels, disabled edges use the disabled attribute
+   (dimmed + inert), and error rows lead with a bold text message. */
+#tool { max-width: 720px; margin: 0 auto; padding: var(--space-2xl) var(--space-xl) var(--space-4xl); }
+#tool h1 { margin: 0 0 var(--space-sm); font-size: var(--t-2xl); font-weight: 600; }
+.tool-lead { margin: 0 0 var(--space-xl); color: var(--text-secondary); font-size: var(--t-lg); }
+
+.dropzone {
+  border: 2px dashed var(--border-strong);
+  border-radius: var(--radius-card);
+  padding: var(--space-2xl);
+  text-align: center;
+  background: var(--surface);
+}
+.dropzone.is-drag { border-color: var(--accent); background: var(--surface-2); }
+.dropzone p { margin: 0 0 var(--space-sm); }
+.dropzone-hint { color: var(--text-muted); font-size: var(--t-sm); }
+.file-label {
+  position: relative;
+  display: inline-block;
+  padding: var(--space-sm) var(--space-lg);
+  border-radius: var(--radius-control);
+  background: var(--accent);
+  color: var(--accent-contrast);
+  font-weight: 500;
+  cursor: pointer;
+}
+/* Visually hidden, NOT display:none — the input stays focusable and in the
+   a11y tree so keyboard users can Tab to it and press Enter/Space.
+   Same clip pattern as shell.css's .visually-hidden utility. */
+.file-label input {
+  position: absolute !important;
+  width: 1px !important; height: 1px !important;
+  margin: -1px !important; padding: 0 !important;
+  border: 0 !important; clip: rect(0 0 0 0) !important;
+  clip-path: inset(50%) !important; overflow: hidden !important;
+  white-space: nowrap !important;
+}
+.file-label:focus-within { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+
+.builder { margin: var(--space-xl) 0; }
+#page-list { list-style: none; margin: 0 0 var(--space-md); padding: 0; display: flex; flex-direction: column; gap: var(--space-md); }
+.pdf-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  background: var(--surface);
+  padding: var(--space-md) var(--space-lg);
+  flex-wrap: wrap;
+}
+.row-thumb {
+  width: 48px; height: 48px;
+  object-fit: contain;
+  flex: 0 0 auto;
+  border-radius: var(--radius-control);
+  background: var(--surface-2);
+}
+.row-body { flex: 1 1 200px; min-width: 0; }
+.row-name { font-weight: 600; overflow-wrap: anywhere; }
+.row-meta { color: var(--text-muted); font-size: var(--t-sm); }
+.row-controls { display: flex; gap: var(--space-xs); flex: 0 0 auto; }
+.row-controls button {
+  border: 1px solid var(--border-strong);
+  background: var(--surface);
+  padding: var(--space-xs) var(--space-sm);
+  border-radius: var(--radius-control);
+  font-size: var(--t-sm);
+  white-space: nowrap;
+}
+.row-controls button:disabled { opacity: 0.4; cursor: default; }
+.result-error { color: var(--danger); font-weight: 500; }
+.pdf-row .result-error { flex: 1 1 200px; }
+.pdf-row .result-error a { color: inherit; font-weight: 600; }
+
+.builder-options {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  flex-wrap: wrap;
+}
+.page-size-label { font-size: var(--t-sm); color: var(--text-secondary); }
+#page-size {
+  border: 1px solid var(--border-strong);
+  background: var(--surface);
+  color: inherit;
+  padding: var(--space-sm) var(--space-md);
+  border-radius: var(--radius-control);
+}
+.builder-options button {
+  border: 1px solid var(--border-strong);
+  background: var(--surface);
+  padding: var(--space-sm) var(--space-lg);
+  border-radius: var(--radius-control);
+}
+#create-pdf {
+  background: var(--accent);
+  color: var(--accent-contrast);
+  border-color: var(--accent);
+  font-weight: 500;
+}
+#create-pdf:disabled { opacity: 0.5; cursor: default; }
+#pdf-error { margin: var(--space-md) 0 0; }
+
+.tool-copy { margin-top: var(--space-3xl); }
+.faq dt { font-weight: 600; margin-top: var(--space-lg); }
+.faq dd { margin: var(--space-xs) 0 0; color: var(--text-secondary); }

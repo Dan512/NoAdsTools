@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>QR Code Generator — Free, No Tracking · NoAdsTools</title>
+  <meta name="description" content="Generate QR codes for links, text, and WiFi networks — free, no sign-up, no tracking. The code is made on your device; what you type never leaves your browser.">
+  <meta name="theme-color" content="#0f1410">
+  <link rel="canonical" href="https://noadstools.com/qr-code-generator/">
+  <link rel="icon" type="image/png" sizes="192x192" href="/photo-editor/img/favicon-light-192.png">
+  <link rel="stylesheet" href="/shared/shell.css">
+  <link rel="stylesheet" href="./qr-code-generator.css">
+
+  <meta property="og:title" content="QR Code Generator — Free, No Tracking">
+  <meta property="og:description" content="Make QR codes for links, text, and WiFi — generated on your device. No account, no expiry, no scan tracking.">
+  <meta property="og:url" content="https://noadstools.com/qr-code-generator/">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="NoAdsTools">
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="QR Code Generator — Free, No Tracking">
+  <meta name="twitter:description" content="Make QR codes for links, text, and WiFi — generated on your device. No account, no expiry, no scan tracking.">
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "NoAdsTools QR Code Generator",
+    "url": "https://noadstools.com/qr-code-generator/",
+    "description": "Generate QR codes for links, text, and WiFi networks entirely in your browser. Static codes: they never expire and can't be tracked. Free, no account, PNG and SVG downloads.",
+    "applicationCategory": "UtilitiesApplication",
+    "operatingSystem": "Any (browser-based)",
+    "browserRequirements": "Any modern browser. No install, no account.",
+    "isAccessibleForFree": true,
+    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+    "license": "https://www.gnu.org/licenses/agpl-3.0.html"
+  }
+  </script>
+</head>
+<body>
+  <main id="tool">
+    <h1>QR code generator</h1>
+    <p class="tool-lead">Make a QR code for a link, some text, or your WiFi network. The code is generated on your device — nothing you type leaves your browser.</p>
+
+    <div class="mode-tabs" role="group" aria-label="What the code contains">
+      <button type="button" class="pill is-active" id="tab-text" aria-pressed="true">Text / URL</button>
+      <button type="button" class="pill" id="tab-wifi" aria-pressed="false">WiFi</button>
+    </div>
+
+    <section class="panel" id="panel-text" aria-label="Text or URL">
+      <label class="field-label" for="text-input">Text or web address</label>
+      <textarea id="text-input" rows="3" placeholder="https://example.com — or any text" autocomplete="off" spellcheck="false"></textarea>
+    </section>
+
+    <section class="panel" id="panel-wifi" aria-label="WiFi network" hidden>
+      <div class="field">
+        <label class="field-label" for="wifi-ssid">Network name (SSID)</label>
+        <input id="wifi-ssid" type="text" autocomplete="off" autocapitalize="off" spellcheck="false">
+      </div>
+      <div class="field">
+        <label class="field-label" for="wifi-password">Password</label>
+        <input id="wifi-password" type="text" autocomplete="off" autocapitalize="off" spellcheck="false">
+        <p class="field-hint" id="wifi-password-hint" hidden>Open network — no password needed.</p>
+      </div>
+      <div class="field">
+        <label class="field-label" for="wifi-encryption">Security</label>
+        <select id="wifi-encryption">
+          <option value="WPA" selected>WPA / WPA2 (most networks)</option>
+          <option value="WEP">WEP (older routers)</option>
+          <option value="None">None — open network</option>
+        </select>
+      </div>
+      <label class="check-label"><input id="wifi-hidden" type="checkbox"> Hidden network (SSID not broadcast)</label>
+    </section>
+
+    <div class="options-row">
+      <div class="field">
+        <label class="field-label" for="qr-size">Size</label>
+        <select id="qr-size">
+          <option value="256">256 px</option>
+          <option value="512" selected>512 px</option>
+          <option value="1024">1024 px</option>
+        </select>
+      </div>
+      <div class="field">
+        <label class="field-label" for="qr-ecc">Error correction</label>
+        <select id="qr-ecc">
+          <option value="L">Low — smallest code</option>
+          <option value="M" selected>Medium — recommended</option>
+          <option value="Q">Quartile — sturdier</option>
+          <option value="H">High — sturdiest, densest</option>
+        </select>
+      </div>
+    </div>
+    <p class="options-hint">Higher error correction survives smudges and damage, but packs the code denser.</p>
+
+    <section class="preview">
+      <p class="qr-empty" id="qr-empty">Type something above and the code appears here.</p>
+      <p class="qr-error" id="qr-error" hidden></p>
+      <canvas id="qr-canvas" role="img" aria-label="Generated QR code" hidden></canvas>
+      <p class="qr-meta" id="qr-meta" aria-live="polite" hidden></p>
+      <div class="download-row">
+        <button type="button" id="download-png" disabled>Download PNG</button>
+        <button type="button" id="download-svg" disabled>Download SVG</button>
+      </div>
+    </section>
+
+    <section class="prose tool-copy">
+      <h2>Generated on your device</h2>
+      <p>Most online QR generators are web services: what you type is sent to their server, which sends a code image back. This page works differently. The generator is a small open-source library loaded from this site, and the code is generated on your device — URLs and WiFi passwords never leave your browser. You can load this page, go offline, and it still works. The privacy panel in the footer lists everything this page loads.</p>
+      <h2>Static codes — the honest kind</h2>
+      <p>QR services like to sell "dynamic" codes: the printed code points at their server, which redirects to your content. That's what lets them count scans and charge a subscription — and why those codes die when the subscription does. The codes made here are static: your text is encoded directly into the pattern. They never expire, can't be tracked, and there is no account to lapse. The honest trade-off: a static code can't be edited after printing, because the content <em>is</em> the pattern.</p>
+      <h2>WiFi QR codes</h2>
+      <p>A WiFi code lets guests join your network by pointing their camera at it — no typing, no reading the password aloud. Switch to the WiFi tab, enter the network name exactly as your router broadcasts it, the password, and the security type. Print the code and put it where guests sit; phones running iOS 11+ or Android 10+ scan it with the built-in camera.</p>
+
+      <h2>Questions</h2>
+      <dl class="faq">
+        <dt>Does my QR code expire?</dt>
+        <dd>No. The code encodes your text directly, so there is no service behind it that could shut down or start charging. It will scan for as long as QR readers exist.</dd>
+        <dt>Can anyone track how often my code is scanned?</dt>
+        <dd>No. Scanning happens entirely between the reader's camera and your content — nothing routes through this site or anyone else's. That also means we can't show you scan statistics; services that do are redirecting every scan through their servers.</dd>
+        <dt>How do I make a WiFi QR code?</dt>
+        <dd>Choose the WiFi tab, type the network name (SSID) and password, pick the security type — WPA/WPA2 for almost every modern router — and download the code. Tick "hidden network" only if your router doesn't broadcast its name.</dd>
+        <dt>What does the error correction setting do?</dt>
+        <dd>QR codes carry redundant data so they still scan when partly obscured or damaged. Low tolerates about 7% damage, Medium 15%, Quartile 25%, High 30%. Higher levels make denser codes, so Medium is the sensible default; pick High for stickers and prints that will get scuffed.</dd>
+        <dt>Why is there no sign-up?</dt>
+        <dd>Because there is nothing to sign up for. No code is stored anywhere, no scan passes through a server, and the download is yours the moment it's generated. Accounts exist to meter usage and bill for it — a static generator needs neither.</dd>
+      </dl>
+
+      <h2>Related tools</h2>
+      <p><a href="/remove-exif/">Remove EXIF Data</a> — strip location and camera metadata from photos before sharing. <a href="/photo-editor/">Photo Editor</a> — crop, resize, redact, and batch-edit images. All in your browser, like this one.</p>
+    </section>
+  </main>
+
+  <script type="module" src="./js/main.js"></script>
+</body>
+</html>
