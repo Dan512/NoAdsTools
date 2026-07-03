@@ -214,7 +214,7 @@ test('clusterByDHash: invalid threshold falls back to 8', () => {
 test('thresholdFor: known presets', () => {
   assert.equal(thresholdFor('strict'), 4);
   assert.equal(thresholdFor('normal'), 8);
-  assert.equal(thresholdFor('loose'), 16);
+  assert.equal(thresholdFor('loose'), 12);
 });
 
 test('thresholdFor: unknown → normal fallback', () => {

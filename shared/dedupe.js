@@ -371,11 +371,16 @@ export function clusterByPerceptual(items, threshold) {
 /**
  * Map of sensitivity preset → Hamming-distance threshold.
  * Exported so the UI dropdown and the cluster pass agree.
+ *
+ * Loose was 16 until 2026-07-03: with the OR-match across dHash AND pHash
+ * (two chances per pair) plus union-find chaining, 16/64 bits produced
+ * visible false positives on real photo libraries. 12 keeps a wide net
+ * without matching unrelated portraits.
  */
 export const SENSITIVITY_THRESHOLDS = Object.freeze({
   strict: 4,
   normal: 8,
-  loose:  16,
+  loose:  12,
 });
 
 export function thresholdFor(sensitivity) {
