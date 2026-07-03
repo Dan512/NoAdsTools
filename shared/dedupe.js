@@ -1,4 +1,4 @@
-// js/ops/dedupe.js — pure logic for duplicate detection in the queue.
+// shared/dedupe.js — pure logic for duplicate detection.
 //
 // Splits into two passes:
 //   1. EXACT — group by SHA-256 of the source bytes. groupBySha256(items).
@@ -7,7 +7,7 @@
 //      clusterByDHash(items, threshold).
 //
 // All functions here are PURE — no DOM, no async, no I/O. The hashing
-// happens elsewhere (in a Web Worker; see js/workers/dedupeWorker.js).
+// happens elsewhere (in a Web Worker; see shared/dedupeWorker.js).
 // Keeping the math pure means we can unit-test it without a browser.
 //
 // dHash representation:

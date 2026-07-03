@@ -34,7 +34,7 @@ import {
   pickKeeper,
   reorderQueueByCluster,
   thresholdFor,
-} from './ops/dedupe.js';
+} from '../../shared/dedupe.js';
 
 // --- Worker pool -----------------------------------------------------------
 //
@@ -71,7 +71,7 @@ function getWorkerPool() {
   const size = Math.max(1, Math.min(MAX_POOL_SIZE, hc));
   const workers = [];
   for (let i = 0; i < size; i++) {
-    const url = new URL('./workers/dedupeWorker.js', import.meta.url);
+    const url = new URL('../../shared/dedupeWorker.js', import.meta.url);
     workers.push(new Worker(url, { type: 'module' }));
   }
   workerPool = { workers, size };

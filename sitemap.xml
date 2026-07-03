@@ -26,6 +26,11 @@
     <priority>0.8</priority>
   </url>
   <url>
+    <loc>https://noadstools.com/find-duplicate-photos/</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
     <loc>https://noadstools.com/image-to-pdf/</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>

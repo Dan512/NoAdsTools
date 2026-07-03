@@ -22,7 +22,7 @@ registerTranslations({ en: {
   rxPrivacyFetchHeading: 'What this page loads',
   rxPrivacyFetchList: '<li>HTML, CSS, and JavaScript from this site only — no third-party CDN.</li><li>The JSZip library (~97 KB, from this origin) — ONLY if you click "Download ZIP". Used to package your cleaned files locally.</li>',
   rxPrivacyStorageHeading: 'Local storage',
-  rxPrivacyStorageBody: 'Theme and chrome preferences only: <code>noadstools:settings:global</code> and <code>noadstools:settings:remove-exif</code>. No image data is ever stored.',
+  rxPrivacyStorageBody: 'Theme and chrome preferences only: <code>noadstools_lang</code>, <code>noadstools:settings:global</code>, and <code>noadstools:settings:remove-exif</code>. No image data is ever stored.',
 } });
 
 injectTopbar({ toolId: 'remove-exif', lang: false, settings: false });
@@ -75,7 +75,7 @@ async function processFile(file) {
     let r = stripImage(bytes);
     let note = 'Metadata removed surgically — pixels untouched.';
     if (!r.ok && r.reason === 'heic') {
-      reportEl.innerHTML = `<div class="result-error">HEIC isn't supported yet — a free <strong>HEIC to JPG</strong> tool is coming to NoAdsTools. Convert first, then clean here.</div>`;
+      reportEl.innerHTML = `<div class="result-error">HEIC isn't supported here — convert it with our free <a href="/heic-to-jpg/">HEIC to JPG</a> tool, then clean it here.</div>`;
       return;
     }
     if (!r.ok) {

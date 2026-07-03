@@ -1,0 +1,162 @@
+/* find-duplicate-photos.css — tool-only styles. Tokens/chrome come from
+   /shared/shell.css. Colorblind-safe: keep/duplicate state rides border
+   weight + glyph + label ("✓ Keep" / "✕ Duplicate"), match type rides a
+   glyph + words ("= Identical files" / "≈ Visually similar") — state never
+   rides hue alone. */
+#tool { max-width: 860px; margin: 0 auto; padding: var(--space-2xl) var(--space-xl) var(--space-4xl); }
+#tool h1 { margin: 0 0 var(--space-sm); font-size: var(--t-2xl); font-weight: 600; }
+.tool-tagline { margin: 0 0 var(--space-xl); color: var(--text-secondary); font-size: var(--t-lg); max-width: 70ch; }
+
+/* The playbook guard: [hidden] must beat any author display: rule below
+   (.actions is flex, .photo is flex, etc.). */
+#tool [hidden] { display: none !important; }
+
+/* --- Dropzone ------------------------------------------------------------ */
+.dropzone {
+  border: 2px dashed var(--border-strong);
+  border-radius: var(--radius-card);
+  padding: var(--space-2xl);
+  text-align: center;
+  background: var(--surface);
+}
+.dropzone.is-drag { border-color: var(--accent); background: var(--surface-2); }
+.dropzone p { margin: 0 0 var(--space-sm); }
+.dz-or { color: var(--text-muted); font-size: var(--t-sm); }
+.dz-buttons { display: flex; gap: var(--space-sm); justify-content: center; flex-wrap: wrap; }
+.dz-note { color: var(--text-muted); font-size: var(--t-sm); margin: var(--space-sm) 0 0; }
+
+.file-label {
+  position: relative;
+  display: inline-block;
+  padding: var(--space-sm) var(--space-lg);
+  border-radius: var(--radius-control);
+  background: var(--accent);
+  color: var(--accent-contrast);
+  font-weight: 500;
+  cursor: pointer;
+}
+/* Visually hidden, NOT display:none — the input stays focusable and in the
+   a11y tree so keyboard users can Tab to it and press Enter/Space.
+   Same clip pattern as shell.css's .visually-hidden utility. */
+.file-label input {
+  position: absolute !important;
+  width: 1px !important; height: 1px !important;
+  margin: -1px !important; padding: 0 !important;
+  border: 0 !important; clip: rect(0 0 0 0) !important;
+  clip-path: inset(50%) !important; overflow: hidden !important;
+  white-space: nowrap !important;
+}
+.file-label:focus-within { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+
+.scan-status { margin: var(--space-lg) 0 0; font-weight: 500; }
+
+/* --- Results ------------------------------------------------------------- */
+#results { margin-top: var(--space-xl); }
+.summary { margin: 0 0 var(--space-lg); font-size: var(--t-lg); font-weight: 600; }
+
+.sensitivity {
+  display: flex; align-items: center; gap: var(--space-lg); flex-wrap: wrap;
+  margin: 0 0 var(--space-lg); padding: var(--space-sm) var(--space-lg) var(--space-md);
+  border: 1px solid var(--border); border-radius: var(--radius-card);
+}
+.sensitivity legend { padding: 0 var(--space-xs); font-size: var(--t-sm); font-weight: 600; }
+.sensitivity label { display: inline-flex; align-items: center; gap: var(--space-xs); }
+#sensitivity-hint { margin: 0; }
+
+.actions { display: flex; gap: var(--space-sm); flex-wrap: wrap; margin-bottom: var(--space-lg); }
+.actions button {
+  border: 1px solid var(--border-strong);
+  background: var(--surface);
+  color: inherit;
+  font: inherit;
+  padding: var(--space-sm) var(--space-lg);
+  border-radius: var(--radius-control);
+  cursor: pointer;
+}
+.actions button:disabled { opacity: 0.55; cursor: default; }
+#download-zip { background: var(--accent); color: var(--accent-contrast); border-color: var(--accent); font-weight: 500; }
+.btn-quiet { color: var(--text-secondary); }
+
+.zip-warning { margin: 0 0 var(--space-lg); font-size: var(--t-sm); font-weight: 500; }
+.zip-warning::before { content: "⚠ "; }
+.action-error { margin: 0 0 var(--space-lg); font-size: var(--t-sm); font-weight: 500; color: var(--danger); }
+.action-error::before { content: "⚠ "; }
+
+/* --- Group cards ----------------------------------------------------------- */
+.group-card {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  background: var(--surface);
+  padding: var(--space-lg);
+  margin-block: var(--space-md);
+}
+.group-head {
+  display: flex; justify-content: space-between; align-items: baseline;
+  gap: var(--space-md); flex-wrap: wrap; margin-bottom: var(--space-md);
+}
+.group-match { font-weight: 600; font-size: var(--t-sm); }
+.group-bytes { color: var(--text-muted); font-size: var(--t-sm); }
+.group-photos { display: flex; flex-wrap: wrap; gap: var(--space-md); }
+
+/* One photo = one real <button> so click/Enter/Space all toggle it and
+   aria-pressed carries the state. Visuals key off aria-pressed so the DOM
+   state and the visual state cannot drift. */
+.photo {
+  display: flex; flex-direction: column; gap: var(--space-xs);
+  width: 112px; padding: var(--space-xs);
+  border: 1px solid var(--border); border-radius: var(--radius-card);
+  background: var(--surface); color: inherit;
+  font: inherit; text-align: left; cursor: pointer;
+}
+/* Keeper: heavier border (weight, not hue, is the signal) + "✓ Keep" caption. */
+.photo[aria-pressed="true"] {
+  border: 2px solid var(--accent);
+  padding: calc(var(--space-xs) - 1px);
+}
+.photo-thumb {
+  position: relative; display: block;
+  width: 104px; height: 104px;
+  border-radius: 2px; overflow: hidden;
+  background: var(--surface-2);
+}
+.photo-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.photo-noimg {
+  display: flex; align-items: center; justify-content: center;
+  width: 100%; height: 100%;
+  padding: var(--space-xs); box-sizing: border-box;
+  color: var(--text-muted); font-size: var(--t-xs); text-align: center;
+}
+/* Duplicate: dark overlay + ✕ glyph on the thumb, plus the text caption below. */
+.photo[aria-pressed="false"] .photo-thumb::after {
+  content: "✕";
+  position: absolute; inset: 0;
+  display: grid; place-items: center;
+  background: rgba(0, 0, 0, 0.55);
+  color: #fff; font-size: var(--t-xl);
+}
+.photo-state { font-weight: 600; font-size: var(--t-xs); }
+.photo[aria-pressed="false"] .photo-state { color: var(--text-secondary); }
+.photo-name { font-size: var(--t-xs); color: var(--text-secondary); overflow-wrap: anywhere; }
+.photo-meta { font-size: var(--t-xs); color: var(--text-muted); }
+
+/* --- Issues + deep page ------------------------------------------------------ */
+#issues { margin-top: var(--space-lg); font-size: var(--t-sm); color: var(--text-secondary); }
+#issues summary { cursor: pointer; font-weight: 500; color: var(--text); }
+#issues-list { margin: var(--space-sm) 0 0; padding-left: var(--space-xl); }
+#issues-list li { margin-bottom: var(--space-xs); overflow-wrap: anywhere; }
+
+.tool-copy { margin-top: var(--space-3xl); max-width: 70ch; }
+.tool-copy h2 { font-size: var(--t-lg); font-weight: 600; margin: var(--space-2xl) 0 var(--space-sm); }
+.tool-copy p { color: var(--text-secondary); line-height: 1.55; }
+.faq details { border-top: 1px solid var(--border); padding: var(--space-md) 0; }
+.faq details:last-child { border-bottom: 1px solid var(--border); }
+.faq summary { font-weight: 600; cursor: pointer; }
+.faq details p { margin: var(--space-sm) 0 0; }
+
+/* --- Mobile ------------------------------------------------------------------ */
+@media (max-width: 480px) {
+  #tool { padding-inline: var(--space-lg); }
+  .dz-buttons { flex-direction: column; align-items: center; }
+  .actions { flex-direction: column; align-items: stretch; }
+  .sensitivity { gap: var(--space-md); }
+}

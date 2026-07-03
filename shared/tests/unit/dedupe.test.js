@@ -1,4 +1,5 @@
-// tests/unit/dedupe.test.js — pure logic for v1.2 Feature 7 (find duplicates).
+// shared/tests/unit/dedupe.test.js — unit tests for the shared dedupe engine
+// (shared/dedupe.js): hashes, Hamming distance, clustering, keeper selection.
 //
 // Covers:
 //   - popcount32 against a reference table.
@@ -24,7 +25,7 @@ import {
   computePHashFromLuminance,
   rgbaToLuminance72,
   rgbaToLuminance1024,
-} from '../../js/ops/dedupe.js';
+} from '../../dedupe.js';
 
 // ---------------------------------------------------------------- popcount32
 

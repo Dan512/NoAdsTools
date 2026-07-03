@@ -10,7 +10,7 @@ import { initSettings } from '/shared/settings.js';
 import { registerPrivacyRows, initPrivacy } from '/shared/privacy.js';
 import { extractExifFromHeif, injectExifIntoJpeg } from '/shared/exif.js';
 import { escapeHtml } from '/shared/escape.js';
-import { loadHeicDecoder } from './heic-loader.js';
+import { loadHeicDecoder } from '/shared/heic-loader.js';
 import { loadJSZip } from './zip.js';
 
 registerTranslations({ en: {
@@ -22,7 +22,7 @@ registerTranslations({ en: {
   hjPrivacyFetchHeading: 'What this page loads',
   hjPrivacyFetchList: '<li>HTML, CSS, and JavaScript from this site only — no third-party CDN.</li><li>The HEIC decoder (libheif, ~1.1 MB WebAssembly, from this origin) — ONLY when your first file lands. Nothing is fetched before that.</li><li>The JSZip library (~97 KB, from this origin) — ONLY if you click "Download ZIP". Used to package your converted files locally.</li>',
   hjPrivacyStorageHeading: 'Local storage',
-  hjPrivacyStorageBody: 'Theme and chrome preferences only: <code>noadstools:settings:global</code> and <code>noadstools:settings:heic-to-jpg</code>. No image data is ever stored.',
+  hjPrivacyStorageBody: 'Theme and chrome preferences only: <code>noadstools_lang</code>, <code>noadstools:settings:global</code>, and <code>noadstools:settings:heic-to-jpg</code>. No image data is ever stored.',
 } });
 
 injectTopbar({ toolId: 'heic-to-jpg', lang: false, settings: false });

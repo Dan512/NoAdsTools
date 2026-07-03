@@ -25,7 +25,7 @@ registerTranslations({ en: {
   ipPrivacyFetchHeading: 'What this page loads',
   ipPrivacyFetchList: '<li>HTML, CSS, and JavaScript from this site only — no third-party CDN.</li><li>The jsPDF library (~420 KB, from this origin) — ONLY when you click "Create PDF". Used to assemble the PDF locally.</li>',
   ipPrivacyStorageHeading: 'Local storage',
-  ipPrivacyStorageBody: 'Theme and chrome preferences only: <code>noadstools:settings:global</code> and <code>noadstools:settings:image-to-pdf</code>. No image data is ever stored.',
+  ipPrivacyStorageBody: 'Theme and chrome preferences only: <code>noadstools_lang</code>, <code>noadstools:settings:global</code>, and <code>noadstools:settings:image-to-pdf</code>. No image data is ever stored.',
 } });
 
 injectTopbar({ toolId: 'image-to-pdf', lang: false, settings: false });

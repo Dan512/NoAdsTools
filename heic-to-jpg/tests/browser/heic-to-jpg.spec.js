@@ -23,11 +23,11 @@ async function boot(page) {
 }
 
 // Fake 16x16 solid-color decoder — keeps the wasm out of the fast tests. The
-// loader module URL matches main.js's relative import, so it's the SAME
-// module instance and main.js picks the fake up.
+// loader module URL matches main.js's import of /shared/heic-loader.js, so
+// it's the SAME module instance and main.js picks the fake up.
 async function installFakeDecoder(page) {
   await page.evaluate(async () => {
-    const { _setHeicDecoderForTest } = await import('/heic-to-jpg/js/heic-loader.js');
+    const { _setHeicDecoderForTest } = await import('/shared/heic-loader.js');
     _setHeicDecoderForTest({
       decode: async () => {
         const w = 16, h = 16;

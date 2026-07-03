@@ -132,7 +132,7 @@ const state = {
   // at a different sensitivity skip the worker step.
   //
   // sensitivity ∈ {'strict','normal','loose'} maps to a Hamming-distance
-  // threshold (see js/ops/dedupe.js SENSITIVITY_THRESHOLDS).
+  // threshold (see shared/dedupe.js SENSITIVITY_THRESHOLDS).
   //
   // clusters: [{ id, memberIds, keeperIds }, ...]
   // markedIds: image IDs currently flagged for removal (subset of all

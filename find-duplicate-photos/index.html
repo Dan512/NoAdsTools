@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Find Duplicate Photos — Free, No Upload, No Install · NoAdsTools</title>
+  <meta name="description" content="Find duplicate and near-duplicate photos in your browser — even at different sizes. Free, no upload, no account: your photos never leave your device.">
+  <meta name="theme-color" content="#0f1410">
+  <link rel="canonical" href="https://noadstools.com/find-duplicate-photos/">
+  <link rel="icon" type="image/png" sizes="192x192" href="/photo-editor/img/favicon-light-192.png">
+  <link rel="stylesheet" href="/shared/shell.css">
+  <link rel="stylesheet" href="./find-duplicate-photos.css">
+
+  <meta property="og:title" content="Find Duplicate Photos — Free, No Upload">
+  <meta property="og:description" content="Spot duplicate and near-duplicate photos entirely in your browser and keep only the best copy. Nothing is uploaded.">
+  <meta property="og:url" content="https://noadstools.com/find-duplicate-photos/">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="NoAdsTools">
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="Find Duplicate Photos — Free, No Upload">
+  <meta name="twitter:description" content="Spot duplicate and near-duplicate photos entirely in your browser and keep only the best copy. Nothing is uploaded.">
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "NoAdsTools Find Duplicate Photos",
+    "url": "https://noadstools.com/find-duplicate-photos/",
+    "description": "Find duplicate and visually similar photos entirely in your browser — exact byte-for-byte matches plus resized and recompressed copies. Download a deduplicated set or a delete list. No upload, no account.",
+    "applicationCategory": "MultimediaApplication",
+    "operatingSystem": "Any (browser-based)",
+    "browserRequirements": "Any modern browser. No install, no account.",
+    "isAccessibleForFree": true,
+    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+    "license": "https://www.gnu.org/licenses/agpl-3.0.html"
+  }
+  </script>
+</head>
+<body>
+  <main id="tool" class="tool-main">
+    <h1>Find duplicate photos</h1>
+    <p class="tool-tagline">Spot duplicate and near-duplicate photos — even at different sizes — and keep only the best copy. Free, in your browser. Your photos never leave your device.</p>
+
+    <section id="dropzone" class="dropzone" aria-label="Add photos">
+      <p><strong>Drop photos or a whole folder here</strong></p>
+      <p class="dz-or">or</p>
+      <p class="dz-buttons">
+        <label class="file-label">Choose files
+          <input type="file" id="file-input" multiple accept="image/*,.heic,.heif">
+        </label>
+        <label class="file-label" id="folder-label">Choose a folder
+          <input type="file" id="folder-input" webkitdirectory>
+        </label>
+      </p>
+      <p class="dz-note">JPEG, PNG, WebP, GIF, AVIF, BMP, HEIC.</p>
+    </section>
+
+    <p id="scan-status" class="scan-status" aria-live="polite" hidden></p>
+    <p id="heic-note" class="dz-note" hidden>HEIC photos take longer to read. Reading them loads a 1.1&nbsp;MB decoder from this site — see Privacy.</p>
+
+    <section id="results" hidden>
+      <p id="summary" class="summary" role="status"></p>
+      <fieldset id="sensitivity" class="sensitivity">
+        <legend>Match sensitivity</legend>
+        <label><input type="radio" name="sensitivity" value="strict"> Strict</label>
+        <label><input type="radio" name="sensitivity" value="normal" checked> Normal</label>
+        <label><input type="radio" name="sensitivity" value="loose"> Loose</label>
+        <span id="sensitivity-hint" class="dz-note"></span>
+      </fieldset>
+      <div id="actions" class="actions">
+        <button type="button" id="download-zip">Download unique set (ZIP)</button>
+        <button type="button" id="copy-list">Copy list of duplicates</button>
+        <button type="button" id="download-list">Download list (.txt)</button>
+        <button type="button" id="clear-all" class="btn-quiet">Clear all</button>
+      </div>
+      <p id="zip-warning" class="zip-warning" hidden>This is a large set — building the ZIP may fail on phones or low-memory devices.</p>
+      <div id="groups"></div>
+      <details id="issues" hidden>
+        <summary id="issues-summary"></summary>
+        <ul id="issues-list"></ul>
+      </details>
+    </section>
+
+    <section class="prose tool-copy">
+      <h2>What this tool does</h2>
+      <p>Photo collections grow copies. The same shot saved twice under different names, a recompressed version sent back through a messaging app, a resized export sitting next to the full-size original. This page finds them: drop in photos — or a whole folder — and it groups exact duplicates and visually similar ones, suggests the best copy of each group, and shows you everything before anything happens.</p>
+      <p>One limitation, stated up front: a website cannot delete files from your computer. No page you open in a browser can. What this tool gives you instead is a clean copy of your collection with the duplicates left out, and a precise list of the files marked as duplicates, so you can remove them yourself.</p>
+
+      <h2>How the matching works</h2>
+      <p>Two passes, both computed on your device. First, every file gets a SHA-256 checksum — two files with the same checksum are byte-for-byte identical, with no guesswork involved. Second, each photo is reduced to a pair of small perceptual fingerprints that describe its broad structure; photos whose fingerprints nearly match are grouped as visually similar. This second pass is what catches the same picture at two different sizes, or re-saved at a different quality. It is a judgment rather than a certainty, so every group is labeled with how it matched — "identical files" or "visually similar" — and a sensitivity control lets you tighten or loosen it.</p>
+      <p>Within each group the tool marks a suggested keeper: the copy with the most pixels, then the largest file. You can override any of it with a click.</p>
+
+      <h2>What you get</h2>
+      <p>Three outputs. A visual report of every group, with thumbnails, paths, dimensions, and sizes. A "unique set" ZIP holding the keepers plus every unmatched photo — original bytes, nothing recompressed, folder structure preserved. And a plain-text list of the files marked as duplicates, to copy or download, formatted so you can work through it in your file manager.</p>
+      <p>Nothing is uploaded. The scan runs in your browser using its own crypto and canvas machinery — you can watch the network tab while it works. The full source code is <a href="https://github.com/Dan512/NoAdsTools" target="_blank" rel="noopener">public on GitHub</a> (AGPL-3.0), and the privacy panel in the footer lists everything this page loads.</p>
+
+      <h2>Questions</h2>
+      <div class="faq">
+        <details>
+          <summary>Do my photos get uploaded?</summary>
+          <p>No. The hashing and comparison run entirely in your browser, on your device. You can verify this: open your browser's DevTools Network tab while scanning — no image data leaves your machine. There is no account, no tracking, and nothing to sign up for.</p>
+        </details>
+        <details>
+          <summary>Can it find the same photo at two different sizes?</summary>
+          <p>Yes. Exact checksums only catch byte-identical files, so this tool also compares perceptual fingerprints, which survive resizing, recompression, and format conversion. A 4032×3024 original and its 1024×768 copy will land in the same group, labeled "visually similar."</p>
+        </details>
+        <details>
+          <summary>Does it work with iPhone HEIC photos?</summary>
+          <p>Yes. The first HEIC file loads a 1.1&nbsp;MB decoder — fetched from this site, not a third party — and decoding happens locally. HEIC files take longer to read than JPEGs, so large batches are slower; the progress counter keeps that honest.</p>
+        </details>
+        <details>
+          <summary>How do I actually delete the duplicates?</summary>
+          <p>This page cannot do it for you — a website cannot delete files from your device, and any site claiming otherwise is misleading you. Two honest routes: download the unique set as a ZIP and replace your folder with it, or copy the delete list and remove those files yourself in your file manager. The list gives each file's name and folder path (when you add a folder), dimensions, and size so nothing is ambiguous.</p>
+        </details>
+        <details>
+          <summary>Is there a limit on how many photos I can check?</summary>
+          <p>No hard limit. The practical limit is your device's memory: a few thousand photos are comfortable on a desktop, a few hundred on a phone. If the browser runs short, the tool reports which files it could not finish rather than failing silently.</p>
+        </details>
+      </div>
+
+      <h2>Related tools</h2>
+      <p><a href="/photo-editor/">Photo Editor</a> — crop, resize, redact, and batch-edit images. <a href="/remove-exif/">Remove EXIF Data</a> — strip location and camera metadata before sharing. <a href="/heic-to-jpg/">HEIC to JPG</a> — convert iPhone photos to JPG. <a href="/image-to-pdf/">Image to PDF</a> — combine photos into a single PDF.</p>
+    </section>
+  </main>
+
+  <script type="module" src="./js/main.js"></script>
+</body>
+</html>

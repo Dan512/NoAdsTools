@@ -1,15 +1,17 @@
-// heic-to-jpg/js/heic-loader.js — lazy ES-module wrapper for the vendored
+// shared/heic-loader.js — lazy ES-module wrapper for the vendored
 // libheif-js (LGPL-3.0) HEIC/HEIF decoder at /vendor/libheif/. The ~1.1 MB
 // load (81 KB JS glue + 1.03 MB WASM) happens only when the first HEIC file
 // lands — 0 bytes at page boot.
 //
-// Adapted from photo-editor/js/vendor/heic-loader.js with the consent modal
-// removed: decoding HEIC is this tool's stated purpose, so the disclosure is
-// an inline note under the dropzone + a privacy-panel row instead of a modal
-// (spec §3.1). Same split-WASM strategy — the JS glue is script-injected
-// (UMD assigns the `libheif` factory to `window.libheif`), the WASM bytes
-// are pre-fetched by us and handed to Emscripten as `wasmBinary`, keeping
-// every request on this origin.
+// No-modal variant: decoding HEIC is the consuming tool's stated purpose,
+// so the disclosure is an inline note under the dropzone + a privacy-panel
+// row instead of a modal (spec §3.1). Consumers: heic-to-jpg,
+// find-duplicate-photos. The photo editor keeps its OWN consent-modal
+// variant at photo-editor/js/vendor/heic-loader.js — that one is
+// intentionally separate and out of scope here. Same split-WASM strategy —
+// the JS glue is script-injected (UMD assigns the `libheif` factory to
+// `window.libheif`), the WASM bytes are pre-fetched by us and handed to
+// Emscripten as `wasmBinary`, keeping every request on this origin.
 //
 // Public surface:
 //   loadHeicDecoder()        → Promise<{ decode(arrayBuffer) }>

@@ -23,7 +23,7 @@ registerTranslations({ en: {
   qrPrivacyFetchHeading: 'What this page loads',
   qrPrivacyFetchList: '<li>HTML, CSS, and JavaScript from this site only — no third-party CDN.</li><li>The QR encoder (Project Nayuki’s qrcodegen library, ~42 KB, from this origin) — loads with the page and runs locally.</li>',
   qrPrivacyStorageHeading: 'Local storage',
-  qrPrivacyStorageBody: 'Theme and chrome preferences only: <code>noadstools:settings:global</code> and <code>noadstools:settings:qr-code-generator</code>. Nothing you type is ever stored or sent.',
+  qrPrivacyStorageBody: 'Theme and chrome preferences only: <code>noadstools_lang</code>, <code>noadstools:settings:global</code>, and <code>noadstools:settings:qr-code-generator</code>. Nothing you type is ever stored or sent.',
 } });
 
 injectTopbar({ toolId: 'qr-code-generator', lang: false, settings: false });
