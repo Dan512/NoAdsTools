@@ -46,9 +46,9 @@ test('download produces a cleaned file with the original name', async ({ page })
 });
 
 test('JSZip loads lazily — only after Download ZIP is clicked', async ({ page }) => {
-  await boot(page);
   const zipRequests = [];
   page.on('request', (r) => { if (r.url().includes('/vendor/jszip/')) zipRequests.push(r.url()); });
+  await boot(page);
   await page.locator('#file-input').setInputFiles([jpegFile(), { ...jpegFile(), name: 'two.jpg' }]);
   await expect(page.locator('.result-row')).toHaveCount(2);
   expect(zipRequests.length).toBe(0);

@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Crop Image — Free, No Upload, No Install · NoAdsTools</title>
+  <meta name="description" content="Crop JPG, PNG, and WebP images in your browser — drag an interactive crop box, use aspect presets like 1:1 and 16:9, or type exact pixels. Free, no upload, no account: your images never leave your device.">
+  <meta name="theme-color" content="#0f1410">
+  <link rel="canonical" href="https://noadstools.com/crop-image/">
+  <link rel="icon" type="image/png" sizes="192x192" href="/photo-editor/img/favicon-light-192.png">
+  <link rel="stylesheet" href="/shared/shell.css">
+  <link rel="stylesheet" href="./crop-image.css">
+
+  <meta property="og:title" content="Crop Image — Free, No Upload">
+  <meta property="og:description" content="Crop JPG, PNG, and WebP images entirely in your browser — interactive crop box, aspect presets, exact pixels. Nothing is uploaded.">
+  <meta property="og:url" content="https://noadstools.com/crop-image/">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="NoAdsTools">
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="Crop Image — Free, No Upload">
+  <meta name="twitter:description" content="Crop JPG, PNG, and WebP images entirely in your browser — interactive crop box, aspect presets, exact pixels. Nothing is uploaded.">
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "NoAdsTools Crop Image",
+    "url": "https://noadstools.com/crop-image/",
+    "description": "Crop JPG, PNG, and WebP images entirely in your browser — with an interactive crop box, aspect-ratio presets, and exact pixel entry. Crop one image or many and download individually or as a ZIP. No upload, no account.",
+    "applicationCategory": "MultimediaApplication",
+    "operatingSystem": "Any (browser-based)",
+    "browserRequirements": "Any modern browser. No install, no account.",
+    "isAccessibleForFree": true,
+    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+    "license": "https://www.gnu.org/licenses/agpl-3.0.html"
+  }
+  </script>
+</head>
+<body>
+  <main id="tool">
+    <h1>Crop images</h1>
+    <p class="tool-lead">Crop JPG, PNG, and WebP images entirely in your browser — drag an interactive crop box, snap to aspect presets like 1:1 or 16:9, or type exact pixel dimensions. Your images never leave your device: no upload, no account, no tracking.</p>
+
+    <section class="dropzone" id="dropzone" aria-label="Add images">
+      <p><strong>Drop images here</strong>, paste, or</p>
+      <label class="file-label"><span class="file-label-text" id="file-label-text">Choose files</span><input id="file-input" type="file" accept="image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp" multiple></label>
+      <p class="dropzone-hint">JPEG, PNG, WebP. Cropped in your browser, nothing uploaded.</p>
+    </section>
+
+    <p id="status-line" class="status-line" role="status" aria-live="polite" hidden></p>
+
+    <section id="editor" hidden>
+      <div id="strip" class="strip" aria-label="Loaded images" hidden></div>
+
+      <div id="stage" class="stage" aria-label="Crop preview">
+        <div id="stage-frame" class="stage-frame">
+          <canvas id="stage-img" class="stage-img" width="1" height="1"></canvas>
+          <div id="crop-box" class="crop-box" tabindex="0" role="group" aria-label="Crop rectangle — drag to move, arrow keys to nudge">
+            <span class="thirds" aria-hidden="true"></span>
+            <span class="handle handle-nw" data-handle="nw" aria-hidden="true"></span>
+            <span class="handle handle-n"  data-handle="n"  aria-hidden="true"></span>
+            <span class="handle handle-ne" data-handle="ne" aria-hidden="true"></span>
+            <span class="handle handle-e"  data-handle="e"  aria-hidden="true"></span>
+            <span class="handle handle-se" data-handle="se" aria-hidden="true"></span>
+            <span class="handle handle-s"  data-handle="s"  aria-hidden="true"></span>
+            <span class="handle handle-sw" data-handle="sw" aria-hidden="true"></span>
+            <span class="handle handle-w"  data-handle="w"  aria-hidden="true"></span>
+          </div>
+        </div>
+      </div>
+
+      <div class="presets" id="presets" role="group" aria-label="Aspect ratio">
+        <button type="button" class="preset" data-ratio="free" aria-pressed="true">Free</button>
+        <button type="button" class="preset" data-ratio="original" aria-pressed="false">Original</button>
+        <button type="button" class="preset" data-ratio="1:1" aria-pressed="false">1:1</button>
+        <button type="button" class="preset" data-ratio="4:3" aria-pressed="false">4:3</button>
+        <button type="button" class="preset" data-ratio="3:2" aria-pressed="false">3:2</button>
+        <button type="button" class="preset" data-ratio="16:9" aria-pressed="false">16:9</button>
+        <button type="button" class="preset" data-ratio="3:4" aria-pressed="false">3:4</button>
+        <button type="button" class="preset" data-ratio="2:3" aria-pressed="false">2:3</button>
+        <button type="button" class="preset" data-ratio="9:16" aria-pressed="false">9:16</button>
+      </div>
+
+      <div class="exact" id="exact">
+        <span class="exact-field">
+          <label for="in-x">X</label>
+          <input id="in-x" type="number" min="0" step="1" inputmode="numeric">
+        </span>
+        <span class="exact-field">
+          <label for="in-y">Y</label>
+          <input id="in-y" type="number" min="0" step="1" inputmode="numeric">
+        </span>
+        <span class="exact-field">
+          <label for="in-w">Width</label>
+          <input id="in-w" type="number" min="16" step="1" inputmode="numeric">
+        </span>
+        <span class="exact-field">
+          <label for="in-h">Height</label>
+          <input id="in-h" type="number" min="16" step="1" inputmode="numeric">
+        </span>
+        <span class="readout" id="readout" role="status" aria-live="polite"></span>
+      </div>
+
+      <div class="actions" id="actions">
+        <button type="button" id="download">Download crop</button>
+        <button type="button" id="download-zip" hidden>Download all (ZIP)</button>
+        <button type="button" id="clear-all" class="btn-quiet">Clear all</button>
+      </div>
+      <p class="action-error" id="action-error" role="status" aria-live="polite" hidden></p>
+    </section>
+
+    <details id="skipped" hidden>
+      <summary id="skipped-summary"></summary>
+      <ul id="skipped-list"></ul>
+    </details>
+
+    <section class="prose tool-copy">
+      <h2>What this tool does</h2>
+      <p>Drop in one JPEG, PNG, or WebP image or a whole batch, and trim each one on your own device. The active image fills a preview stage with a crop box on top: drag the box to move it, pull any of the eight handles to resize it, or type exact numbers into the X, Y, Width, and Height fields. A live W × H readout always shows the crop in source pixels, so you know precisely what you will get. The box is always kept inside the image and never shrinks below a small floor, so it cannot escape the frame or collapse to nothing. Everything works with a mouse, a finger, or a pen — the handles have oversized touch targets, and arrow keys nudge the box a pixel at a time (hold Shift for ten).</p>
+
+      <h2>Aspect ratios and exact pixels</h2>
+      <p>The preset row snaps the crop to a fixed shape: a square for a profile picture (1:1), widescreen for a banner (16:9), classic photo shapes (4:3, 3:2), and their portrait counterparts (3:4, 2:3, 9:16). Original keeps the image's own proportions, and Free lets you drag any shape you like. Picking a preset re-fits the largest box of that shape, centered on your current crop, and while it is active the handles hold the ratio for you. When you need an exact result — say a 1080 × 1080 avatar — type the numbers in and the box follows, clamped to what the image can actually provide.</p>
+
+      <h2>Formats, quality, and metadata</h2>
+      <p>Each cropped image keeps its original format: a JPEG stays a JPEG, a PNG stays a PNG, a WebP stays a WebP. The crop is drawn at full source resolution — the on-screen preview is only scaled to fit the stage, never the output — so nothing is downsized unless you ask for it. JPEG and WebP are re-encoded at a high quality setting and PNG stays lossless. Because the pixels are re-encoded, the hidden EXIF and GPS metadata is dropped along the way, so a cropped copy is also a cleaner, less revealing one. Rotating, straightening, and flipping are out of scope here — the <a href="/photo-editor/">Photo Editor</a> handles those. AVIF and GIF are not supported yet: reliable in-browser AVIF encoding is not available on every platform, and cropping would flatten a GIF's animation.</p>
+
+      <h2>Nothing is uploaded</h2>
+      <p>The decoding, cropping, and re-encoding all run in your browser, using code this page loads only from its own address — never a third-party server. You can open your browser's network panel and watch: no image data leaves the machine. There is no account, no tracking, and no upload step to opt out of. The full source is <a href="https://github.com/Dan512/NoAdsTools" target="_blank" rel="noopener">public on GitHub</a> under the AGPL-3.0 licence, and the privacy panel in the footer names every file this page can load and when.</p>
+
+      <h2>Questions</h2>
+      <div class="faq">
+        <details>
+          <summary>Can I crop an image without uploading it?</summary>
+          <p>Yes. The whole process happens in your browser, on your device — you can verify it by opening your browser's DevTools Network tab while cropping and watching that no image data leaves the machine. There is no account and nothing to sign up for.</p>
+        </details>
+        <details>
+          <summary>Can I crop to a square or 16:9?</summary>
+          <p>Yes. Pick 1:1 for a square or 16:9 for widescreen from the preset row, and the crop box snaps to that shape, centered on your current selection. The handles then keep the ratio as you resize, so the result stays exactly square or exactly 16:9. Portrait presets like 9:16 and 3:4 are there too, and Free lets you drag any shape.</p>
+        </details>
+        <details>
+          <summary>Can I crop to exact pixel dimensions?</summary>
+          <p>Yes. Type the pixel values into the Width and Height fields — and X and Y to place the box — and the crop rectangle updates to match, clamped to what the image actually contains. The live W × H readout confirms the exact source-pixel size you will download, which is handy for avatars, thumbnails, and print sizes.</p>
+        </details>
+        <details>
+          <summary>Can I crop many images at once?</summary>
+          <p>Yes. Add as many as you like and a thumbnail strip appears above the stage. Each image keeps its own crop box and aspect setting, so switching between them never loses your work. Download each one from its own crop, or use "Download all (ZIP)" to get the whole set at once — the practical limit is your device's memory, not a server quota.</p>
+        </details>
+        <details>
+          <summary>Does cropping reduce quality?</summary>
+          <p>Cropping itself only removes pixels outside the box — it does not resample the pixels you keep. JPEG and WebP are re-encoded once at a high quality setting, which is visually near-lossless, and PNG stays fully lossless. The output is at full source resolution; the preview is scaled only to fit your screen.</p>
+        </details>
+      </div>
+
+      <h2>Related tools</h2>
+      <p><a href="/resize-image/">Resize Image</a> — change pixel dimensions to an exact size or percentage. <a href="/compress-images/">Compress images</a> — shrink the file size without changing dimensions. <a href="/photo-editor/">Photo Editor</a> — crop, rotate, redact, and batch-edit images. <a href="/convert-image/">Convert Image</a> — change between JPEG, PNG, WebP, and AVIF.</p>
+    </section>
+  </main>
+
+  <script type="module" src="./js/main.js"></script>
+</body>
+</html>

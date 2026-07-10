@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Color Palette From Image — Free, No Upload · NoAdsTools</title>
+  <meta name="description" content="Pull a color palette and exact hex, RGB, and HSL codes from any image — in your browser. Copy as a hex list, CSS variables, or JSON. Free, no upload, no account, no third-party requests.">
+  <meta name="theme-color" content="#0f1410">
+  <link rel="canonical" href="https://noadstools.com/color-palette-from-image/">
+  <link rel="icon" type="image/png" sizes="192x192" href="/photo-editor/img/favicon-light-192.png">
+  <link rel="stylesheet" href="/shared/shell.css">
+  <link rel="stylesheet" href="./color-palette-from-image.css">
+
+  <meta property="og:title" content="Color Palette From Image — Free, No Upload">
+  <meta property="og:description" content="Extract a dominant color and a palette from any image entirely in your browser — exact hex, RGB, and HSL, copyable as CSS variables or JSON. Nothing is uploaded.">
+  <meta property="og:url" content="https://noadstools.com/color-palette-from-image/">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="NoAdsTools">
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="Color Palette From Image — Free, No Upload">
+  <meta name="twitter:description" content="Extract a dominant color and a palette from any image entirely in your browser — exact hex, RGB, and HSL, copyable as CSS variables or JSON. Nothing is uploaded.">
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "NoAdsTools Color Palette From Image",
+    "url": "https://noadstools.com/color-palette-from-image/",
+    "description": "Extract a dominant color and an N-color palette from any image entirely in your browser, with exact hex, RGB, and HSL values. Copy as a hex list, CSS variables, or JSON, or download the swatches as a PNG. No upload, no account, no third-party requests.",
+    "applicationCategory": "MultimediaApplication",
+    "operatingSystem": "Any (browser-based)",
+    "browserRequirements": "Any modern browser. No install, no account.",
+    "isAccessibleForFree": true,
+    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+    "license": "https://www.gnu.org/licenses/agpl-3.0.html"
+  }
+  </script>
+</head>
+<body>
+  <main id="tool">
+    <h1>Color palette from image</h1>
+    <p class="tool-lead">Extract a dominant color and a palette from any image, entirely in your browser — with exact hex, RGB, and HSL values you can copy as a hex list, CSS variables, or JSON. Your image never leaves your device: no upload, no account, no tracking, and no third-party requests at all.</p>
+
+    <section class="dropzone" id="dropzone" aria-label="Add an image">
+      <p><strong>Drop an image here</strong>, paste, or</p>
+      <label class="file-label"><span class="file-label-text" id="file-label-text">Choose file</span><input id="file-input" type="file" accept="image/jpeg,image/png,image/webp,image/avif,image/gif,image/bmp,.jpg,.jpeg,.png,.webp,.avif,.gif,.bmp"></label>
+      <p class="dropzone-hint">JPEG, PNG, WebP, AVIF, GIF, BMP. Read in your browser, nothing uploaded.</p>
+    </section>
+
+    <p id="status-line" class="status-line" role="status" aria-live="polite" hidden></p>
+
+    <section id="result" hidden>
+      <div class="result-top">
+        <div class="preview">
+          <img id="preview-img" class="preview-img" alt="" width="72" height="72">
+          <span class="preview-name" id="preview-name"></span>
+        </div>
+        <div class="count-control">
+          <label for="color-count">Colors in palette</label>
+          <select id="color-count">
+            <option value="4">4</option>
+            <option value="6" selected>6</option>
+            <option value="8">8</option>
+            <option value="10">10</option>
+            <option value="12">12</option>
+          </select>
+        </div>
+      </div>
+
+      <section class="dominant" aria-label="Dominant color">
+        <h2 class="section-title">Dominant color</h2>
+        <button type="button" class="dominant-card" id="dominant-card">
+          <span class="dominant-swatch" id="dominant-swatch" aria-hidden="true"></span>
+          <span class="dominant-values">
+            <span class="dominant-hex" id="dominant-hex"></span>
+            <span class="dominant-rgb" id="dominant-rgb"></span>
+            <span class="dominant-hsl" id="dominant-hsl"></span>
+            <span class="dominant-copied" id="dominant-copied" hidden>Copied</span>
+          </span>
+        </button>
+      </section>
+
+      <section class="palette" aria-label="Color palette">
+        <h2 class="section-title">Palette</h2>
+        <div class="swatch-grid" id="swatch-grid"></div>
+      </section>
+
+      <div class="copy-actions" id="copy-actions" role="group" aria-label="Copy and download the palette">
+        <button type="button" id="copy-hex">Copy hex list</button>
+        <button type="button" id="copy-css">Copy CSS variables</button>
+        <button type="button" id="copy-json">Copy JSON</button>
+        <button type="button" id="download-png">Download palette (PNG)</button>
+      </div>
+      <p class="action-error" id="action-error" role="status" aria-live="polite" hidden></p>
+    </section>
+
+    <section class="prose tool-copy">
+      <h2>What this tool does</h2>
+      <p>Drop in a photo, screenshot, logo, or artwork and this tool reads its pixels on your own device to find a <strong>dominant color</strong> plus a <strong>palette</strong> of colors that best represent the image. Each color is shown with its exact hex, RGB, and HSL values. You can copy the whole palette as a plain hex list, as a <code>:root</code> block of CSS custom properties, or as JSON, copy any single color by clicking its swatch, or download the swatches with their hex labels as a PNG. A control lets you choose how many colors to pull — from four up to twelve — and the palette re-computes instantly, without re-reading the image.</p>
+
+      <h2>The cleanest privacy story on the site</h2>
+      <p>Most "color from image" tools either upload your picture to a server or pull in a third-party palette library that phones home. This page does neither. The palette math — a classic median-cut quantization — is written by hand and runs entirely in your browser, so this page makes <strong>no third-party requests and loads no extra libraries</strong>. The only things it fetches are its own HTML, CSS, and JavaScript from this address; there is no analytics script, no font from a CDN, and no image upload. You can open your browser's network panel and watch: once the page has loaded, nothing about your image leaves the machine.</p>
+
+      <h2>Colors you can actually use</h2>
+      <p>Design work needs exact values, not a picture of a palette. Every swatch shows its hex code for CSS and design tools, its RGB triplet, and its HSL values, and the hex is drawn as text with an automatically contrasted label so it stays readable on both light and dark colors. Because the values are shown as text on every swatch, you never have to identify a color by eye — you copy it by its code. The dominant color is called out separately and larger, since it is usually the one you want first for a background or a brand accent.</p>
+
+      <h2>Formats</h2>
+      <p>Any raster image your browser can open works: JPEG, PNG, WebP, AVIF, GIF, and BMP. For an animated GIF the first frame is read. Transparent pixels are ignored so a logo on a transparent background gives you its real colors rather than a muddied edge. The full source is <a href="https://github.com/Dan512/NoAdsTools" target="_blank" rel="noopener">public on GitHub</a> under the AGPL-3.0 licence, and the privacy panel in the footer names every file this page can load.</p>
+
+      <h2>Questions</h2>
+      <div class="faq">
+        <details>
+          <summary>Can I extract colors from an image without uploading it?</summary>
+          <p>Yes. The image is read and analysed in your browser, on your device — nothing is sent anywhere. You can confirm it by opening your browser's DevTools Network tab while you use the tool: after the page itself loads, there are no further requests at all. There is no account and nothing to sign up for.</p>
+        </details>
+        <details>
+          <summary>How do I get the hex codes from a photo?</summary>
+          <p>Drop the photo in and the palette appears with each color's hex code shown as text. Click any swatch to copy that one hex code, or use "Copy hex list" to copy them all at once as a comma-separated list. The dominant color's hex is shown larger at the top.</p>
+        </details>
+        <details>
+          <summary>How many colors can I pull from an image?</summary>
+          <p>Choose 4, 6, 8, 10, or 12 from the "Colors in palette" control; the default is 6. Changing it re-computes the palette instantly from the pixels already read. If an image has fewer distinct colors than you ask for — a two-tone logo, say — you get only the colors that are actually there, never invented filler.</p>
+        </details>
+        <details>
+          <summary>Can I copy the palette as CSS variables?</summary>
+          <p>Yes. "Copy CSS variables" puts a <code>:root</code> block on your clipboard with one custom property per color (<code>--color-1</code>, <code>--color-2</code>, and so on), ready to paste into a stylesheet. There is also "Copy JSON" for a structured list with hex, RGB, and HSL for each color.</p>
+        </details>
+        <details>
+          <summary>Does it work on any image?</summary>
+          <p>It works on any raster image the browser can decode — JPEG, PNG, WebP, AVIF, GIF, and BMP. Very large images are sampled from a downscaled copy so the analysis stays fast, which does not change the palette. SVG and other vector formats are not supported, since they have no fixed pixels to sample.</p>
+        </details>
+      </div>
+
+      <h2>Related tools</h2>
+      <p><a href="/photo-editor/">Photo Editor</a> — crop, redact, and batch-edit images. <a href="/crop-image/">Crop Image</a> — trim to an exact box or aspect ratio. <a href="/compress-images/">Compress images</a> — shrink the file size without changing dimensions. <a href="/resize-image/">Resize Image</a> — change pixel dimensions to an exact size or percentage.</p>
+    </section>
+  </main>
+
+  <script type="module" src="./js/main.js"></script>
+</body>
+</html>

@@ -1,0 +1,177 @@
+/* color-palette-from-image.css — tool-only styles. Tokens/chrome come from
+   /shared/shell.css. COLORBLIND-CRITICAL (this is a color tool and the site
+   owner is colorblind): every swatch carries its exact hex + RGB as TEXT — the
+   color block is NEVER the only signal, and every color is copied by its value,
+   never picked by eye. "Copied" feedback is a text change, never a color change.
+   All selectors are scoped under #tool so nothing leaks onto the shared topbar
+   (which injects <div class="controls">) or footer. */
+
+/* #tool is a margin:0 auto flex item of the body column; width:100% keeps its
+   cross size definite so an intrinsically-sized child (the preview <img>) can't
+   content-size the container past a narrow viewport (crop-image lesson). */
+#tool { width: 100%; max-width: 860px; margin: 0 auto; box-sizing: border-box; padding: var(--space-2xl) var(--space-xl) var(--space-4xl); }
+#tool h1 { margin: 0 0 var(--space-sm); font-size: var(--t-2xl); font-weight: 600; }
+.tool-lead { margin: 0 0 var(--space-xl); color: var(--text-secondary); font-size: var(--t-lg); max-width: 70ch; }
+
+/* The playbook guard: [hidden] must beat any author display: rule below
+   (.result-top is flex, .copy-actions is flex, .swatch-grid is grid, etc.). */
+#tool [hidden] { display: none !important; }
+
+/* --- Dropzone ------------------------------------------------------------ */
+.dropzone {
+  border: 2px dashed var(--border-strong);
+  border-radius: var(--radius-card);
+  padding: var(--space-2xl);
+  text-align: center;
+  background: var(--surface);
+}
+.dropzone.is-drag { border-color: var(--accent); background: var(--surface-2); }
+.dropzone p { margin: 0 0 var(--space-sm); }
+.dropzone-hint { color: var(--text-muted); font-size: var(--t-sm); margin: var(--space-sm) 0 0; }
+
+.file-label {
+  position: relative;
+  display: inline-block;
+  padding: var(--space-sm) var(--space-lg);
+  border-radius: var(--radius-control);
+  background: var(--accent);
+  color: var(--accent-contrast);
+  font-weight: 500;
+  cursor: pointer;
+}
+/* Visually hidden, NOT display:none — the input stays focusable and in the
+   a11y tree (WCAG 2.1.1). Same clip pattern as shell.css's .visually-hidden. */
+.file-label input {
+  position: absolute !important;
+  width: 1px !important; height: 1px !important;
+  margin: -1px !important; padding: 0 !important;
+  border: 0 !important; clip: rect(0 0 0 0) !important;
+  clip-path: inset(50%) !important; overflow: hidden !important;
+  white-space: nowrap !important;
+}
+.file-label:focus-within { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+
+.status-line { margin: var(--space-md) 0 0; font-weight: 500; }
+
+/* --- Result: top row (preview + color-count) ----------------------------- */
+#result { margin-top: var(--space-xl); }
+
+.result-top {
+  display: flex; flex-wrap: wrap; align-items: center;
+  justify-content: space-between; gap: var(--space-md);
+  margin-bottom: var(--space-xl);
+}
+.preview { display: flex; align-items: center; gap: var(--space-md); min-width: 0; }
+.preview-img {
+  width: 72px; height: 72px; object-fit: cover;
+  border-radius: var(--radius-control); border: 1px solid var(--border);
+  background: var(--surface-2); flex: none;
+}
+.preview-name { font-size: var(--t-sm); color: var(--text-secondary); overflow-wrap: anywhere; min-width: 0; }
+
+.count-control { display: inline-flex; align-items: center; gap: var(--space-sm); flex: none; }
+.count-control label { font-weight: 600; font-size: var(--t-sm); }
+.count-control select {
+  padding: var(--space-xs) var(--space-sm);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-control);
+  background: var(--surface); color: inherit; font: inherit;
+}
+.count-control select:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+
+.section-title { font-size: var(--t-md); font-weight: 600; margin: 0 0 var(--space-sm); }
+
+/* --- Dominant color ------------------------------------------------------ */
+.dominant { margin-bottom: var(--space-xl); }
+.dominant-card {
+  display: flex; align-items: stretch; gap: var(--space-lg);
+  width: 100%; text-align: left;
+  padding: var(--space-md);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  background: var(--surface);
+  cursor: pointer;
+}
+.dominant-card:hover { background: var(--surface-2); }
+.dominant-card:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+.dominant-swatch {
+  flex: none; width: 96px; height: 96px;
+  border-radius: var(--radius-control);
+  border: 1px solid var(--border);
+}
+.dominant-values { display: flex; flex-direction: column; justify-content: center; gap: var(--space-xs); min-width: 0; }
+/* The hex is the headline value — large, tabular, always readable as text. */
+.dominant-hex { font-size: var(--t-2xl); font-weight: 600; font-variant-numeric: tabular-nums; line-height: 1.1; }
+.dominant-rgb, .dominant-hsl { font-size: var(--t-sm); color: var(--text-secondary); font-variant-numeric: tabular-nums; }
+.dominant-copied { font-size: var(--t-sm); font-weight: 600; color: var(--accent); }
+
+/* --- Palette grid -------------------------------------------------------- */
+.palette { margin-bottom: var(--space-xl); }
+.swatch-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(116px, 1fr));
+  gap: var(--space-md);
+}
+/* Each swatch is a copy button; its hex + RGB are shown as TEXT so the color
+   block is never the only signal (colorblind-critical). */
+.swatch {
+  display: flex; flex-direction: column; gap: 0;
+  padding: 0; text-align: left;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  background: var(--surface);
+  overflow: hidden; cursor: pointer;
+}
+.swatch:hover { border-color: var(--border-strong); }
+.swatch:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+/* The color block. The hex label is drawn ON it with a contrast-safe color
+   chosen per-swatch by labelOn() (set inline in JS). */
+.swatch-color {
+  display: flex; align-items: center; justify-content: center;
+  height: 72px; padding: var(--space-xs);
+  font-weight: 600; font-size: var(--t-sm);
+  font-variant-numeric: tabular-nums;
+}
+.swatch-rgb {
+  padding: var(--space-xs) var(--space-sm);
+  font-size: var(--t-xs); color: var(--text-secondary);
+  font-variant-numeric: tabular-nums; overflow-wrap: anywhere;
+  border-top: 1px solid var(--border);
+}
+
+/* --- Copy / download actions --------------------------------------------- */
+.copy-actions { display: flex; gap: var(--space-sm); flex-wrap: wrap; }
+.copy-actions button {
+  border: 1px solid var(--border-strong);
+  background: var(--surface); color: inherit; font: inherit;
+  padding: var(--space-sm) var(--space-lg);
+  border-radius: var(--radius-control); cursor: pointer;
+}
+.copy-actions button:hover { background: var(--surface-2); }
+#download-png { background: var(--accent); color: var(--accent-contrast); border-color: var(--accent); font-weight: 500; }
+#download-png:hover { background: var(--accent-hover); }
+
+.action-error {
+  margin: var(--space-md) 0 0;
+  font-size: var(--t-sm); font-weight: 600; color: var(--danger);
+}
+.action-error::before { content: "⚠ "; }
+
+/* --- Deep page ----------------------------------------------------------- */
+.tool-copy { margin-top: var(--space-3xl); max-width: 70ch; }
+.tool-copy h2 { font-size: var(--t-lg); font-weight: 600; margin: var(--space-2xl) 0 var(--space-sm); }
+.tool-copy p { color: var(--text-secondary); line-height: 1.55; }
+.tool-copy code { font-size: 0.9em; background: var(--surface-2); padding: 0 var(--space-xs); border-radius: 3px; }
+.faq details { border-top: 1px solid var(--border); padding: var(--space-md) 0; }
+.faq details:last-child { border-bottom: 1px solid var(--border); }
+.faq summary { font-weight: 600; cursor: pointer; }
+.faq details p { margin: var(--space-sm) 0 0; }
+
+/* --- Mobile -------------------------------------------------------------- */
+@media (max-width: 520px) {
+  #tool { padding-inline: var(--space-lg); }
+  .result-top { align-items: flex-start; }
+  .copy-actions { flex-direction: column; align-items: stretch; }
+  .swatch-grid { grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); }
+  .dominant-hex { font-size: var(--t-xl); }
+}

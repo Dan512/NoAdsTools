@@ -1,0 +1,209 @@
+/* favicon-generator.css — tool-only styles. Tokens/chrome come from
+   /shared/shell.css. EVERYTHING here is scoped under #tool so no bare
+   .controls/.card/.actions rule can leak onto the shared topbar/footer and
+   cause mobile horizontal overflow (playbook §4). Colorblind-safe (Dan is
+   colorblind): the active fit/background option rides a "✓" glyph + heavier
+   border + weight, never hue alone, and the theme/background colors always
+   show their hex as text. */
+
+/* #tool is a `margin:0 auto` flex item of the body column. Auto cross-margins
+   DISABLE align-items:stretch, so an intrinsic-width child (the preview
+   canvases) would content-size #tool and overflow narrow viewports. An explicit
+   width:100% (border-box) makes the cross size definite. (crop-image bug.) */
+#tool { width: 100%; max-width: 860px; margin: 0 auto; box-sizing: border-box; padding: var(--space-2xl) var(--space-xl) var(--space-4xl); }
+#tool h1 { margin: 0 0 var(--space-sm); font-size: var(--t-2xl); font-weight: 600; }
+#tool .tool-lead { margin: 0 0 var(--space-xl); color: var(--text-secondary); font-size: var(--t-lg); max-width: 70ch; }
+#tool code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.9em; }
+
+/* [hidden] must beat any author display: rule below (.fg-actions is flex, etc.) */
+#tool [hidden] { display: none !important; }
+
+/* --- Dropzone ------------------------------------------------------------ */
+#tool .fg-dropzone {
+  border: 2px dashed var(--border-strong);
+  border-radius: var(--radius-card);
+  padding: var(--space-2xl);
+  text-align: center;
+  background: var(--surface);
+}
+#tool .fg-dropzone.is-drag { border-color: var(--accent); background: var(--surface-2); }
+#tool .fg-dropzone p { margin: 0 0 var(--space-sm); }
+#tool .fg-dropzone-hint { color: var(--text-muted); font-size: var(--t-sm); margin: var(--space-sm) 0 0; }
+/* Once an image is loaded, collapse to a compact inline "+ Replace image" row. */
+#tool .fg-dropzone.is-compact {
+  padding: var(--space-sm) var(--space-md);
+  text-align: left;
+  border-style: solid;
+  border-width: 1px;
+}
+#tool .fg-dropzone.is-compact p { display: none; }
+
+#tool .fg-file-label {
+  position: relative;
+  display: inline-block;
+  padding: var(--space-sm) var(--space-lg);
+  border-radius: var(--radius-control);
+  background: var(--accent);
+  color: var(--accent-contrast);
+  font-weight: 500;
+  cursor: pointer;
+}
+/* Visually hidden, NOT display:none — the input stays focusable + in the a11y
+   tree so keyboard users can Tab to it and press Enter/Space (WCAG 2.1.1). */
+#tool .fg-file-label input {
+  position: absolute !important;
+  width: 1px !important; height: 1px !important;
+  margin: -1px !important; padding: 0 !important;
+  border: 0 !important; clip: rect(0 0 0 0) !important;
+  clip-path: inset(50%) !important; overflow: hidden !important;
+  white-space: nowrap !important;
+}
+#tool .fg-file-label:focus-within { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+
+#tool .fg-status-line { margin: var(--space-md) 0 0; font-weight: 500; }
+
+/* --- Editor layout ------------------------------------------------------- */
+#tool #editor { margin-top: var(--space-xl); }
+#tool .fg-source-note {
+  margin: 0 0 var(--space-lg); font-size: var(--t-sm); font-weight: 600;
+  color: var(--text-secondary);
+}
+#tool .fg-source-note::before { content: "\2139  "; } /* ℹ — glyph + text, not hue */
+
+#tool .fg-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: var(--space-2xl);
+  align-items: start;
+}
+
+/* --- Controls ------------------------------------------------------------ */
+#tool .fg-controls { display: flex; flex-direction: column; gap: var(--space-xl); min-width: 0; }
+#tool .fg-field { display: flex; flex-direction: column; gap: var(--space-sm); border: 0; margin: 0; padding: 0; min-width: 0; }
+#tool .fg-field > label,
+#tool .fg-field > legend { font-weight: 600; font-size: var(--t-sm); padding: 0; }
+#tool .fg-hint { color: var(--text-muted); font-size: var(--t-xs); }
+
+#tool #site-name {
+  width: 100%; max-width: 100%;
+  padding: var(--space-sm);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-control);
+  background: var(--surface); color: inherit; font: inherit;
+  box-sizing: border-box;
+}
+#tool #site-name:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+
+/* Color inputs always sit beside their hex value AS TEXT (colorblind-safe). */
+#tool .fg-color-row { display: flex; align-items: center; gap: var(--space-sm); }
+#tool .fg-color-row input[type="color"] {
+  width: 44px; height: 32px; padding: 0;
+  border: 1px solid var(--border-strong); border-radius: var(--radius-control);
+  background: var(--surface); cursor: pointer;
+}
+#tool .fg-color-row input[type="color"]:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+#tool .fg-hex {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: var(--t-sm); font-weight: 600;
+  letter-spacing: 0.02em; text-transform: uppercase;
+  color: var(--text);
+}
+
+/* Button groups (fit + background). Active = ✓ glyph + weight + heavier border. */
+#tool .fg-btn-group { display: flex; flex-wrap: wrap; gap: var(--space-xs); }
+#tool .fg-opt {
+  border: 1px solid var(--border-strong);
+  background: var(--surface); color: inherit; font: inherit;
+  padding: var(--space-xs) var(--space-md);
+  border-radius: var(--radius-control); cursor: pointer; min-width: 0;
+}
+#tool .fg-opt:hover { background: var(--surface-2); }
+#tool .fg-opt[aria-pressed="true"] {
+  border: 2px solid var(--accent);
+  padding: calc(var(--space-xs) - 1px) calc(var(--space-md) - 1px);
+  font-weight: 700;
+  background: var(--surface-2);
+}
+#tool .fg-opt[aria-pressed="true"]::before { content: "\2713  "; } /* ✓ */
+#tool .fg-opt:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+
+/* --- Preview ------------------------------------------------------------- */
+#tool .fg-preview { display: flex; flex-direction: column; gap: var(--space-lg); min-width: 0; }
+
+/* Checkerboard so transparency reads visually behind the icons (neutral, not hue). */
+#tool .fg-swatch-frame,
+#tool .fg-tab-favicon {
+  --sq: 8px;
+  background-color: #fff;
+  background-image:
+    linear-gradient(45deg, #ccc 25%, transparent 25%, transparent 75%, #ccc 75%, #ccc),
+    linear-gradient(45deg, #ccc 25%, transparent 25%, transparent 75%, #ccc 75%, #ccc);
+  background-size: var(--sq) var(--sq);
+  background-position: 0 0, calc(var(--sq) / 2) calc(var(--sq) / 2);
+}
+
+#tool .fg-tab-mock {
+  display: inline-flex; align-items: center; gap: var(--space-sm);
+  max-width: 100%;
+  padding: var(--space-xs) var(--space-md);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-control) var(--radius-control) 0 0;
+  border-bottom: 2px solid var(--accent);
+  background: var(--surface-2);
+  box-sizing: border-box;
+}
+#tool .fg-tab-favicon { width: 16px; height: 16px; flex: 0 0 auto; border-radius: 2px; }
+#tool .fg-tab-title {
+  font-size: var(--t-sm); font-weight: 500;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0;
+}
+#tool .fg-tab-close { color: var(--text-muted); flex: 0 0 auto; }
+
+#tool .fg-swatches { display: flex; flex-wrap: wrap; align-items: flex-end; gap: var(--space-xl); }
+#tool .fg-swatch { margin: 0; display: flex; flex-direction: column; align-items: center; gap: var(--space-xs); }
+#tool .fg-swatch-frame {
+  display: grid; place-items: center;
+  border: 1px solid var(--border); border-radius: 2px;
+  line-height: 0;
+}
+#tool .fg-swatch-frame canvas { display: block; image-rendering: auto; }
+#tool .fg-swatch figcaption { font-size: var(--t-xs); color: var(--text-muted); font-weight: 600; }
+#tool .fg-apple-note { margin: 0; font-size: var(--t-xs); color: var(--text-muted); max-width: 42ch; }
+
+/* --- Actions ------------------------------------------------------------- */
+#tool .fg-actions { display: flex; gap: var(--space-sm); flex-wrap: wrap; margin: var(--space-2xl) 0 var(--space-md); }
+#tool .fg-actions button {
+  border: 1px solid var(--border-strong);
+  background: var(--surface); color: inherit; font: inherit;
+  padding: var(--space-sm) var(--space-lg);
+  border-radius: var(--radius-control); cursor: pointer;
+}
+#tool .fg-actions button:disabled { opacity: 0.55; cursor: default; }
+#tool #download-package { background: var(--accent); color: var(--accent-contrast); border-color: var(--accent); font-weight: 500; }
+#tool .fg-btn-quiet { color: var(--text-secondary); }
+
+#tool .fg-action-error { margin: 0 0 var(--space-lg); font-size: var(--t-sm); font-weight: 600; color: var(--danger); }
+#tool .fg-action-error::before { content: "\26A0  "; } /* ⚠ */
+
+/* --- Skipped + deep page ------------------------------------------------- */
+#tool #skipped { margin-top: var(--space-lg); font-size: var(--t-sm); color: var(--text-secondary); }
+#tool #skipped summary { cursor: pointer; font-weight: 500; color: var(--text); }
+#tool #skipped-list { margin: var(--space-sm) 0 0; padding-left: var(--space-xl); }
+#tool #skipped-list li { margin-bottom: var(--space-xs); overflow-wrap: anywhere; }
+
+#tool .fg-tool-copy { margin-top: var(--space-3xl); max-width: 70ch; }
+#tool .fg-tool-copy h2 { font-size: var(--t-lg); font-weight: 600; margin: var(--space-2xl) 0 var(--space-sm); }
+#tool .fg-tool-copy p { color: var(--text-secondary); line-height: 1.55; }
+#tool .faq details { border-top: 1px solid var(--border); padding: var(--space-md) 0; }
+#tool .faq details:last-child { border-bottom: 1px solid var(--border); }
+#tool .faq summary { font-weight: 600; cursor: pointer; }
+#tool .faq details p { margin: var(--space-sm) 0 0; }
+
+/* --- Mobile -------------------------------------------------------------- */
+@media (max-width: 640px) {
+  #tool .fg-grid { grid-template-columns: minmax(0, 1fr); gap: var(--space-xl); }
+}
+@media (max-width: 520px) {
+  #tool { padding-inline: var(--space-lg); }
+  #tool .fg-actions { flex-direction: column; align-items: stretch; }
+}

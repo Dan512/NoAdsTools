@@ -31,6 +31,36 @@
     <priority>0.8</priority>
   </url>
   <url>
+    <loc>https://noadstools.com/compress-images/</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://noadstools.com/resize-image/</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://noadstools.com/convert-image/</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://noadstools.com/crop-image/</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://noadstools.com/color-palette-from-image/</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://noadstools.com/favicon-generator/</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
     <loc>https://noadstools.com/image-to-pdf/</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>

@@ -2,6 +2,10 @@ import { defineConfig, devices } from '@playwright/test';
 export default defineConfig({
   testDir: '.',
   testMatch: '**/tests/browser/**/*.spec.js',
+  // Never collect specs from session-local git worktrees or tooling dirs — a
+  // stale `.claude/worktrees/*` checkout would otherwise run duplicate, stale
+  // copies of every spec against the shared dev server and add phantom reds.
+  testIgnore: ['**/.claude/**', '**/node_modules/**', '**/.tmp*/**'],
   fullyParallel: true,
   retries: 0,
   use: { baseURL: 'http://localhost:4173', trace: 'on-first-retry' },

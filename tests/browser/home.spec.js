@@ -25,11 +25,20 @@ test('Tools dropdown lists the live editor', async ({ page }) => {
 test('grid shows the live editor card and non-clickable Soon tiles', async ({ page }) => {
   await boot(page);
   await expect(page.locator('a.tool-card[href="/photo-editor/"]')).toHaveCount(1);
+  // Soon tiles mirror the manifest's still-planned tools. Once compress-images
+  // (the last planned tool) shipped there are none left — but however many there
+  // are, they must never be links and each must carry the "Soon" marker.
+  const plannedCount = await page.evaluate(async () => {
+    const m = await import('/shared/tools.js');
+    return m.TOOLS.filter(t => t.status === 'planned').length;
+  });
   const soon = page.locator('.tool-card.is-soon');
-  expect(await soon.count()).toBeGreaterThan(0);
+  await expect(soon).toHaveCount(plannedCount);
   // Soon tiles are not links.
   await expect(page.locator('a.tool-card.is-soon')).toHaveCount(0);
-  await expect(soon.first().locator('.tool-soon')).toHaveText('Soon');
+  if (plannedCount > 0) {
+    await expect(soon.first().locator('.tool-soon')).toHaveText('Soon');
+  }
 });
 
 test('live grid cards match liveTools() (drift guard)', async ({ page }) => {

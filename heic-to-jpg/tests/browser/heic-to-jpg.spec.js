@@ -154,10 +154,10 @@ test('non-HEIC image gets the friendly "already a JPG" note — no fake work', a
 });
 
 test('JSZip loads lazily; ZIP downloads as noadstools-converted.zip', async ({ page }) => {
-  await boot(page);
-  await installFakeDecoder(page);
   const zipRequests = [];
   page.on('request', (r) => { if (r.url().includes('/vendor/jszip/')) zipRequests.push(r.url()); });
+  await boot(page);
+  await installFakeDecoder(page);
   await page.locator('#file-input').setInputFiles([
     heicFile('one.heic', makeHeicNoExif()),
     heicFile('two.heic', makeHeicNoExif()),

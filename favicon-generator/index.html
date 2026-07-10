@@ -1,0 +1,175 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Favicon Generator — Free, No Upload · NoAdsTools</title>
+  <meta name="description" content="Turn an image into a full favicon package in your browser — a multi-resolution favicon.ico, PNG sizes, apple-touch-icon, site.webmanifest, and a paste-in HTML snippet, zipped. Free, no upload, no account: your image never leaves your device.">
+  <meta name="theme-color" content="#0f1410">
+  <link rel="canonical" href="https://noadstools.com/favicon-generator/">
+  <link rel="icon" type="image/png" sizes="192x192" href="/photo-editor/img/favicon-light-192.png">
+  <link rel="stylesheet" href="/shared/shell.css">
+  <link rel="stylesheet" href="./favicon-generator.css">
+
+  <meta property="og:title" content="Favicon Generator — Free, No Upload">
+  <meta property="og:description" content="Make a full favicon package — favicon.ico, PNGs, apple-touch-icon, manifest, and the HTML snippet — entirely in your browser. Nothing is uploaded.">
+  <meta property="og:url" content="https://noadstools.com/favicon-generator/">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="NoAdsTools">
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="Favicon Generator — Free, No Upload">
+  <meta name="twitter:description" content="Make a full favicon package — favicon.ico, PNGs, apple-touch-icon, manifest, and the HTML snippet — entirely in your browser. Nothing is uploaded.">
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "NoAdsTools Favicon Generator",
+    "url": "https://noadstools.com/favicon-generator/",
+    "description": "Turn a source image into a complete favicon package — a multi-resolution favicon.ico, PNG sizes, an apple-touch-icon, a site.webmanifest, and a paste-in HTML snippet — all generated in your browser and zipped. No upload, no account.",
+    "applicationCategory": "MultimediaApplication",
+    "operatingSystem": "Any (browser-based)",
+    "browserRequirements": "Any modern browser. No install, no account.",
+    "isAccessibleForFree": true,
+    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+    "license": "https://www.gnu.org/licenses/agpl-3.0.html"
+  }
+  </script>
+</head>
+<body>
+  <main id="tool">
+    <h1>Favicon generator</h1>
+    <p class="tool-lead">Turn one image into a full favicon package — a multi-resolution <code>favicon.ico</code>, the PNG sizes, an apple-touch-icon, a <code>site.webmanifest</code>, and the exact HTML snippet to paste into your site — all built in your browser and zipped. Your image never leaves your device: no upload, no account, no tracking.</p>
+
+    <section class="fg-dropzone" id="dropzone" aria-label="Add a source image">
+      <p><strong>Drop an image here</strong>, paste, or</p>
+      <label class="fg-file-label"><span class="fg-file-label-text" id="file-label-text">Choose file</span><input id="file-input" type="file" accept="image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp"></label>
+      <p class="fg-dropzone-hint">PNG, JPEG, or WebP. A square image at least 512 px works best. Generated in your browser, nothing uploaded.</p>
+    </section>
+
+    <p id="status-line" class="fg-status-line" role="status" aria-live="polite" hidden></p>
+
+    <section id="editor" hidden>
+      <p id="source-note" class="fg-source-note" role="status" aria-live="polite" hidden></p>
+
+      <div class="fg-grid">
+        <div class="fg-controls">
+          <div class="fg-field">
+            <label for="site-name">Site name</label>
+            <input id="site-name" type="text" value="My Site" maxlength="60" autocomplete="off" spellcheck="false">
+            <span class="fg-hint">Fills the manifest name and short name.</span>
+          </div>
+
+          <div class="fg-field">
+            <label for="theme-color">Theme color</label>
+            <span class="fg-color-row">
+              <input id="theme-color" type="color" value="#0f1410" aria-describedby="theme-color-hex">
+              <output id="theme-color-hex" class="fg-hex" for="theme-color">#0f1410</output>
+            </span>
+            <span class="fg-hint">The browser UI color (manifest + theme-color meta).</span>
+          </div>
+
+          <fieldset class="fg-field">
+            <legend>Background</legend>
+            <div class="fg-btn-group" id="bg-mode" role="group" aria-label="Background">
+              <button type="button" class="fg-opt" data-bg="transparent" aria-pressed="true">Transparent</button>
+              <button type="button" class="fg-opt" data-bg="color" aria-pressed="false">Color</button>
+            </div>
+            <span class="fg-color-row" id="bg-color-row" hidden>
+              <input id="bg-color" type="color" value="#ffffff" aria-describedby="bg-color-hex">
+              <output id="bg-color-hex" class="fg-hex" for="bg-color">#ffffff</output>
+            </span>
+          </fieldset>
+
+          <fieldset class="fg-field">
+            <legend>Fit non-square images</legend>
+            <div class="fg-btn-group" id="fit-mode" role="group" aria-label="Fit mode">
+              <button type="button" class="fg-opt" data-fit="pad" aria-pressed="true">Pad</button>
+              <button type="button" class="fg-opt" data-fit="crop" aria-pressed="false">Crop</button>
+            </div>
+            <span class="fg-hint" id="fit-hint">Pad keeps the whole image and fills the margins. Crop trims to a centered square.</span>
+          </fieldset>
+        </div>
+
+        <div class="fg-preview">
+          <div class="fg-tab-mock" aria-label="Browser tab preview">
+            <canvas id="tab-favicon" class="fg-tab-favicon" width="16" height="16" aria-hidden="true"></canvas>
+            <span id="tab-title" class="fg-tab-title"></span>
+            <span class="fg-tab-close" aria-hidden="true">×</span>
+          </div>
+
+          <div class="fg-swatches">
+            <figure class="fg-swatch">
+              <div class="fg-swatch-frame"><canvas id="prev-16" width="16" height="16"></canvas></div>
+              <figcaption>16 px</figcaption>
+            </figure>
+            <figure class="fg-swatch">
+              <div class="fg-swatch-frame"><canvas id="prev-32" width="32" height="32"></canvas></div>
+              <figcaption>32 px</figcaption>
+            </figure>
+            <figure class="fg-swatch">
+              <div class="fg-swatch-frame"><canvas id="prev-180" width="180" height="180"></canvas></div>
+              <figcaption>180 px · apple-touch</figcaption>
+            </figure>
+          </div>
+          <p class="fg-apple-note" id="apple-note">The apple-touch-icon is drawn on a solid background — Apple does not show transparency.</p>
+        </div>
+      </div>
+
+      <div class="fg-actions" id="actions">
+        <button type="button" id="download-package">Download package</button>
+        <button type="button" id="clear-all" class="fg-btn-quiet">Clear</button>
+      </div>
+      <p class="fg-action-error" id="action-error" role="status" aria-live="polite" hidden></p>
+    </section>
+
+    <details id="skipped" hidden>
+      <summary id="skipped-summary"></summary>
+      <ul id="skipped-list"></ul>
+    </details>
+
+    <section class="fg-prose fg-tool-copy">
+      <h2>What this tool does</h2>
+      <p>Drop in one PNG, JPEG, or WebP image and this page turns it into everything a modern site needs to show a favicon — the little icon in the browser tab, the bookmark, the phone home screen, and the install prompt. It builds a real multi-resolution <code>favicon.ico</code> containing the 16×16, 32×32, and 48×48 icons, standalone PNGs at 16, 32, 48, 192, and 512 pixels, a 180-pixel <code>apple-touch-icon.png</code> for iOS, a <code>site.webmanifest</code> that names your site and points to the large icons, and a ready-to-paste HTML snippet. Everything is packed into a single <code>favicon-package.zip</code>. A canvas cannot save an <code>.ico</code> file on its own, so the ICO container is assembled byte by byte here in the page.</p>
+
+      <h2>Square, background, and fit</h2>
+      <p>Favicons are square, so a non-square image has to be squared first — and this tool never stretches it. By default it pads: the whole image is centered and the margins are left transparent, or filled with a background color if you pick one. If you would rather trim than pad, switch Fit to Crop and the image is cut to a centered square instead. A live preview renders the icon at 16, 32, and 180 pixels next to a browser-tab mock, so you can judge legibility at real favicon scale before you download — fine detail and thin text tend to disappear at 16 pixels, and it is better to find that out here.</p>
+
+      <h2>Install it</h2>
+      <p>Unzip the package into the root of your site — the same folder as your home page — and paste the snippet from <code>favicon-snippet.html</code> into your page's <code>&lt;head&gt;</code>. The tags point at <code>/favicon.ico</code>, the two PNG sizes browsers ask for, the apple-touch-icon, the manifest, and your chosen theme color. That is the whole install: no build step, no plugin. Older browsers read the <code>.ico</code>; modern ones prefer the PNGs and the manifest.</p>
+
+      <h2>Nothing is uploaded</h2>
+      <p>Decoding, squaring, resizing, ICO assembly, and zipping all run in your browser, using code this page loads only from its own address. You can open your browser's network panel and watch: no image data leaves the machine. There is no account and nothing to sign up for. The ZIP library is fetched only when you click Download package, and nothing else. The full source is <a href="https://github.com/Dan512/NoAdsTools" target="_blank" rel="noopener">public on GitHub</a> under the AGPL-3.0 licence, and the privacy panel in the footer names every file this page can load and when. SVG source is not supported yet — export a PNG for now — and a source smaller than 512 pixels still works, though the 192 and 512 icons will be upscaled and may look soft.</p>
+
+      <h2>Questions</h2>
+      <div class="faq">
+        <details>
+          <summary>Can I make a favicon without uploading my image?</summary>
+          <p>Yes. The whole process happens in your browser, on your device — you can verify it by opening your browser's DevTools Network tab while you work and watching that no image data leaves the machine. There is no account and nothing to sign up for.</p>
+        </details>
+        <details>
+          <summary>Can I make a favicon.ico from a PNG or JPEG?</summary>
+          <p>Yes. Drop in a PNG, JPEG, or WebP and the tool builds a real multi-resolution <code>favicon.ico</code> that packs the 16×16, 32×32, and 48×48 icons into one file. Because a browser canvas cannot save the <code>.ico</code> format directly, the ICO container is assembled byte by byte in the page from the PNG-encoded sizes.</p>
+        </details>
+        <details>
+          <summary>What favicon sizes do I actually need?</summary>
+          <p>This tool covers the practical modern set: a <code>favicon.ico</code> with 16, 32, and 48 pixels for legacy support; standalone 16, 32, 48, 192, and 512 pixel PNGs for browsers and the manifest; and a 180 pixel apple-touch-icon for iOS home screens. The 192 and 512 sizes are what the web manifest uses for install prompts and the Android home screen.</p>
+        </details>
+        <details>
+          <summary>How do I install the favicon on my site?</summary>
+          <p>Unzip the package into your site's root folder and paste the contents of <code>favicon-snippet.html</code> into your page's <code>&lt;head&gt;</code>. The snippet references the <code>.ico</code>, the two PNG sizes, the apple-touch-icon, the manifest, and your theme color. No build step or plugin is involved.</p>
+        </details>
+        <details>
+          <summary>Does it support transparency?</summary>
+          <p>Yes. If you keep the background transparent, the padded favicon PNGs and the <code>.ico</code> preserve the transparency of your source. The one exception is the apple-touch-icon: Apple does not show transparency on home screens, so that icon is always drawn on a solid background — white by default, or the background color you choose.</p>
+        </details>
+      </div>
+
+      <h2>Related tools</h2>
+      <p><a href="/crop-image/">Crop Image</a> — square your logo before generating icons. <a href="/resize-image/">Resize Image</a> — change pixel dimensions to an exact size. <a href="/compress-images/">Compress images</a> — shrink file size without changing dimensions. <a href="/photo-editor/">Photo Editor</a> — crop, redact, remove backgrounds, and batch-edit images.</p>
+    </section>
+  </main>
+
+  <script type="module" src="./js/main.js"></script>
+</body>
+</html>

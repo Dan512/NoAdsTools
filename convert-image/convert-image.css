@@ -1,0 +1,189 @@
+/* convert-image.css — tool-only styles. Tokens/chrome come from
+   /shared/shell.css. Colorblind-safe (Dan is colorblind): "first frame only"
+   rides a "⚑" glyph + wording + weight; a fallback/degraded encode rides a
+   "⚠" glyph + text; an error rides a "⚠" glyph + weight + the danger token.
+   No state rides hue alone. Sizes are shown neutrally — convert is a format
+   change, not a shrink, so there is no "saved" claim. */
+#tool { max-width: 820px; margin: 0 auto; padding: var(--space-2xl) var(--space-xl) var(--space-4xl); }
+#tool h1 { margin: 0 0 var(--space-sm); font-size: var(--t-2xl); font-weight: 600; }
+.tool-lead { margin: 0 0 var(--space-xl); color: var(--text-secondary); font-size: var(--t-lg); max-width: 70ch; }
+
+/* The playbook guard: [hidden] must beat any author display: rule below
+   (.controls is grid, .results-actions is flex, .card is grid, etc.). */
+#tool [hidden] { display: none !important; }
+
+/* --- Dropzone ------------------------------------------------------------ */
+.dropzone {
+  border: 2px dashed var(--border-strong);
+  border-radius: var(--radius-card);
+  padding: var(--space-2xl);
+  text-align: center;
+  background: var(--surface);
+}
+.dropzone.is-drag { border-color: var(--accent); background: var(--surface-2); }
+.dropzone p { margin: 0 0 var(--space-sm); }
+.dropzone-hint { color: var(--text-muted); font-size: var(--t-sm); margin: var(--space-sm) 0 0; }
+
+.file-label {
+  position: relative;
+  display: inline-block;
+  padding: var(--space-sm) var(--space-lg);
+  border-radius: var(--radius-control);
+  background: var(--accent);
+  color: var(--accent-contrast);
+  font-weight: 500;
+  cursor: pointer;
+}
+/* Visually hidden, NOT display:none — the input stays focusable and in the
+   a11y tree so keyboard users can Tab to it and press Enter/Space.
+   Same clip pattern as shell.css's .visually-hidden utility. */
+.file-label input {
+  position: absolute !important;
+  width: 1px !important; height: 1px !important;
+  margin: -1px !important; padding: 0 !important;
+  border: 0 !important; clip: rect(0 0 0 0) !important;
+  clip-path: inset(50%) !important; overflow: hidden !important;
+  white-space: nowrap !important;
+}
+.file-label:focus-within { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+
+/* --- Controls ------------------------------------------------------------ */
+/* Scoped to #tool: the shared topbar (shared/topbar.js) also injects a
+   <div class="controls">, and an unscoped .controls here would leak this
+   card's padding/border/grid styling onto that unrelated element, causing
+   ~4px horizontal overflow at narrow widths. */
+#tool .controls {
+  display: grid;
+  gap: var(--space-lg);
+  margin: var(--space-lg) 0;
+  padding: var(--space-lg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  background: var(--surface);
+}
+
+.control-block { display: flex; flex-direction: column; gap: var(--space-xs); }
+.control-block > label { font-weight: 600; }
+.control-hint { margin: 0; color: var(--text-muted); font-size: var(--t-sm); }
+
+#quality-value { font-weight: 700; font-variant-numeric: tabular-nums; }
+#quality { width: 100%; max-width: 360px; accent-color: var(--accent); cursor: pointer; }
+#quality:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 4px; }
+
+#format-control { max-width: 26rem; }
+#format-control select {
+  align-self: flex-start;
+  padding: var(--space-xs) var(--space-sm);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-control);
+  background: var(--surface); color: inherit; font: inherit;
+}
+#format-control select:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+
+.avif-caution {
+  margin: 0; padding: var(--space-sm) var(--space-md);
+  border: 1px solid var(--border-strong); border-radius: var(--radius-control);
+  background: var(--surface-2); font-size: var(--t-sm);
+}
+
+.status-line { margin: var(--space-md) 0 0; font-weight: 500; }
+
+/* --- Results ------------------------------------------------------------- */
+#results { margin-top: var(--space-xl); }
+.summary { margin: 0 0 var(--space-lg); font-size: var(--t-lg); font-weight: 600; }
+
+.results-actions { display: flex; gap: var(--space-sm); flex-wrap: wrap; margin-bottom: var(--space-lg); }
+.results-actions button {
+  border: 1px solid var(--border-strong);
+  background: var(--surface); color: inherit; font: inherit;
+  padding: var(--space-sm) var(--space-lg);
+  border-radius: var(--radius-control); cursor: pointer;
+}
+.results-actions button:disabled { opacity: 0.55; cursor: default; }
+#download-zip { background: var(--accent); color: var(--accent-contrast); border-color: var(--accent); font-weight: 500; }
+.btn-quiet { color: var(--text-secondary); }
+
+/* --- Cards --------------------------------------------------------------- */
+.cards { display: flex; flex-direction: column; gap: var(--space-md); }
+.card {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  background: var(--surface);
+  padding: var(--space-lg);
+  display: grid;
+  grid-template-columns: 64px 1fr auto;
+  gap: var(--space-xs) var(--space-lg);
+  align-items: start;
+}
+.card-thumb {
+  grid-row: span 4;
+  width: 64px; height: 64px;
+  object-fit: cover;
+  border-radius: var(--radius-control);
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+}
+.card-thumb-empty {
+  grid-row: span 4;
+  width: 64px; height: 64px;
+  border-radius: var(--radius-control);
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  display: grid; place-items: center;
+  color: var(--text-muted); font-size: var(--t-xs);
+}
+.card-name { grid-column: 2 / 4; font-weight: 600; overflow-wrap: anywhere; }
+/* The headline of each card: SRC → TGT format change. The "→" glyph makes the
+   direction explicit; format labels are text, so this reads without colour. */
+.card-format { grid-column: 2; font-size: var(--t-sm); font-weight: 700; }
+.card-arrow { color: var(--text-muted); font-weight: 400; }
+/* Sizes shown neutrally — never a "saved" claim (convert can grow a file). */
+.card-sizes { grid-column: 2; font-size: var(--t-sm); font-variant-numeric: tabular-nums; color: var(--text-secondary); }
+.card-meta { grid-column: 2; font-size: var(--t-xs); color: var(--text-muted); }
+
+/* State notes — each leads with a glyph + label, colorblind-safe. */
+.card-note { grid-column: 2 / 4; font-size: var(--t-sm); }
+.card-note.is-firstframe { font-weight: 600; }
+.card-note.is-firstframe::before { content: "\2691  "; } /* ⚑ flag */
+.card-note.is-fallback { font-weight: 600; }
+.card-note.is-fallback::before { content: "\26A0  "; } /* ⚠ */
+.card-error { grid-column: 2 / 4; font-size: var(--t-sm); font-weight: 600; color: var(--danger); }
+.card-error::before { content: "\26A0  "; } /* ⚠ */
+.card-status { grid-column: 2 / 4; font-size: var(--t-sm); color: var(--text-secondary); }
+
+.card-download {
+  grid-column: 3; grid-row: 2;
+  align-self: start; justify-self: end;
+  border: 1px solid var(--border-strong);
+  background: var(--surface); color: inherit; font: inherit;
+  padding: var(--space-xs) var(--space-md);
+  border-radius: var(--radius-control); cursor: pointer;
+}
+.card-download:disabled { opacity: 0.55; cursor: default; }
+
+/* --- Issues + deep page -------------------------------------------------- */
+#issues { margin-top: var(--space-lg); font-size: var(--t-sm); color: var(--text-secondary); }
+#issues summary { cursor: pointer; font-weight: 500; color: var(--text); }
+#issues-list { margin: var(--space-sm) 0 0; padding-left: var(--space-xl); }
+#issues-list li { margin-bottom: var(--space-xs); overflow-wrap: anywhere; }
+
+.tool-copy { margin-top: var(--space-3xl); max-width: 70ch; }
+.tool-copy h2 { font-size: var(--t-lg); font-weight: 600; margin: var(--space-2xl) 0 var(--space-sm); }
+.tool-copy p { color: var(--text-secondary); line-height: 1.55; }
+.faq details { border-top: 1px solid var(--border); padding: var(--space-md) 0; }
+.faq details:last-child { border-bottom: 1px solid var(--border); }
+.faq summary { font-weight: 600; cursor: pointer; }
+.faq details p { margin: var(--space-sm) 0 0; }
+
+/* --- Mobile -------------------------------------------------------------- */
+@media (max-width: 520px) {
+  #tool { padding-inline: var(--space-lg); }
+  .results-actions { flex-direction: column; align-items: stretch; }
+  .card {
+    grid-template-columns: 48px 1fr;
+    gap: var(--space-xs) var(--space-md);
+  }
+  .card-thumb, .card-thumb-empty { width: 48px; height: 48px; grid-row: span 6; }
+  .card-name { grid-column: 2; }
+  .card-download { grid-column: 2; grid-row: auto; justify-self: start; margin-top: var(--space-xs); }
+}

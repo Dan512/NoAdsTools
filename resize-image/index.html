@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Resize Image — Free, No Upload, No Install · NoAdsTools</title>
+  <meta name="description" content="Resize JPG, PNG, and WebP images in your browser — to exact pixels or by percentage, with high-quality downscaling. Free, no upload, no account: your images never leave your device.">
+  <meta name="theme-color" content="#0f1410">
+  <link rel="canonical" href="https://noadstools.com/resize-image/">
+  <link rel="icon" type="image/png" sizes="192x192" href="/photo-editor/img/favicon-light-192.png">
+  <link rel="stylesheet" href="/shared/shell.css">
+  <link rel="stylesheet" href="./resize-image.css">
+
+  <meta property="og:title" content="Resize Image — Free, No Upload">
+  <meta property="og:description" content="Resize JPG, PNG, and WebP images entirely in your browser — to exact pixels or by percentage, high quality. Nothing is uploaded.">
+  <meta property="og:url" content="https://noadstools.com/resize-image/">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="NoAdsTools">
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="Resize Image — Free, No Upload">
+  <meta name="twitter:description" content="Resize JPG, PNG, and WebP images entirely in your browser — to exact pixels or by percentage, high quality. Nothing is uploaded.">
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "NoAdsTools Resize Image",
+    "url": "https://noadstools.com/resize-image/",
+    "description": "Resize JPG, PNG, and WebP images entirely in your browser — to exact pixel dimensions or by percentage, with high-quality downscaling. Batch process and download individually or as a ZIP. No upload, no account.",
+    "applicationCategory": "MultimediaApplication",
+    "operatingSystem": "Any (browser-based)",
+    "browserRequirements": "Any modern browser. No install, no account.",
+    "isAccessibleForFree": true,
+    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+    "license": "https://www.gnu.org/licenses/agpl-3.0.html"
+  }
+  </script>
+</head>
+<body>
+  <main id="tool">
+    <h1>Resize images</h1>
+    <p class="tool-lead">Resize JPG, PNG, and WebP images — to exact pixel dimensions or by percentage — entirely in your browser, with high-quality downscaling. Your images never leave your device: no upload, no account, no tracking.</p>
+
+    <section class="dropzone" id="dropzone" aria-label="Add images">
+      <p><strong>Drop images here</strong>, paste, or</p>
+      <label class="file-label">Choose files<input id="file-input" type="file" accept="image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp" multiple></label>
+      <p class="dropzone-hint">JPEG, PNG, WebP · multiple files welcome · resized in your browser, nothing uploaded</p>
+    </section>
+
+    <section class="controls" id="controls" aria-label="Resize settings">
+      <fieldset class="mode" id="mode">
+        <legend>How to resize</legend>
+        <label><input type="radio" name="mode" value="dimensions" checked> By dimensions</label>
+        <label><input type="radio" name="mode" value="percentage"> By percentage</label>
+      </fieldset>
+
+      <div class="control-block" id="dims-control">
+        <span class="dims-row">
+          <span class="dims-field">
+            <label for="target-w">Width</label>
+            <input type="number" id="target-w" min="1" max="20000" value="800" inputmode="numeric" placeholder="px">
+          </span>
+          <span class="dims-times" aria-hidden="true">×</span>
+          <span class="dims-field">
+            <label for="target-h">Height</label>
+            <input type="number" id="target-h" min="1" max="20000" inputmode="numeric" placeholder="px">
+          </span>
+        </span>
+        <label class="lock-toggle"><input type="checkbox" id="aspect-lock" checked> Lock aspect ratio</label>
+        <p class="control-hint" id="dims-hint">With the ratio locked, each image is scaled to fit inside the width and height you give — its own proportions are kept. Fill in just one to constrain that side. Unlock to force an exact width and height on every image, even if that stretches some.</p>
+      </div>
+
+      <div class="control-block" id="pct-control" hidden>
+        <label for="target-pct">Scale to percentage</label>
+        <span class="pct-input">
+          <input type="number" id="target-pct" min="1" max="1000" value="50" inputmode="numeric">
+          <span aria-hidden="true">%</span>
+        </span>
+        <p class="control-hint">Each image is scaled by this percentage of its own size — 50% is half, 200% is double.</p>
+      </div>
+
+      <label class="upscale-toggle"><input type="checkbox" id="allow-upscale"> Allow upscaling (enlarge images past their original size)</label>
+
+      <p class="control-msg" id="control-msg" role="status" aria-live="polite" hidden></p>
+    </section>
+
+    <p id="status-line" class="status-line" role="status" aria-live="polite" hidden></p>
+
+    <section id="results" hidden>
+      <p id="summary" class="summary"></p>
+      <div class="results-actions">
+        <button type="button" id="download-zip">Download all (ZIP)</button>
+        <button type="button" id="clear-all" class="btn-quiet">Clear all</button>
+      </div>
+      <div id="cards" class="cards"></div>
+      <details id="skipped" hidden>
+        <summary id="skipped-summary"></summary>
+        <ul id="skipped-list"></ul>
+      </details>
+    </section>
+
+    <section class="prose tool-copy">
+      <h2>What this tool does</h2>
+      <p>Drop in JPEG, PNG, or WebP images and change their pixel size on your own device. There are two ways to drive it. <strong>By dimensions</strong>, you give a width and a height in pixels: with the aspect ratio locked, each image is scaled to fit inside that box while keeping its own proportions, so a mixed set of photos all come out no larger than the size you named. Fill in only one field and that side is constrained while the other follows along. <strong>By percentage</strong>, you give a single number and every image is scaled to that fraction of its own size. Either way you can add one file or a few hundred, and download them one at a time or together as a ZIP.</p>
+
+      <h2>Why the quality holds up</h2>
+      <p>Shrinking an image well is harder than it sounds — a naive scale throws away pixels and leaves edges jagged or shimmering. This tool resizes with pica, which uses a Lanczos filter and works in linear light, so fine detail is averaged properly rather than dropped. The result is noticeably cleaner than a plain browser resize, especially on big reductions like a camera photo down to web size. If pica cannot load for some reason, the tool falls back to the browser's own high-quality scaler and says so plainly on the card, rather than failing.</p>
+
+      <h2>Formats and file size</h2>
+      <p>Each image keeps its original format: a JPEG stays a JPEG, a PNG stays a PNG, a WebP stays a WebP. Resizing is about dimensions, not about tuning file size, so JPEG and WebP are re-encoded at a fixed high quality and PNG stays lossless. Because the pixels are re-encoded, the hidden EXIF and GPS metadata is dropped along the way — a resized copy is also a cleaner, less revealing one. (An image left at its native size — because it was already smaller than your target — is passed through untouched, so it keeps its metadata.) If your real goal is a smaller <em>file</em> rather than smaller dimensions, <a href="/compress-images/">Compress images</a> is the better tool, and it can be used after this one.</p>
+
+      <h2>Nothing is uploaded</h2>
+      <p>The decoding, resizing, and re-encoding all run in your browser, using code this page loads only from its own address — never a third-party server. You can open your browser's network panel and watch: no image data leaves the machine. There is no account, no tracking, and no upload step to opt out of. The full source is <a href="https://github.com/Dan512/NoAdsTools" target="_blank" rel="noopener">public on GitHub</a> under the AGPL-3.0 licence, and the privacy panel in the footer names every file this page can load and when. AVIF and GIF are not supported yet — AVIF because reliable in-browser encoding is not available on every platform, GIF because resizing would flatten its animation.</p>
+
+      <h2>Questions</h2>
+      <div class="faq">
+        <details>
+          <summary>Can I resize an image without uploading it?</summary>
+          <p>Yes. The whole process happens in your browser, on your device — you can verify it by opening your browser's DevTools Network tab while resizing and watching that no image data leaves the machine. There is no account and nothing to sign up for.</p>
+        </details>
+        <details>
+          <summary>Can I resize to exact pixel dimensions?</summary>
+          <p>Yes. Choose "By dimensions" and enter a width and a height. With the aspect ratio locked, each image fits inside that box while keeping its proportions. Unlock the ratio to force the exact width and height on every image — the card marks any image that had to be stretched to reach it.</p>
+        </details>
+        <details>
+          <summary>Can I resize many images at once?</summary>
+          <p>Yes. Add as many as you like — a whole folder's worth — and the same settings apply to all of them. Download them one by one from their cards, or all together with "Download all (ZIP)". The practical limit is your device's memory rather than a server quota.</p>
+        </details>
+        <details>
+          <summary>Does resizing reduce quality?</summary>
+          <p>Making an image smaller always discards some pixels — that is what resizing means — but this tool does it carefully with a high-quality filter, so the result stays sharp. JPEG and WebP are re-encoded at a high quality setting; PNG is kept lossless. Enlarging cannot invent detail that was never captured, so an upscaled image looks softer than one shot at that size.</p>
+        </details>
+        <details>
+          <summary>Can it enlarge an image, not just shrink it?</summary>
+          <p>Yes, but it is off by default. Tick "Allow upscaling" and the tool will scale images past their original size; without it, an image already smaller than your target is left at its native size and the card says so. Upscaling smooths the result but cannot add detail that was not there to begin with.</p>
+        </details>
+      </div>
+
+      <h2>Related tools</h2>
+      <p><a href="/compress-images/">Compress images</a> — shrink the file size without changing dimensions. <a href="/photo-editor/">Photo Editor</a> — crop, redact, and batch-edit images. <a href="/remove-exif/">Remove EXIF data</a> — strip location and camera metadata before sharing. <a href="/find-duplicate-photos/">Find Duplicate Photos</a> — spot duplicates and keep the best copy.</p>
+    </section>
+  </main>
+
+  <script type="module" src="./js/main.js"></script>
+</body>
+</html>

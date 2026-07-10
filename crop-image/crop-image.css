@@ -1,0 +1,265 @@
+/* crop-image.css — tool-only styles. Tokens/chrome come from
+   /shared/shell.css. Colorblind-safe (Dan is colorblind): the active aspect
+   preset rides weight + a "✓" check glyph, and the active strip thumb rides
+   border weight + a "▸ Editing" caption — state never rides hue alone.
+   The layout classes below (.stage, .strip, .presets, .actions, .exact, …) are
+   bare, not #tool-scoped, but none collide with the shared topbar/footer: the
+   topbar injects <div class="controls"> and this file defines no .controls,
+   .card, or other shared class name (verified: none of these selectors appear
+   under shared/). Keep it that way — a bare .controls/.actions rule with
+   padding/border WOULD leak onto the topbar and cause mobile overflow. */
+/* #tool is a flex item of the body's column flex, centered with `margin:0 auto`.
+   Auto cross-axis margins DISABLE `align-items:stretch`, so #tool would be
+   content-sized and grow to the sized stage <canvas>'s intrinsic width →
+   horizontal overflow at 375px. Giving it an explicit `width:100%` (border-box)
+   makes the cross size definite: it fills the viewport (capped at max-width and
+   still centered by the auto margins on wide screens), and the oversized canvas
+   is clipped by the stage's overflow instead of stretching the page. */
+#tool { width: 100%; max-width: 860px; margin: 0 auto; box-sizing: border-box; padding: var(--space-2xl) var(--space-xl) var(--space-4xl); }
+#tool h1 { margin: 0 0 var(--space-sm); font-size: var(--t-2xl); font-weight: 600; }
+.tool-lead { margin: 0 0 var(--space-xl); color: var(--text-secondary); font-size: var(--t-lg); max-width: 70ch; }
+
+/* The playbook guard: [hidden] must beat any author display: rule below
+   (.presets is flex, .actions is flex, .strip is flex, etc.). */
+#tool [hidden] { display: none !important; }
+
+/* --- Dropzone ------------------------------------------------------------ */
+.dropzone {
+  border: 2px dashed var(--border-strong);
+  border-radius: var(--radius-card);
+  padding: var(--space-2xl);
+  text-align: center;
+  background: var(--surface);
+}
+.dropzone.is-drag { border-color: var(--accent); background: var(--surface-2); }
+.dropzone p { margin: 0 0 var(--space-sm); }
+.dropzone-hint { color: var(--text-muted); font-size: var(--t-sm); margin: var(--space-sm) 0 0; }
+
+/* Once images are loaded, collapse to a compact inline "+ Add images" control
+   so the crop stage is above the fold. The prompt/hint paragraphs fold away;
+   the picker button stays (drop + paste still work on this element too). */
+.dropzone.is-compact {
+  padding: var(--space-sm) var(--space-md);
+  text-align: left;
+  border-style: solid;
+  border-width: 1px;
+}
+.dropzone.is-compact p { display: none; }
+
+.file-label {
+  position: relative;
+  display: inline-block;
+  padding: var(--space-sm) var(--space-lg);
+  border-radius: var(--radius-control);
+  background: var(--accent);
+  color: var(--accent-contrast);
+  font-weight: 500;
+  cursor: pointer;
+}
+/* Visually hidden, NOT display:none — the input stays focusable and in the
+   a11y tree so keyboard users can Tab to it and press Enter/Space. */
+.file-label input {
+  position: absolute !important;
+  width: 1px !important; height: 1px !important;
+  margin: -1px !important; padding: 0 !important;
+  border: 0 !important; clip: rect(0 0 0 0) !important;
+  clip-path: inset(50%) !important; overflow: hidden !important;
+  white-space: nowrap !important;
+}
+.file-label:focus-within { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+
+.status-line { margin: var(--space-md) 0 0; font-weight: 500; }
+
+/* --- Editor -------------------------------------------------------------- */
+#editor { margin-top: var(--space-xl); }
+
+/* --- Thumbnail strip (only when >1 image) -------------------------------- */
+.strip {
+  display: flex; gap: var(--space-sm); flex-wrap: wrap;
+  margin-bottom: var(--space-lg);
+}
+.strip-thumb {
+  position: relative;
+  display: flex; flex-direction: column; gap: var(--space-xs);
+  width: 84px; padding: var(--space-xs);
+  border: 1px solid var(--border); border-radius: var(--radius-card);
+  background: var(--surface); color: inherit;
+  font: inherit; text-align: left; cursor: pointer;
+  box-sizing: border-box;
+}
+/* Active image: heavier border (weight, not hue) + a "▸ Editing" caption. */
+.strip-thumb[aria-current="true"] {
+  border: 2px solid var(--accent);
+  padding: calc(var(--space-xs) - 1px);
+}
+.strip-thumb img {
+  width: 100%; height: 60px; object-fit: cover; display: block;
+  border-radius: 2px; background: var(--surface-2);
+}
+.strip-cap { font-size: var(--t-xs); color: var(--text-muted); font-weight: 600; min-height: 1.1em; }
+.strip-thumb[aria-current="true"] .strip-cap { color: var(--text); }
+.strip-thumb[aria-current="true"] .strip-cap::before { content: "\25B8  "; } /* ▸ */
+.strip-name {
+  font-size: var(--t-xs); color: var(--text-secondary);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+
+/* --- Stage --------------------------------------------------------------- */
+.stage {
+  position: relative;
+  display: flex; align-items: center; justify-content: center;
+  width: 100%;
+  height: min(58vh, 480px);
+  background: #12140f; /* fixed dark backdrop for letterboxing (both themes) */
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  overflow: hidden;
+  box-sizing: border-box;
+  touch-action: none; /* the crop interaction owns the gestures inside */
+}
+.stage-frame {
+  position: relative;
+  /* size set by JS to the letterboxed display size of the active image */
+  overflow: hidden; /* clips the crop-box mask shadow to the image bounds */
+  line-height: 0;
+}
+.stage-img { display: block; width: 100%; height: 100%; }
+
+/* Crop rectangle. The 9999px box-shadow dims everything OUTSIDE the box; the
+   frame's overflow:hidden clips that dimming to the image. */
+.crop-box {
+  position: absolute;
+  left: 0; top: 0; width: 0; height: 0;
+  box-sizing: border-box;
+  border: 1px solid #fff;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.5), 0 0 0 9999px rgba(0, 0, 0, 0.5);
+  cursor: move;
+  touch-action: none;
+}
+.crop-box:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+
+/* Rule-of-thirds: two vertical + two horizontal hairlines via layered gradients. */
+.thirds {
+  position: absolute; inset: 0; pointer-events: none;
+  background:
+    linear-gradient(to right, transparent calc(33.333% - 0.5px), rgba(255,255,255,0.4) calc(33.333% - 0.5px) calc(33.333% + 0.5px), transparent calc(33.333% + 0.5px)),
+    linear-gradient(to right, transparent calc(66.666% - 0.5px), rgba(255,255,255,0.4) calc(66.666% - 0.5px) calc(66.666% + 0.5px), transparent calc(66.666% + 0.5px)),
+    linear-gradient(to bottom, transparent calc(33.333% - 0.5px), rgba(255,255,255,0.4) calc(33.333% - 0.5px) calc(33.333% + 0.5px), transparent calc(33.333% + 0.5px)),
+    linear-gradient(to bottom, transparent calc(66.666% - 0.5px), rgba(255,255,255,0.4) calc(66.666% - 0.5px) calc(66.666% + 0.5px), transparent calc(66.666% + 0.5px));
+}
+
+/* Handles: the element itself is the (larger) invisible hit target; a smaller
+   visible square is drawn by ::before. Hit target ≥44px on touch devices. */
+.handle {
+  position: absolute;
+  width: 22px; height: 22px;
+  transform: translate(-50%, -50%);
+  z-index: 2;
+  touch-action: none;
+}
+.handle::before {
+  content: "";
+  position: absolute; left: 50%; top: 50%;
+  width: 11px; height: 11px;
+  transform: translate(-50%, -50%);
+  background: #fff;
+  border: 1px solid rgba(0, 0, 0, 0.55);
+  border-radius: 2px;
+}
+.handle-nw { left: 0;    top: 0;    cursor: nwse-resize; }
+.handle-n  { left: 50%;  top: 0;    cursor: ns-resize; }
+.handle-ne { left: 100%; top: 0;    cursor: nesw-resize; }
+.handle-e  { left: 100%; top: 50%;  cursor: ew-resize; }
+.handle-se { left: 100%; top: 100%; cursor: nwse-resize; }
+.handle-s  { left: 50%;  top: 100%; cursor: ns-resize; }
+.handle-sw { left: 0;    top: 100%; cursor: nesw-resize; }
+.handle-w  { left: 0;    top: 50%;  cursor: ew-resize; }
+
+@media (pointer: coarse) {
+  .handle { width: 44px; height: 44px; }
+  .handle::before { width: 16px; height: 16px; }
+}
+
+/* --- Aspect presets ------------------------------------------------------ */
+.presets {
+  display: flex; flex-wrap: wrap; gap: var(--space-xs);
+  margin: var(--space-lg) 0;
+}
+.preset {
+  border: 1px solid var(--border-strong);
+  background: var(--surface); color: inherit; font: inherit;
+  padding: var(--space-xs) var(--space-md);
+  border-radius: var(--radius-control); cursor: pointer;
+  min-width: 0;
+}
+.preset:hover { background: var(--surface-2); }
+/* Active preset: heavier border + weight + a "✓" glyph — never hue alone. */
+.preset[aria-pressed="true"] {
+  border: 2px solid var(--accent);
+  padding: calc(var(--space-xs) - 1px) calc(var(--space-md) - 1px);
+  font-weight: 700;
+  background: var(--surface-2);
+}
+.preset[aria-pressed="true"]::before { content: "\2713  "; } /* ✓ */
+.preset:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+
+/* --- Exact inputs + readout ---------------------------------------------- */
+.exact {
+  display: flex; flex-wrap: wrap; align-items: flex-end;
+  gap: var(--space-sm) var(--space-md);
+  margin: 0 0 var(--space-lg);
+}
+.exact-field { display: flex; flex-direction: column; gap: var(--space-xs); min-width: 0; }
+.exact-field label { font-weight: 600; font-size: var(--t-sm); }
+.exact-field input {
+  width: 5.5rem; max-width: 100%;
+  padding: var(--space-xs) var(--space-sm);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-control);
+  background: var(--surface); color: inherit; font: inherit;
+  box-sizing: border-box;
+}
+.exact-field input:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+.readout {
+  font-weight: 600; font-variant-numeric: tabular-nums;
+  padding-bottom: var(--space-xs);
+  color: var(--text-secondary);
+}
+.readout::before { content: "Crop: "; color: var(--text-muted); font-weight: 400; }
+
+/* --- Actions ------------------------------------------------------------- */
+.actions { display: flex; gap: var(--space-sm); flex-wrap: wrap; margin-bottom: var(--space-md); }
+.actions button {
+  border: 1px solid var(--border-strong);
+  background: var(--surface); color: inherit; font: inherit;
+  padding: var(--space-sm) var(--space-lg);
+  border-radius: var(--radius-control); cursor: pointer;
+}
+.actions button:disabled { opacity: 0.55; cursor: default; }
+#download { background: var(--accent); color: var(--accent-contrast); border-color: var(--accent); font-weight: 500; }
+.btn-quiet { color: var(--text-secondary); }
+
+.action-error { margin: 0 0 var(--space-lg); font-size: var(--t-sm); font-weight: 600; color: var(--danger); }
+.action-error::before { content: "\26A0  "; } /* ⚠ */
+
+/* --- Skipped + deep page ------------------------------------------------- */
+#skipped { margin-top: var(--space-lg); font-size: var(--t-sm); color: var(--text-secondary); }
+#skipped summary { cursor: pointer; font-weight: 500; color: var(--text); }
+#skipped-list { margin: var(--space-sm) 0 0; padding-left: var(--space-xl); }
+#skipped-list li { margin-bottom: var(--space-xs); overflow-wrap: anywhere; }
+
+.tool-copy { margin-top: var(--space-3xl); max-width: 70ch; }
+.tool-copy h2 { font-size: var(--t-lg); font-weight: 600; margin: var(--space-2xl) 0 var(--space-sm); }
+.tool-copy p { color: var(--text-secondary); line-height: 1.55; }
+.faq details { border-top: 1px solid var(--border); padding: var(--space-md) 0; }
+.faq details:last-child { border-bottom: 1px solid var(--border); }
+.faq summary { font-weight: 600; cursor: pointer; }
+.faq details p { margin: var(--space-sm) 0 0; }
+
+/* --- Mobile -------------------------------------------------------------- */
+@media (max-width: 520px) {
+  #tool { padding-inline: var(--space-lg); }
+  .actions { flex-direction: column; align-items: stretch; }
+  .stage { height: 52vh; }
+  .exact-field input { width: 4.5rem; }
+}

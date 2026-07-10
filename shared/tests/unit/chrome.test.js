@@ -31,9 +31,11 @@ test('topbar Tools dropdown lists live tools and an All tools link', () => {
   assert.ok(html.includes('data-i18n="toolsMenu"'), 'tools toggle needs toolsMenu key');
   assert.ok(html.includes('href="/photo-editor/"'), 'dropdown must link the live editor');
   assert.ok(html.includes('data-i18n="allTools"'), 'dropdown must have an All tools link');
-  // A planned tool must NOT appear as a live dropdown link. (Uses a tool that
-  // is still status:'planned' in the manifest — update the slug when it ships.)
-  assert.ok(!html.includes('href="/compress-images/"'), 'planned tools must not be linked');
+  // The dropdown must only ever link real, live tools — never an arbitrary slug.
+  // No planned tools remain in the manifest (compress-images, the last one, went
+  // live), so this pins the property with a fabricated slug that must never
+  // appear; repoint it to a real status:'planned' slug if one is ever added.
+  assert.ok(!html.includes('href="/definitely-not-a-tool/"'), 'unknown tools must not be linked');
 });
 
 test('topbar marks the current tool with aria-current', () => {

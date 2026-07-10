@@ -1,0 +1,209 @@
+/* resize-image.css — tool-only styles. Tokens/chrome come from
+   /shared/shell.css. Colorblind-safe (Dan is colorblind): every result state
+   rides a glyph + wording + weight, never hue alone — enlarged rides "↑
+   enlarged", kept-native rides "= kept native size", stretched rides "⇔
+   stretched", a fallback resize rides "⚠". The dims arrow "→" reads the
+   original → new size. */
+#tool { max-width: 820px; margin: 0 auto; padding: var(--space-2xl) var(--space-xl) var(--space-4xl); }
+#tool h1 { margin: 0 0 var(--space-sm); font-size: var(--t-2xl); font-weight: 600; }
+.tool-lead { margin: 0 0 var(--space-xl); color: var(--text-secondary); font-size: var(--t-lg); max-width: 70ch; }
+
+/* The playbook guard: [hidden] must beat any author display: rule below
+   (.controls is grid, .results-actions is flex, .card is grid, etc.). */
+#tool [hidden] { display: none !important; }
+
+/* --- Dropzone ------------------------------------------------------------ */
+.dropzone {
+  border: 2px dashed var(--border-strong);
+  border-radius: var(--radius-card);
+  padding: var(--space-2xl);
+  text-align: center;
+  background: var(--surface);
+}
+.dropzone.is-drag { border-color: var(--accent); background: var(--surface-2); }
+.dropzone p { margin: 0 0 var(--space-sm); }
+.dropzone-hint { color: var(--text-muted); font-size: var(--t-sm); margin: var(--space-sm) 0 0; }
+
+.file-label {
+  position: relative;
+  display: inline-block;
+  padding: var(--space-sm) var(--space-lg);
+  border-radius: var(--radius-control);
+  background: var(--accent);
+  color: var(--accent-contrast);
+  font-weight: 500;
+  cursor: pointer;
+}
+/* Visually hidden, NOT display:none — the input stays focusable and in the
+   a11y tree so keyboard users can Tab to it and press Enter/Space.
+   Same clip pattern as shell.css's .visually-hidden utility. */
+.file-label input {
+  position: absolute !important;
+  width: 1px !important; height: 1px !important;
+  margin: -1px !important; padding: 0 !important;
+  border: 0 !important; clip: rect(0 0 0 0) !important;
+  clip-path: inset(50%) !important; overflow: hidden !important;
+  white-space: nowrap !important;
+}
+.file-label:focus-within { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+
+/* --- Controls ------------------------------------------------------------ */
+/* Scoped to #tool: the shared topbar (shared/topbar.js) also injects a
+   <div class="controls">, and an unscoped .controls here would leak this
+   card's padding/border/grid styling onto that unrelated element, causing
+   ~4px horizontal overflow at narrow widths. */
+#tool .controls {
+  display: grid;
+  gap: var(--space-lg);
+  margin: var(--space-lg) 0;
+  padding: var(--space-lg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  background: var(--surface);
+}
+.mode {
+  display: flex; align-items: center; gap: var(--space-lg); flex-wrap: wrap;
+  margin: 0; padding: var(--space-sm) var(--space-lg) var(--space-md);
+  border: 1px solid var(--border); border-radius: var(--radius-card);
+}
+.mode legend { padding: 0 var(--space-xs); font-size: var(--t-sm); font-weight: 600; }
+.mode label { display: inline-flex; align-items: center; gap: var(--space-xs); cursor: pointer; }
+
+.control-block { display: flex; flex-direction: column; gap: var(--space-sm); }
+.control-block > label { font-weight: 600; }
+.control-hint { margin: 0; color: var(--text-muted); font-size: var(--t-sm); max-width: 62ch; }
+
+/* Width × Height row */
+.dims-row { display: flex; align-items: flex-end; gap: var(--space-sm); flex-wrap: wrap; }
+.dims-field { display: flex; flex-direction: column; gap: var(--space-xs); }
+.dims-field label { font-weight: 600; font-size: var(--t-sm); }
+.dims-times { padding-bottom: var(--space-sm); color: var(--text-muted); font-weight: 600; }
+.dims-field input,
+.pct-input input {
+  width: 7rem;
+  padding: var(--space-xs) var(--space-sm);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-control);
+  background: var(--surface); color: inherit; font: inherit;
+}
+.dims-field input:focus-visible,
+.pct-input input:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+/* Invalid field: a red ring PLUS the inline #control-msg text carry it —
+   never colour alone (Dan is colorblind). */
+.dims-field input.is-invalid,
+.pct-input input.is-invalid { border-color: var(--danger); border-width: 2px; }
+
+.lock-toggle, .upscale-toggle {
+  display: inline-flex; align-items: center; gap: var(--space-xs);
+  cursor: pointer; font-weight: 500;
+}
+.upscale-toggle { color: var(--text-secondary); }
+
+.pct-input { display: inline-flex; gap: var(--space-xs); align-items: center; }
+
+.control-msg {
+  margin: 0; padding: var(--space-sm) var(--space-md);
+  border: 1px solid var(--border-strong); border-radius: var(--radius-control);
+  background: var(--surface-2); font-size: var(--t-sm); font-weight: 600;
+}
+.control-msg::before { content: "⚠ "; }
+
+.status-line { margin: var(--space-md) 0 0; font-weight: 500; }
+
+/* --- Results ------------------------------------------------------------- */
+#results { margin-top: var(--space-xl); }
+.summary { margin: 0 0 var(--space-lg); font-size: var(--t-lg); font-weight: 600; }
+
+.results-actions { display: flex; gap: var(--space-sm); flex-wrap: wrap; margin-bottom: var(--space-lg); }
+.results-actions button {
+  border: 1px solid var(--border-strong);
+  background: var(--surface); color: inherit; font: inherit;
+  padding: var(--space-sm) var(--space-lg);
+  border-radius: var(--radius-control); cursor: pointer;
+}
+.results-actions button:disabled { opacity: 0.55; cursor: default; }
+#download-zip { background: var(--accent); color: var(--accent-contrast); border-color: var(--accent); font-weight: 500; }
+.btn-quiet { color: var(--text-secondary); }
+
+/* --- Cards --------------------------------------------------------------- */
+.cards { display: flex; flex-direction: column; gap: var(--space-md); }
+.card {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  background: var(--surface);
+  padding: var(--space-lg);
+  display: grid;
+  grid-template-columns: 64px 1fr auto;
+  gap: var(--space-xs) var(--space-lg);
+  align-items: start;
+}
+.card-thumb {
+  grid-row: span 3;
+  width: 64px; height: 64px;
+  object-fit: cover;
+  border-radius: var(--radius-control);
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+}
+.card-thumb-empty {
+  grid-row: span 3;
+  width: 64px; height: 64px;
+  border-radius: var(--radius-control);
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  display: grid; place-items: center;
+  color: var(--text-muted); font-size: var(--t-xs);
+}
+.card-name { grid-column: 2 / 4; font-weight: 600; overflow-wrap: anywhere; }
+.card-dims { grid-column: 2; font-size: var(--t-sm); font-variant-numeric: tabular-nums; font-weight: 600; }
+.card-arrow { color: var(--text-muted); font-weight: 400; }
+.card-meta { grid-column: 2; font-size: var(--t-xs); color: var(--text-muted); }
+
+/* State notes — each leads with a glyph + label, colorblind-safe. */
+.card-note { grid-column: 2 / 4; font-size: var(--t-sm); font-weight: 600; }
+.card-note.is-enlarged::before { content: "↑ "; }
+.card-note.is-kept::before { content: "= "; }
+.card-note.is-stretched::before { content: "⇔ "; }
+.card-note.is-fallback::before { content: "⚠ "; }
+.card-error { grid-column: 2 / 4; font-size: var(--t-sm); font-weight: 600; color: var(--danger); }
+.card-error::before { content: "⚠ "; }
+.card-status { grid-column: 2 / 4; font-size: var(--t-sm); color: var(--text-secondary); }
+
+.card-download {
+  grid-column: 3; grid-row: 2;
+  align-self: start; justify-self: end;
+  border: 1px solid var(--border-strong);
+  background: var(--surface); color: inherit; font: inherit;
+  padding: var(--space-xs) var(--space-md);
+  border-radius: var(--radius-control); cursor: pointer;
+}
+.card-download:disabled { opacity: 0.55; cursor: default; }
+
+/* --- Skipped + deep page ------------------------------------------------- */
+#skipped { margin-top: var(--space-lg); font-size: var(--t-sm); color: var(--text-secondary); }
+#skipped summary { cursor: pointer; font-weight: 500; color: var(--text); }
+#skipped-list { margin: var(--space-sm) 0 0; padding-left: var(--space-xl); }
+#skipped-list li { margin-bottom: var(--space-xs); overflow-wrap: anywhere; }
+
+.tool-copy { margin-top: var(--space-3xl); max-width: 70ch; }
+.tool-copy h2 { font-size: var(--t-lg); font-weight: 600; margin: var(--space-2xl) 0 var(--space-sm); }
+.tool-copy p { color: var(--text-secondary); line-height: 1.55; }
+.faq details { border-top: 1px solid var(--border); padding: var(--space-md) 0; }
+.faq details:last-child { border-bottom: 1px solid var(--border); }
+.faq summary { font-weight: 600; cursor: pointer; }
+.faq details p { margin: var(--space-sm) 0 0; }
+
+/* --- Mobile -------------------------------------------------------------- */
+@media (max-width: 520px) {
+  #tool { padding-inline: var(--space-lg); }
+  .results-actions { flex-direction: column; align-items: stretch; }
+  .dims-row { gap: var(--space-xs); }
+  .dims-field input, .pct-input input { width: 5.5rem; }
+  .card {
+    grid-template-columns: 48px 1fr;
+    gap: var(--space-xs) var(--space-md);
+  }
+  .card-thumb, .card-thumb-empty { width: 48px; height: 48px; grid-row: span 5; }
+  .card-name { grid-column: 2; }
+  .card-download { grid-column: 2; grid-row: auto; justify-self: start; margin-top: var(--space-xs); }
+}
