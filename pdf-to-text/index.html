@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>PDF to Text — Free, No Upload, No Install · NoAdsTools</title>
+  <meta name="description" content="Extract text from a PDF in your browser — pull the text layer and OCR scanned pages, then copy or download as a .txt. Free, no upload, no account: your PDF never leaves your device.">
+  <meta name="theme-color" content="#0f1410">
+  <link rel="canonical" href="https://noadstools.com/pdf-to-text/">
+  <link rel="icon" type="image/png" sizes="192x192" href="/photo-editor/img/favicon-light-192.png">
+  <link rel="stylesheet" href="/shared/shell.css">
+  <link rel="stylesheet" href="./pdf-to-text.css">
+
+  <meta property="og:title" content="PDF to Text — Free, No Upload">
+  <meta property="og:description" content="Pull a PDF's text layer and OCR scanned pages — entirely in your browser. Copy or download as .txt. Nothing is uploaded.">
+  <meta property="og:url" content="https://noadstools.com/pdf-to-text/">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="NoAdsTools">
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="PDF to Text — Free, No Upload">
+  <meta name="twitter:description" content="Pull a PDF's text layer and OCR scanned pages — entirely in your browser. Copy or download as .txt. Nothing is uploaded.">
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "NoAdsTools PDF to Text",
+    "url": "https://noadstools.com/pdf-to-text/",
+    "description": "Extract text from a PDF entirely in your browser — pull the real text layer and fall back to on-device OCR for scanned pages, then copy or download the result as a .txt file. No upload, no account.",
+    "applicationCategory": "UtilitiesApplication",
+    "operatingSystem": "Any (browser-based)",
+    "browserRequirements": "Any modern browser. No install, no account.",
+    "isAccessibleForFree": true,
+    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+    "license": "https://www.gnu.org/licenses/agpl-3.0.html"
+  }
+  </script>
+</head>
+<body>
+  <main id="tool">
+    <h1>PDF to Text</h1>
+    <p class="tool-lead">Pull the text out of a PDF — read its text layer, and fall back to OCR for scanned or image-only pages — then copy it or download a .txt. Everything happens in your browser; your PDF never leaves your device.</p>
+
+    <section class="dropzone" id="dropzone">
+      <p><strong>Drop a PDF here</strong>, or</p>
+      <label class="file-label">Choose a PDF<input id="file-input" type="file" accept="application/pdf,.pdf"></label>
+      <p class="dropzone-hint">One PDF. Read in your browser — nothing is uploaded.</p>
+    </section>
+
+    <p id="intake-note" class="intake-note" role="status" aria-live="polite" hidden></p>
+
+    <div id="workspace" class="workspace" hidden>
+      <p id="doc-info" class="doc-info" role="status" aria-live="polite">
+        <span id="doc-name" class="doc-name"></span>
+        <span id="doc-pages" class="doc-pages"></span>
+      </p>
+
+      <div class="controls" id="controls">
+        <!-- Mode -->
+        <div class="control-row">
+          <span class="control-label" id="mode-label">Mode</span>
+          <div class="seg-group" role="group" aria-labelledby="mode-label">
+            <button type="button" class="seg-btn" data-mode="auto" aria-pressed="true">Auto</button>
+            <button type="button" class="seg-btn" data-mode="text" aria-pressed="false">Text layer only</button>
+            <button type="button" class="seg-btn" data-mode="ocr-all" aria-pressed="false">OCR all pages</button>
+          </div>
+          <p id="mode-hint" class="control-hint" aria-live="polite">Auto reads the text layer and runs OCR only on pages that have little or no text.</p>
+        </div>
+
+        <!-- Pages -->
+        <div class="control-row">
+          <span class="control-label" id="pages-label">Pages</span>
+          <div class="seg-group" role="group" aria-labelledby="pages-label">
+            <button type="button" class="seg-btn" data-pages="all" aria-pressed="true">All</button>
+            <button type="button" class="seg-btn" data-pages="range" aria-pressed="false">A range</button>
+          </div>
+          <div class="range-field" id="range-field" hidden>
+            <label for="range-input" class="visually-hidden">Pages to read</label>
+            <input id="range-input" type="text" inputmode="numeric" autocomplete="off" spellcheck="false" placeholder="e.g. 1-3, 5, 8-10">
+          </div>
+          <p id="range-error" class="range-error" role="alert" aria-live="assertive" hidden></p>
+        </div>
+      </div>
+
+      <div class="run-actions">
+        <button type="button" id="extract">Extract text</button>
+        <button type="button" id="clear" class="btn-quiet">Clear</button>
+      </div>
+      <p id="run-status" class="run-status" role="status" aria-live="polite" hidden></p>
+      <p id="run-error" class="run-error" role="alert" aria-live="assertive" hidden></p>
+
+      <!-- Output: read-only textarea with the assembled text + copy/download. -->
+      <div id="output" class="output" hidden>
+        <div class="output-head">
+          <div class="page-badges" id="page-badges" aria-label="Pages extracted"></div>
+          <div class="output-actions">
+            <button type="button" id="copy">Copy text</button>
+            <button type="button" id="download">Download .txt</button>
+          </div>
+        </div>
+        <p id="ocr-note" class="ocr-note" hidden></p>
+        <label for="out" class="visually-hidden">Extracted text</label>
+        <textarea id="out" class="out" readonly spellcheck="false" aria-live="off"></textarea>
+      </div>
+
+      <!-- Off-view but on-DOM render stage: pdfjs' rAF-driven render needs an
+           attached, painted canvas (playbook §4), so the OCR rasterisation
+           happens here rather than in a detached canvas. -->
+      <div id="ocr-stage" class="ocr-stage" aria-hidden="true"></div>
+    </div>
+
+    <section class="prose tool-copy">
+      <h2>Extract text from a PDF without uploading a thing</h2>
+      <p>Add one PDF and this tool reads the text out of it and hands you plain text you can copy or save. Everything runs on your device: the pdf.js library that reads the PDF loads from this site — never a third-party server — the first time you open a file, so you can open this page, disconnect from the internet, and it still works. There is no account, no watermark, and no page cap. Most PDFs carry a real <em>text layer</em> — the selectable text behind the page — and pulling that back out is fast and exact. When a page has no text layer, because it is a scan or an image, this tool can recognise the text from the picture instead, using on-device OCR.</p>
+      <p>There are three modes. <strong>Auto</strong> reads the text layer of every page and quietly falls back to OCR only for pages that come back with little or no text — the right choice for most files. <strong>Text layer only</strong> skips OCR entirely: it is instant, and it is honest about scanned pages, returning them empty rather than guessing. <strong>OCR all pages</strong> forces recognition on every page, which is the one to reach for when a PDF's built-in text is garbled or wrong and you would rather trust the picture. You can also read the whole document or just a range of pages, such as <code>1-3, 5, 8-10</code>.</p>
+
+      <h2>A word on OCR</h2>
+      <p>OCR — optical character recognition — reads text out of an image of a page, so it is approximate rather than exact. It handles clean, straight scans well and struggles with faint print, handwriting, heavy layout, or skew, so treat OCR output as a strong draft to proofread rather than a perfect copy. The OCR engine is a one-time download of roughly 22 MB that loads only the first time a page actually needs it — open a normal digital PDF and it is never fetched at all. For now the OCR recognises <strong>English</strong> only; other scripts will come back rough. Recognising a page takes a few seconds, so a long scanned document in OCR mode is not instant — the progress line tells you which page it is on.</p>
+
+      <h2>Copy or download</h2>
+      <p>The extracted text appears in a box, split page by page with a <code>--- Page N ---</code> heading before each one so you can see where each page starts. <strong>Copy text</strong> puts the whole thing on your clipboard; <strong>Download .txt</strong> saves it as a plain text file named after your PDF, like <code>document.txt</code>. Pages that were read by OCR are marked with an OCR badge above the box, so you always know which text came from the reliable text layer and which was recognised from a picture.</p>
+
+      <h2>What stays on your device</h2>
+      <p>The reading, the rendering, and the OCR all run in your browser, using code this page loads from its own address. You can open your browser's network panel and watch: no PDF data leaves the machine. A password-protected PDF cannot be read without its password, so unlock it first and add it again; the tool says so plainly rather than failing quietly. The full source is <a href="https://github.com/Dan512/NoAdsTools" target="_blank" rel="noopener">public on GitHub</a> under the AGPL-3.0 licence, and the privacy panel in the footer names every file this page can load and when.</p>
+
+      <h2>Questions</h2>
+      <dl class="faq">
+        <dt>How do I extract text from a PDF without uploading it?</dt>
+        <dd>Add your PDF and press Extract text. The reading runs in your browser using JavaScript this page loads from its own site. You can verify it: open your browser's DevTools Network tab while extracting — no PDF data leaves your device.</dd>
+        <dt>Does it work on scanned PDFs?</dt>
+        <dd>Yes. A scanned or image-only page has no text layer, so this tool recognises the text from the page image using on-device OCR. Leave the mode on Auto and scanned pages are OCR'd automatically; choose OCR all pages to force it on every page.</dd>
+        <dt>How accurate is the OCR?</dt>
+        <dd>OCR is approximate. It reads clean, straight scans well and struggles with faint print, handwriting, heavy layout, or skew, so proofread the result. It recognises English only for now; other scripts come back rough.</dd>
+        <dt>Can I copy the text or download it as a file?</dt>
+        <dd>Both. Copy text puts the whole result on your clipboard, and Download .txt saves it as a plain text file named after your PDF. The text is split page by page with a heading before each page.</dd>
+        <dt>Are my PDFs uploaded to a server?</dt>
+        <dd>No. Nothing is uploaded and no copy is kept. Your PDF stays in your browser's memory only while the page is open, and both the text extraction and the OCR run entirely on your device.</dd>
+      </dl>
+
+      <h2>Related tools</h2>
+      <p><a href="/pdf-to-jpg/">PDF to JPG</a> — turn PDF pages into JPG or PNG images. <a href="/merge-pdf/">Merge PDF</a> — combine PDF files in any order. <a href="/split-pdf/">Split PDF</a> — extract pages or cut one PDF into pieces. <a href="/image-to-pdf/">Image to PDF</a> — combine JPG, PNG, and WebP images into a single PDF. <a href="/photo-editor/">Photo Editor</a> — crop, resize, redact, and batch-edit images.</p>
+    </section>
+  </main>
+
+  <script type="module" src="./js/main.js"></script>
+</body>
+</html>

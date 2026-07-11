@@ -1,0 +1,160 @@
+/* merge-pdf.css — tool-only styles. Tokens/chrome come from /shared/shell.css.
+   Every rule is scoped under #tool so nothing leaks onto the shared topbar's
+   injected .controls row (playbook: a bare .controls/.actions/.list leaks and
+   overflows mobile). Colorblind-safe: the merge-order ordinal is a NUMBER (its
+   position), never a hue; excluded rows (locked/error) carry a glyph + word +
+   heavier left border, so state never rides color alone. */
+#tool { max-width: 760px; margin: 0 auto; padding: var(--space-2xl) var(--space-xl) var(--space-4xl); }
+#tool h1 { margin: 0 0 var(--space-sm); font-size: var(--t-2xl); font-weight: 600; }
+.tool-lead { margin: 0 0 var(--space-xl); color: var(--text-secondary); font-size: var(--t-lg); max-width: 70ch; }
+
+/* [hidden] must beat any author display: rule below (.workspace is block,
+   .merge-actions is flex, rows are flex, etc.). */
+#tool [hidden] { display: none !important; }
+
+/* --- Dropzone ------------------------------------------------------------ */
+#tool .dropzone {
+  border: 2px dashed var(--border-strong);
+  border-radius: var(--radius-card);
+  padding: var(--space-2xl);
+  text-align: center;
+  background: var(--surface);
+}
+#tool .dropzone.is-drag { border-color: var(--accent); background: var(--surface-2); }
+#tool .dropzone p { margin: 0 0 var(--space-sm); }
+#tool .dropzone-hint { color: var(--text-muted); font-size: var(--t-sm); margin: var(--space-sm) 0 0; }
+
+#tool .file-label {
+  position: relative;
+  display: inline-block;
+  padding: var(--space-sm) var(--space-lg);
+  border-radius: var(--radius-control);
+  background: var(--accent);
+  color: var(--accent-contrast);
+  font-weight: 500;
+  cursor: pointer;
+}
+/* Visually hidden, NOT display:none — the input stays focusable and in the
+   a11y tree so keyboard users can Tab to it and press Enter/Space. */
+#tool .file-label input {
+  position: absolute !important;
+  width: 1px !important; height: 1px !important;
+  margin: -1px !important; padding: 0 !important;
+  border: 0 !important; clip: rect(0 0 0 0) !important;
+  clip-path: inset(50%) !important; overflow: hidden !important;
+  white-space: nowrap !important;
+}
+#tool .file-label:focus-within { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+
+#tool .intake-note { margin: var(--space-lg) 0 0; font-size: var(--t-sm); color: var(--text-secondary); }
+
+/* --- Workspace ----------------------------------------------------------- */
+#tool .workspace { margin-top: var(--space-xl); }
+#tool .summary { margin: 0 0 var(--space-lg); font-size: var(--t-lg); font-weight: 600; }
+
+#tool .pdf-list { list-style: none; margin: 0 0 var(--space-lg); padding: 0; display: flex; flex-direction: column; gap: var(--space-md); }
+
+#tool .pdf-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--border);
+  border-radius: var(--radius-card);
+  background: var(--surface);
+  padding: var(--space-md) var(--space-lg);
+  flex-wrap: wrap;
+}
+/* The dragged row lifts and dims; the row a drop would land before shows a
+   thick insertion bar on top (weight, not hue). */
+#tool .pdf-row.dragging { opacity: 0.55; }
+#tool .pdf-row.insert-before { box-shadow: inset 0 3px 0 0 var(--accent); }
+#tool .pdf-row.insert-after { box-shadow: inset 0 -3px 0 0 var(--accent); }
+
+/* Ordinal badge = the file's place in the merged PDF. A number, never a color. */
+#tool .ord {
+  flex: 0 0 auto;
+  min-width: 1.9em;
+  height: 1.9em;
+  display: inline-flex; align-items: center; justify-content: center;
+  padding: 0 var(--space-xs);
+  border-radius: 999px;
+  background: var(--surface-2);
+  border: 1px solid var(--border-strong);
+  font-size: var(--t-sm); font-weight: 700; font-variant-numeric: tabular-nums;
+}
+
+/* Grab affordance for pointer drag (mouse + touch + pen). touch-action:none so
+   a touch-drag reorders instead of scrolling the page. */
+#tool .drag-handle {
+  flex: 0 0 auto;
+  cursor: grab;
+  color: var(--text-muted);
+  font-size: var(--t-lg);
+  line-height: 1;
+  padding: var(--space-xs);
+  touch-action: none;
+  user-select: none;
+}
+#tool .drag-handle:active { cursor: grabbing; }
+
+#tool .row-body { flex: 1 1 200px; min-width: 0; }
+#tool .row-name { font-weight: 600; overflow-wrap: anywhere; }
+#tool .row-meta { color: var(--text-muted); font-size: var(--t-sm); }
+
+/* Excluded rows (locked / error): heavier left border + a bold, glyph-led note
+   in .row-meta. State is carried by glyph + word + weight, never hue alone. */
+#tool .pdf-row.is-locked,
+#tool .pdf-row.is-error { border-left-width: 5px; border-left-color: var(--border-strong); background: var(--surface-2); }
+#tool .pdf-row.is-locked .row-meta,
+#tool .pdf-row.is-error .row-meta { color: var(--text-secondary); font-weight: 600; }
+#tool .pdf-row.is-locked .ord,
+#tool .pdf-row.is-error .ord { background: transparent; border-style: dashed; font-weight: 600; color: var(--text-muted); }
+
+#tool .row-controls { display: flex; gap: var(--space-xs); flex: 0 0 auto; }
+#tool .row-controls button {
+  border: 1px solid var(--border-strong);
+  background: var(--surface);
+  color: inherit;
+  font: inherit;
+  padding: var(--space-xs) var(--space-sm);
+  border-radius: var(--radius-control);
+  font-size: var(--t-sm);
+  white-space: nowrap;
+  cursor: pointer;
+}
+#tool .row-controls button:disabled { opacity: 0.4; cursor: default; }
+
+/* --- Actions ------------------------------------------------------------- */
+#tool .merge-actions { display: flex; gap: var(--space-sm); flex-wrap: wrap; align-items: center; }
+#tool .merge-actions button {
+  border: 1px solid var(--border-strong);
+  background: var(--surface);
+  color: inherit;
+  font: inherit;
+  padding: var(--space-sm) var(--space-lg);
+  border-radius: var(--radius-control);
+  cursor: pointer;
+}
+#tool #merge { background: var(--accent); color: var(--accent-contrast); border-color: var(--accent); font-weight: 500; }
+#tool #merge:disabled { opacity: 0.5; cursor: default; }
+#tool .btn-quiet { color: var(--text-secondary); }
+
+#tool .merge-hint { margin: var(--space-md) 0 0; font-size: var(--t-sm); color: var(--text-secondary); }
+#tool .merge-error { margin: var(--space-md) 0 0; font-size: var(--t-sm); font-weight: 500; color: var(--danger); }
+#tool .merge-error::before { content: "⚠ "; }
+
+/* --- Deep page ----------------------------------------------------------- */
+#tool .tool-copy { margin-top: var(--space-3xl); max-width: 70ch; }
+#tool .tool-copy h2 { font-size: var(--t-lg); font-weight: 600; margin: var(--space-2xl) 0 var(--space-sm); }
+#tool .tool-copy p { color: var(--text-secondary); line-height: 1.55; }
+#tool .faq dt { font-weight: 600; margin-top: var(--space-lg); }
+#tool .faq dd { margin: var(--space-xs) 0 0; color: var(--text-secondary); }
+
+/* --- Mobile -------------------------------------------------------------- */
+@media (max-width: 480px) {
+  #tool { padding-inline: var(--space-lg); }
+  #tool .merge-actions { flex-direction: column; align-items: stretch; }
+  #tool .row-controls { flex: 1 1 100%; }
+  #tool .row-controls button { flex: 1 1 auto; }
+}

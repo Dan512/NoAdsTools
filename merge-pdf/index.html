@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Merge PDF — Free, No Upload, No Install · NoAdsTools</title>
+  <meta name="description" content="Combine several PDF files into one — free, entirely in your browser. Drag to reorder before merging. No upload, no account, no watermark: your PDFs never leave your device.">
+  <meta name="theme-color" content="#0f1410">
+  <link rel="canonical" href="https://noadstools.com/merge-pdf/">
+  <link rel="icon" type="image/png" sizes="192x192" href="/photo-editor/img/favicon-light-192.png">
+  <link rel="stylesheet" href="/shared/shell.css">
+  <link rel="stylesheet" href="./merge-pdf.css">
+
+  <meta property="og:title" content="Merge PDF — Free, No Upload">
+  <meta property="og:description" content="Combine several PDF files into one, in a chosen order, entirely in your browser. Nothing is uploaded.">
+  <meta property="og:url" content="https://noadstools.com/merge-pdf/">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="NoAdsTools">
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="Merge PDF — Free, No Upload">
+  <meta name="twitter:description" content="Combine several PDF files into one, in a chosen order, entirely in your browser. Nothing is uploaded.">
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "NoAdsTools Merge PDF",
+    "url": "https://noadstools.com/merge-pdf/",
+    "description": "Combine several PDF files into a single PDF entirely in your browser. Add files, drag to reorder, merge, and download. No upload, no account.",
+    "applicationCategory": "UtilitiesApplication",
+    "operatingSystem": "Any (browser-based)",
+    "browserRequirements": "Any modern browser. No install, no account.",
+    "isAccessibleForFree": true,
+    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+    "license": "https://www.gnu.org/licenses/agpl-3.0.html"
+  }
+  </script>
+</head>
+<body>
+  <main id="tool">
+    <h1>Merge PDF</h1>
+    <p class="tool-lead">Combine several PDF files into one — in the order you choose, entirely in your browser. Your PDFs never leave your device.</p>
+
+    <section class="dropzone" id="dropzone">
+      <p><strong>Drop PDF files here</strong>, or</p>
+      <label class="file-label">Choose PDFs<input id="file-input" type="file" accept="application/pdf,.pdf" multiple></label>
+      <p class="dropzone-hint">PDF files. Merged in your browser — nothing is uploaded.</p>
+    </section>
+
+    <p id="intake-note" class="intake-note" role="status" aria-live="polite" hidden></p>
+
+    <div id="workspace" class="workspace" hidden>
+      <p id="summary" class="summary" role="status" aria-live="polite"></p>
+      <ul id="list" class="pdf-list" aria-label="PDF files to merge, in order"></ul>
+      <div class="merge-actions">
+        <button type="button" id="merge" disabled>Merge &amp; download</button>
+        <button type="button" id="clear" class="btn-quiet">Clear</button>
+      </div>
+      <p id="merge-hint" class="merge-hint" hidden></p>
+      <p id="merge-error" class="merge-error" role="alert" aria-live="assertive" hidden></p>
+    </div>
+
+    <section class="prose tool-copy">
+      <h2>Combine PDFs without uploading a thing</h2>
+      <p>Add the PDF files you want to join, drag them into the order you want, and click Merge &amp; download. The whole thing happens on your device: the pdf-lib library loads from this site — never a third-party CDN — the first time you add a PDF, reads how many pages each file has, and stitches them together when you merge. No account, no watermark, no page cap. You can open this page, disconnect from the internet, and it still works.</p>
+      <p>Each file becomes a row showing its name, page count, and size, with a clear number marking its place in the final document. Reorder by dragging a row, or with the up and down buttons on each row — whichever suits your device. The summary keeps a running total, so you always know how many pages the merged PDF will have before you build it.</p>
+
+      <h2>What travels into the merged file — and what doesn't</h2>
+      <p>The pages themselves are copied across faithfully: text stays selectable, and each page keeps its own size, so mixing a landscape scan with portrait pages is fine. The merged PDF is given fresh, minimal information of its own — it is not stamped with the title, author, or other document properties of the files you combined. That is a small privacy plus: metadata from the originals is left behind rather than carried forward.</p>
+      <p>One honest limit: a PDF that is password-protected cannot be read without its password, so this tool cannot merge it. Those files are listed with a plain note asking you to unlock them first, and the rest still merge normally. Page-level editing — reordering or removing individual pages within a file — is not part of this tool yet; for now it combines whole files in order.</p>
+      <p>The full source code is <a href="https://github.com/Dan512/NoAdsTools" target="_blank" rel="noopener">public on GitHub</a> (AGPL-3.0), and the privacy panel in the footer lists everything this page loads.</p>
+
+      <h2>Questions</h2>
+      <dl class="faq">
+        <dt>Can I merge PDFs without uploading them?</dt>
+        <dd>Yes. The merge runs in your browser using JavaScript this page loads from its own site. You can verify it: open your browser's DevTools Network tab while merging — no PDF data leaves your device. There is no account and nothing to sign up for.</dd>
+        <dt>How do I combine several PDF files into one?</dt>
+        <dd>Add the files with the Choose PDFs button or by dropping them onto the page, put them in the order you want, then click Merge &amp; download. You get a single <code>merged.pdf</code> containing every page, in order.</dd>
+        <dt>Can I reorder the files before merging?</dt>
+        <dd>Yes. Drag any row to a new position, or use the up and down buttons on each row if you prefer the keyboard. The number on each row shows its place, and the merged PDF follows that order exactly.</dd>
+        <dt>Is there a limit on how many PDFs I can merge?</dt>
+        <dd>There is no fixed limit. The practical ceiling is your device's memory, since the whole merge happens locally: a handful of ordinary documents is effortless on a phone, and desktops handle far more. If a very large merge runs short of memory, the tool says so rather than failing silently.</dd>
+        <dt>Can I merge a password-protected PDF?</dt>
+        <dd>Not while it is locked. A password-protected PDF cannot be read without its password, so this tool lists it with a note asking you to unlock it first, and merges the rest of your files normally. Once you have removed the password in the app that made the PDF, add it here again.</dd>
+        <dt>Are my PDFs uploaded to a server?</dt>
+        <dd>No. Nothing is uploaded, and no copy is kept. The files stay in your browser's memory only while the page is open, and the merged PDF is built and downloaded entirely on your device.</dd>
+      </dl>
+
+      <h2>Related tools</h2>
+      <p><a href="/split-pdf/">Split PDF</a> — extract pages or split one PDF into pieces. <a href="/image-to-pdf/">Image to PDF</a> — combine JPG, PNG, and WebP images into a single PDF. <a href="/photo-editor/">Photo Editor</a> — crop, resize, redact, and batch-edit images.</p>
+    </section>
+  </main>
+
+  <script type="module" src="./js/main.js"></script>
+</body>
+</html>

@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Split PDF — Free, No Upload, No Install · NoAdsTools</title>
+  <meta name="description" content="Split a PDF on your device — extract pages, cut into custom ranges, chop every N pages, or burst into one file per page. Free, no upload, no account: your PDF never leaves your browser.">
+  <meta name="theme-color" content="#0f1410">
+  <link rel="canonical" href="https://noadstools.com/split-pdf/">
+  <link rel="icon" type="image/png" sizes="192x192" href="/photo-editor/img/favicon-light-192.png">
+  <link rel="stylesheet" href="/shared/shell.css">
+  <link rel="stylesheet" href="./split-pdf.css">
+
+  <meta property="og:title" content="Split PDF — Free, No Upload">
+  <meta property="og:description" content="Extract pages or split one PDF into pieces — custom ranges, every N pages, or one file per page — entirely in your browser. Nothing is uploaded.">
+  <meta property="og:url" content="https://noadstools.com/split-pdf/">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="NoAdsTools">
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="Split PDF — Free, No Upload">
+  <meta name="twitter:description" content="Extract pages or split one PDF into pieces — entirely in your browser. Nothing is uploaded.">
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "NoAdsTools Split PDF",
+    "url": "https://noadstools.com/split-pdf/",
+    "description": "Split one PDF into pieces entirely in your browser — extract specific pages, cut into custom ranges, chop every N pages, or burst into one file per page. No upload, no account.",
+    "applicationCategory": "UtilitiesApplication",
+    "operatingSystem": "Any (browser-based)",
+    "browserRequirements": "Any modern browser. No install, no account.",
+    "isAccessibleForFree": true,
+    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+    "license": "https://www.gnu.org/licenses/agpl-3.0.html"
+  }
+  </script>
+</head>
+<body>
+  <main id="tool">
+    <h1>Split PDF</h1>
+    <p class="tool-lead">Extract pages, cut custom ranges, chop every N pages, or burst one PDF into a file per page — entirely in your browser. Your PDF never leaves your device.</p>
+
+    <section class="dropzone" id="dropzone">
+      <p><strong>Drop a PDF here</strong>, or</p>
+      <label class="file-label">Choose a PDF<input id="file-input" type="file" accept="application/pdf,.pdf"></label>
+      <p class="dropzone-hint">One PDF. Split in your browser — nothing is uploaded.</p>
+    </section>
+
+    <p id="intake-note" class="intake-note" role="status" aria-live="polite" hidden></p>
+
+    <div id="workspace" class="workspace" hidden>
+      <p id="doc-info" class="doc-info" role="status" aria-live="polite">
+        <span id="doc-name" class="doc-name"></span>
+        <span id="doc-pages" class="doc-pages"></span>
+      </p>
+
+      <div class="mode-row">
+        <span class="mode-label" id="mode-label">Split mode</span>
+        <div class="mode-group" role="group" aria-labelledby="mode-label">
+          <button type="button" class="mode-btn" data-mode="extract" aria-pressed="true">Extract pages</button>
+          <button type="button" class="mode-btn" data-mode="ranges" aria-pressed="false">Split into ranges</button>
+          <button type="button" class="mode-btn" data-mode="everyn" aria-pressed="false">Every N pages</button>
+          <button type="button" class="mode-btn" data-mode="burst" aria-pressed="false">Burst (one per page)</button>
+        </div>
+      </div>
+
+      <div class="mode-input" id="range-field">
+        <label for="range-input" id="range-label">Pages to extract</label>
+        <input id="range-input" type="text" inputmode="numeric" autocomplete="off" spellcheck="false" placeholder="e.g. 1-3, 5, 8-10">
+      </div>
+      <div class="mode-input" id="n-field" hidden>
+        <label for="n-input">Pages per file</label>
+        <input id="n-input" type="number" min="1" step="1" value="1" inputmode="numeric" autocomplete="off">
+      </div>
+
+      <p id="range-error" class="range-error" role="alert" aria-live="assertive" hidden></p>
+      <p id="preview" class="preview" role="status" aria-live="polite"></p>
+
+      <div class="split-actions">
+        <button type="button" id="run" disabled>Split &amp; download</button>
+        <button type="button" id="clear" class="btn-quiet">Clear</button>
+      </div>
+      <p id="run-error" class="run-error" role="alert" aria-live="assertive" hidden></p>
+    </div>
+
+    <section class="prose tool-copy">
+      <h2>Split a PDF without uploading a thing</h2>
+      <p>Add one PDF, choose how you want it split, and download the result. Everything happens on your device: the pdf-lib library loads from this site — never a third-party CDN — the first time you add a PDF, reads how many pages it has, and builds the new files when you split. There is no account, no watermark, and no page cap. You can open this page, disconnect from the internet, and it still works.</p>
+      <p>There are four ways to split. <strong>Extract pages</strong> pulls a set of pages you name — like <code>1-3, 5, 8-10</code> — into one new PDF, in the order you list them. <strong>Split into ranges</strong> treats each comma group as its own file, so <code>1-5, 6-10</code> gives you two PDFs. <strong>Every N pages</strong> cuts the document into equal chunks, with a shorter final chunk if it does not divide evenly. <strong>Burst</strong> turns every page into its own one-page PDF. When a split produces more than one file, they are bundled into a single ZIP so you download once.</p>
+
+      <h2>What travels into the split files — and what doesn't</h2>
+      <p>The pages themselves are copied across faithfully: text stays selectable, and each page keeps its own size. Each new PDF is given fresh, minimal information of its own — it is not stamped with the title, author, or other document properties of the file you split. That is a small privacy plus: metadata from the original is left behind rather than carried forward. A live preview line tells you exactly what you will get — how many pages, and how many files — before you build anything.</p>
+      <p>One honest limit: a PDF that is password-protected cannot be read without its password, so this tool cannot split it. Those files are named with a plain note asking you to unlock them first. Clickable page thumbnails, so you can pick pages by sight rather than by number, are planned for a later version; for now the page-range box does the job.</p>
+      <p>The full source code is <a href="https://github.com/Dan512/NoAdsTools" target="_blank" rel="noopener">public on GitHub</a> (AGPL-3.0), and the privacy panel in the footer lists everything this page loads.</p>
+
+      <h2>Questions</h2>
+      <dl class="faq">
+        <dt>Can I split a PDF without uploading it?</dt>
+        <dd>Yes. The split runs in your browser using JavaScript this page loads from its own site. You can verify it: open your browser's DevTools Network tab while splitting — no PDF data leaves your device. There is no account and nothing to sign up for.</dd>
+        <dt>How do I extract specific pages from a PDF?</dt>
+        <dd>Choose the Extract pages mode and type the pages you want, such as <code>1-3, 5, 8-10</code>. You get a single PDF containing exactly those pages, in the order you listed them.</dd>
+        <dt>How do I split a PDF into separate files?</dt>
+        <dd>Use Split into ranges and give each file its own comma group, like <code>1-5, 6-10</code> for two files. Every N pages and Burst also produce separate files. When there is more than one file, they arrive together in a single ZIP.</dd>
+        <dt>Can I split a PDF every N pages?</dt>
+        <dd>Yes. Choose Every N pages and enter a number. The document is cut into chunks of that many pages each; if the total does not divide evenly, the last chunk is simply shorter.</dd>
+        <dt>Are my PDFs uploaded to a server?</dt>
+        <dd>No. Nothing is uploaded, and no copy is kept. The file stays in your browser's memory only while the page is open, and the split files are built and downloaded entirely on your device.</dd>
+      </dl>
+
+      <h2>Related tools</h2>
+      <p><a href="/merge-pdf/">Merge PDF</a> — combine PDF files in any order. <a href="/image-to-pdf/">Image to PDF</a> — combine JPG, PNG, and WebP images into a single PDF. <a href="/photo-editor/">Photo Editor</a> — crop, resize, redact, and batch-edit images.</p>
+    </section>
+  </main>
+
+  <script type="module" src="./js/main.js"></script>
+</body>
+</html>

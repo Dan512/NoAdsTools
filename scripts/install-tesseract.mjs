@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // scripts/install-tesseract.mjs — fetch the Tesseract.js OCR engine
-// (Apache-2.0) into js/vendor/tesseract/. Mirror of install-blazeface.mjs /
+// (Apache-2.0) into vendor/tesseract/. Mirror of install-blazeface.mjs /
 // install-bgremove.mjs's pattern: one-time fetch + SHA-256 verification,
 // then the files live in the repo and the site loads them locally at
 // runtime (no third-party CDN at user-visit time).
@@ -13,7 +13,7 @@
 //   3. Fetches eng.traineddata from the tessdata_fast GitHub repo, gzip-
 //      compresses it locally (Tesseract's loader expects .traineddata.gz),
 //      and stages it under lang/.
-//   4. Copies the curated file set into js/vendor/tesseract/ and verifies
+//   4. Copies the curated file set into vendor/tesseract/ and verifies
 //      each one against the pinned SHA-256s below.
 //
 // The script is idempotent: if all vendored files already match their
@@ -68,9 +68,9 @@ const TESSERACT_JS_FILES = [
 ];
 
 // We collect all .wasm + .wasm.js files emitted by tesseract.js-core into
-// js/vendor/tesseract/core/.
+// vendor/tesseract/core/.
 //
-// Pinned SHA-256 hashes for the FILES WE COMMIT to js/vendor/tesseract/.
+// Pinned SHA-256 hashes for the FILES WE COMMIT to vendor/tesseract/.
 // Bump alongside TESSERACT_*_VERSION. Use `TBD` on first run; copy printed
 // hashes here after the script writes them once.
 const PINNED = {
@@ -86,7 +86,7 @@ const PINNED = {
 };
 
 const PROJECT_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const VENDOR_DIR   = path.join(PROJECT_ROOT, 'js', 'vendor', 'tesseract');
+const VENDOR_DIR   = path.join(PROJECT_ROOT, 'vendor', 'tesseract');
 const TMP_DIR      = path.join(PROJECT_ROOT, '.tmp-vendor');
 
 // ----- Helpers -------------------------------------------------------------
@@ -185,7 +185,7 @@ async function vendorTesseractCore() {
     const hash = await sha256(dst);
     // Add a PINNED entry on the fly so verify() considers it.
     PINNED[`core/${entry}`] = PINNED[`core/${entry}`] || 'TBD';
-    console.log(`  → js/vendor/tesseract/core/${entry}  [sha256: ${hash.slice(0, 12)}…]`);
+    console.log(`  → vendor/tesseract/core/${entry}  [sha256: ${hash.slice(0, 12)}…]`);
   }
 }
 
@@ -202,7 +202,7 @@ async function vendorEnglishLanguageData() {
   await mkdir(langDir, { recursive: true });
   const dst = path.join(langDir, 'eng.traineddata.gz');
   await writeFile(dst, gz);
-  console.log(`  → js/vendor/tesseract/lang/eng.traineddata.gz`);
+  console.log(`  → vendor/tesseract/lang/eng.traineddata.gz`);
 }
 
 async function verify() {

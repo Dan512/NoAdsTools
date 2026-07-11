@@ -1,0 +1,192 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Watermark PDF — Free, No Upload, No Install · NoAdsTools</title>
+  <meta name="description" content="Stamp a text or logo watermark onto a PDF on your device — set position, opacity, rotation, and tiling, on every page or a range. Free, no upload, no account: your PDF never leaves your browser.">
+  <meta name="theme-color" content="#0f1410">
+  <link rel="canonical" href="https://noadstools.com/watermark-pdf/">
+  <link rel="icon" type="image/png" sizes="192x192" href="/photo-editor/img/favicon-light-192.png">
+  <link rel="stylesheet" href="/shared/shell.css">
+  <link rel="stylesheet" href="./watermark-pdf.css">
+
+  <meta property="og:title" content="Watermark PDF — Free, No Upload">
+  <meta property="og:description" content="Add a text or logo watermark to a PDF — position, opacity, rotation, tiling — entirely in your browser. Nothing is uploaded.">
+  <meta property="og:url" content="https://noadstools.com/watermark-pdf/">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="NoAdsTools">
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="Watermark PDF — Free, No Upload">
+  <meta name="twitter:description" content="Add a text or logo watermark to a PDF — entirely in your browser. Nothing is uploaded.">
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "NoAdsTools Watermark PDF",
+    "url": "https://noadstools.com/watermark-pdf/",
+    "description": "Stamp a text or logo watermark onto a PDF entirely in your browser — set position, opacity, rotation, and tiling, on every page or a page range. No upload, no account.",
+    "applicationCategory": "UtilitiesApplication",
+    "operatingSystem": "Any (browser-based)",
+    "browserRequirements": "Any modern browser. No install, no account.",
+    "isAccessibleForFree": true,
+    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+    "license": "https://www.gnu.org/licenses/agpl-3.0.html"
+  }
+  </script>
+</head>
+<body>
+  <main id="tool">
+    <h1>Watermark PDF</h1>
+    <p class="tool-lead">Stamp a text or logo watermark onto a PDF — choose position, opacity, rotation, and tiling, on every page or a page range. Everything happens in your browser; your PDF never leaves your device.</p>
+
+    <section class="dropzone" id="dropzone">
+      <p><strong>Drop a PDF here</strong>, or</p>
+      <label class="file-label">Choose a PDF<input id="file-input" type="file" accept="application/pdf,.pdf"></label>
+      <p class="dropzone-hint">One PDF. Watermarked in your browser — nothing is uploaded.</p>
+    </section>
+
+    <p id="intake-note" class="intake-note" role="status" aria-live="polite" hidden></p>
+
+    <div id="workspace" class="workspace" hidden>
+      <p id="doc-info" class="doc-info" role="status" aria-live="polite">
+        <span id="doc-name" class="doc-name"></span>
+        <span id="doc-pages" class="doc-pages"></span>
+      </p>
+
+      <div class="control-row">
+        <span class="control-label" id="type-label">Watermark type</span>
+        <div class="seg-group" role="group" aria-labelledby="type-label">
+          <button type="button" class="seg-btn" data-type="text" aria-pressed="true">Text</button>
+          <button type="button" class="seg-btn" data-type="image" aria-pressed="false">Image / logo</button>
+        </div>
+      </div>
+
+      <div id="text-controls" class="control-stack">
+        <div class="field">
+          <label for="wm-text">Watermark text</label>
+          <input id="wm-text" type="text" value="CONFIDENTIAL" autocomplete="off" spellcheck="false" maxlength="120">
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label for="wm-font">Font</label>
+            <select id="wm-font">
+              <option value="Helvetica">Helvetica</option>
+              <option value="HelveticaBold">Helvetica Bold</option>
+              <option value="TimesRoman">Times Roman</option>
+              <option value="TimesRomanItalic">Times Italic</option>
+              <option value="Courier">Courier</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="wm-size">Size (pt)</label>
+            <input id="wm-size" type="number" min="6" max="400" step="1" value="48" inputmode="numeric" autocomplete="off">
+          </div>
+          <div class="field">
+            <label for="wm-color">Color</label>
+            <span class="color-field">
+              <input id="wm-color" type="color" value="#888888">
+              <span id="wm-color-hex" class="color-hex" aria-hidden="true">#888888</span>
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <div id="image-controls" class="control-stack" hidden>
+        <div class="field">
+          <span class="field-label-text">Logo image (PNG or JPEG)</span>
+          <label class="file-label file-label-sm">Choose a logo<input id="logo-input" type="file" accept="image/png,image/jpeg,.png,.jpg,.jpeg"></label>
+          <span id="logo-name" class="logo-name" role="status" aria-live="polite"></span>
+        </div>
+        <div class="field">
+          <label for="wm-scale">Logo width (% of page): <span id="wm-scale-val">30%</span></label>
+          <input id="wm-scale" type="range" min="5" max="100" step="1" value="30">
+        </div>
+      </div>
+
+      <div class="field-row">
+        <div class="field">
+          <label for="wm-opacity">Opacity: <span id="wm-opacity-val">30%</span></label>
+          <input id="wm-opacity" type="range" min="0" max="100" step="1" value="30">
+        </div>
+        <div class="field">
+          <label for="wm-rotation">Rotation: <span id="wm-rotation-val">45°</span></label>
+          <input id="wm-rotation" type="range" min="0" max="359" step="1" value="45">
+        </div>
+      </div>
+
+      <div class="control-row">
+        <span class="control-label" id="pos-label">Position</span>
+        <div class="seg-group" role="group" aria-labelledby="pos-label">
+          <button type="button" class="seg-btn" data-pos="center" aria-pressed="true">Center</button>
+          <button type="button" class="seg-btn" data-pos="tile" aria-pressed="false">Tile</button>
+          <button type="button" class="seg-btn" data-pos="tl" aria-pressed="false">Top-left</button>
+          <button type="button" class="seg-btn" data-pos="tr" aria-pressed="false">Top-right</button>
+          <button type="button" class="seg-btn" data-pos="bl" aria-pressed="false">Bottom-left</button>
+          <button type="button" class="seg-btn" data-pos="br" aria-pressed="false">Bottom-right</button>
+        </div>
+      </div>
+
+      <div class="field" id="tile-gap-field" hidden>
+        <label for="wm-tilegap">Tile gap (pt)</label>
+        <input id="wm-tilegap" type="number" min="0" max="400" step="1" value="64" inputmode="numeric" autocomplete="off">
+      </div>
+
+      <div class="control-row">
+        <span class="control-label" id="apply-label">Apply to</span>
+        <div class="seg-group" role="group" aria-labelledby="apply-label">
+          <button type="button" class="seg-btn" data-apply="all" aria-pressed="true">All pages</button>
+          <button type="button" class="seg-btn" data-apply="range" aria-pressed="false">Page range</button>
+        </div>
+      </div>
+
+      <div class="field" id="range-field" hidden>
+        <label for="range-input">Pages</label>
+        <input id="range-input" type="text" inputmode="numeric" autocomplete="off" spellcheck="false" placeholder="e.g. 1-3, 5, 8-10">
+      </div>
+
+      <p id="range-error" class="wm-error" role="alert" aria-live="assertive" hidden></p>
+      <p id="preview" class="preview" role="status" aria-live="polite"></p>
+
+      <div class="wm-actions">
+        <button type="button" id="apply" disabled>Apply &amp; download</button>
+        <button type="button" id="clear" class="btn-quiet">Clear</button>
+      </div>
+      <p id="apply-hint" class="apply-hint" role="status" aria-live="polite" hidden></p>
+      <p id="run-error" class="wm-error" role="alert" aria-live="assertive" hidden></p>
+    </div>
+
+    <section class="prose tool-copy">
+      <h2>Watermark a PDF without uploading a thing</h2>
+      <p>Add one PDF, choose a text or logo watermark, and download the result. Everything happens on your device: the pdf-lib library loads from this site — never a third-party CDN — the first time you add a PDF, reads how many pages it has, and stamps the watermark locally. There is no account, no forced watermark of our own, and no page cap. You can open this page, disconnect from the internet, and it still works.</p>
+      <p>A <strong>text</strong> watermark is the classic case — a word like <code>CONFIDENTIAL</code> or <code>DRAFT</code> laid across the page. Pick from a small set of built-in fonts, set the size and color, and choose how strong it shows. An <strong>image</strong> watermark stamps a PNG or JPEG logo instead, scaled to a share of the page width. Both share the same placement controls, so a company mark and a status stamp behave the same way.</p>
+
+      <h2>Text or logo, placed the way you want</h2>
+      <p>Position the watermark in the <strong>center</strong>, in any <strong>corner</strong>, or <strong>tiled</strong> in a repeating grid across the whole page. Opacity runs from faint to solid, so the mark reads without hiding the text underneath, and rotation lets you set the familiar diagonal look. You can stamp every page or only a range you type, such as <code>1-3, 5, 8-10</code>. A live preview line states exactly what you will get — which word or logo, how many pages, the position, the angle, and the opacity — before you build anything. The watermark is drawn on top of each page's existing content, which is the standard, readable-through watermark look.</p>
+
+      <h2>What is honest about this tool</h2>
+      <p>This version uses the standard built-in PDF fonts, so custom or handwriting typefaces are not available yet. A password-protected PDF cannot be read without its password, so it must be unlocked before it can be watermarked; the tool says so plainly rather than failing quietly. The watermark sits over the page rather than behind it, and the source file's document properties — title, author, and the like — are not carried into the watermarked copy. The full source code is <a href="https://github.com/Dan512/NoAdsTools" target="_blank" rel="noopener">public on GitHub</a> (AGPL-3.0), and the privacy panel in the footer lists everything this page loads.</p>
+
+      <h2>Questions</h2>
+      <dl class="faq">
+        <dt>How do I watermark a PDF without uploading it?</dt>
+        <dd>Add your PDF, set the text or logo and its position, then choose Apply and download. The watermark is drawn in your browser using JavaScript this page loads from its own site. You can verify it: open your browser's DevTools Network tab while applying — no PDF data leaves your device.</dd>
+        <dt>How do I add a CONFIDENTIAL stamp to a PDF?</dt>
+        <dd>Keep the type on Text, type <code>CONFIDENTIAL</code> (it is the default), and pick a position — Center or Tile with a rotation of about 45 degrees gives the classic diagonal stamp. Set the opacity so the mark shows without hiding the content, then apply.</dd>
+        <dt>Can I use my own logo as a watermark?</dt>
+        <dd>Yes. Switch the type to Image, choose a PNG or JPEG logo, and set its width as a share of the page. The logo is embedded directly into the PDF; SVG logos are not supported in this version, so export your mark to PNG or JPEG first.</dd>
+        <dt>Can I watermark only specific pages?</dt>
+        <dd>Yes. Under Apply to, choose Page range and type the pages you want, like <code>1-3, 5, 8-10</code>. Only those pages are stamped; the rest are copied through untouched.</dd>
+        <dt>Are my PDFs uploaded to a server?</dt>
+        <dd>No. Nothing is uploaded and no copy is kept. Your PDF and any logo stay in your browser's memory only while the page is open, and the watermarked file is built and downloaded entirely on your device.</dd>
+      </dl>
+
+      <h2>Related tools</h2>
+      <p><a href="/merge-pdf/">Merge PDF</a> — combine PDF files in any order. <a href="/split-pdf/">Split PDF</a> — extract pages or cut one PDF into pieces. <a href="/image-to-pdf/">Image to PDF</a> — combine JPG, PNG, and WebP images into a single PDF. <a href="/photo-editor/">Photo Editor</a> — crop, resize, redact, and batch-edit images.</p>
+    </section>
+  </main>
+
+  <script type="module" src="./js/main.js"></script>
+</body>
+</html>

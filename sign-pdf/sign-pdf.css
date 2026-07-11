@@ -1,0 +1,281 @@
+/* sign-pdf.css — tool-only styles. Tokens/chrome come from /shared/shell.css.
+   Every rule is scoped under #tool so nothing leaks onto the shared topbar's
+   injected .controls row (playbook: a bare .controls/.actions/.list rule leaks
+   and overflows mobile). This tool has a draw canvas AND page-preview canvases,
+   so #tool{width:100%} + the frame's overflow:hidden keep an oversized canvas
+   from stretching the page at 375px. Colorblind-safe (Dan is colorblind): the
+   Draw/Type toggle's active state carries a ✓ glyph + heavier weight + fill
+   (never hue alone); the active page frame carries a ▸ caption + heavier border;
+   the color picker's value is shown as HEX TEXT. */
+#tool { width: 100%; max-width: 820px; margin: 0 auto; box-sizing: border-box; padding: var(--space-2xl) var(--space-xl) var(--space-4xl); }
+#tool h1 { margin: 0 0 var(--space-sm); font-size: var(--t-2xl); font-weight: 600; }
+.tool-lead { margin: 0 0 var(--space-xl); color: var(--text-secondary); font-size: var(--t-lg); max-width: 70ch; }
+
+/* [hidden] must beat any author display: rule below. */
+#tool [hidden] { display: none !important; }
+
+/* --- Dropzone ------------------------------------------------------------ */
+#tool .dropzone {
+  border: 2px dashed var(--border-strong);
+  border-radius: var(--radius-card);
+  padding: var(--space-2xl);
+  text-align: center;
+  background: var(--surface);
+}
+#tool .dropzone.is-drag { border-color: var(--accent); background: var(--surface-2); }
+#tool .dropzone p { margin: 0 0 var(--space-sm); }
+#tool .dropzone-hint { color: var(--text-muted); font-size: var(--t-sm); margin: var(--space-sm) 0 0; }
+
+/* --- File input (clip pattern — NEVER display:none) ---------------------- */
+#tool .file-label {
+  position: relative;
+  display: inline-block;
+  padding: var(--space-sm) var(--space-lg);
+  border-radius: var(--radius-control);
+  background: var(--accent);
+  color: var(--accent-contrast);
+  font-weight: 500;
+  cursor: pointer;
+}
+/* Visually hidden, NOT display:none — the input stays focusable and in the
+   a11y tree so keyboard users can Tab to it and press Enter/Space. */
+#tool .file-label input {
+  position: absolute !important;
+  width: 1px !important; height: 1px !important;
+  margin: -1px !important; padding: 0 !important;
+  border: 0 !important; clip: rect(0 0 0 0) !important;
+  clip-path: inset(50%) !important; overflow: hidden !important;
+  white-space: nowrap !important;
+}
+#tool .file-label:focus-within { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+
+#tool .intake-note { margin: var(--space-lg) 0 0; font-size: var(--t-sm); color: var(--text-secondary); font-weight: 500; }
+
+/* --- Workspace ----------------------------------------------------------- */
+#tool .workspace { margin-top: var(--space-xl); }
+#tool .doc-info { margin: 0 0 var(--space-lg); font-size: var(--t-lg); display: flex; flex-wrap: wrap; gap: var(--space-xs) var(--space-md); align-items: baseline; }
+#tool .doc-name { font-weight: 600; overflow-wrap: anywhere; min-width: 0; }
+#tool .doc-pages { color: var(--text-secondary); font-size: var(--t-md); font-variant-numeric: tabular-nums; }
+
+/* --- Segmented control (Draw / Type) ------------------------------------- */
+#tool .control-row { margin: 0 0 var(--space-lg); }
+#tool .control-label { display: block; font-size: var(--t-sm); font-weight: 600; color: var(--text-secondary); margin: 0 0 var(--space-sm); }
+#tool .seg-group { display: flex; flex-wrap: wrap; gap: var(--space-sm); }
+#tool .seg-btn {
+  border: 1px solid var(--border-strong);
+  background: var(--surface);
+  color: inherit;
+  font: inherit;
+  font-size: var(--t-sm);
+  padding: var(--space-sm) var(--space-lg);
+  border-radius: var(--radius-control);
+  cursor: pointer;
+  white-space: nowrap;
+  /* Snap the shared :where(button) 120ms color transition: a mid-cross-fade
+     frame can trip axe's color-contrast sampler as aria-pressed toggles
+     (spurious serious flag; resting state is ≥7:1). Instant + deterministic. */
+  transition: none;
+}
+#tool .seg-btn:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+/* Active state: glyph + weight + fill together carry state, never hue alone. */
+#tool .seg-btn[aria-pressed="true"] {
+  background: var(--accent);
+  color: var(--accent-contrast);
+  border-color: var(--accent);
+  font-weight: 700;
+}
+#tool .seg-btn[aria-pressed="true"]::before { content: "\2713\00a0"; /* ✓ + nbsp */ }
+
+/* --- Signature pad ------------------------------------------------------- */
+#tool .pad-controls { margin: 0 0 var(--space-lg); }
+#tool .draw-canvas {
+  display: block;
+  width: 100%;
+  max-width: 520px;
+  height: 180px;
+  box-sizing: border-box;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-card);
+  background: var(--surface);
+  /* The signing gesture owns pointer input inside the pad. */
+  touch-action: none;
+  cursor: crosshair;
+}
+#tool .pad-actions { display: flex; gap: var(--space-sm); margin: var(--space-sm) 0 0; flex-wrap: wrap; }
+#tool .pad-hint { margin: var(--space-sm) 0 0; font-size: var(--t-sm); color: var(--text-muted); }
+
+/* --- Fields (type mode + page picker) ------------------------------------ */
+#tool .field { margin: 0 0 var(--space-lg); }
+#tool .field-row { display: flex; flex-wrap: wrap; gap: var(--space-lg); margin: 0 0 var(--space-lg); }
+#tool .field-row .field { margin: 0; flex: 1 1 14ch; min-width: 0; }
+#tool .field label { display: block; font-size: var(--t-sm); font-weight: 600; color: var(--text-secondary); margin: 0 0 var(--space-sm); }
+#tool .field input[type="text"],
+#tool .field select {
+  width: 100%;
+  max-width: 40ch;
+  box-sizing: border-box;
+  border: 1px solid var(--border-strong);
+  background: var(--surface);
+  color: inherit;
+  font: inherit;
+  padding: var(--space-sm) var(--space-md);
+  border-radius: var(--radius-control);
+}
+#tool .field input:focus-visible,
+#tool .field select:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+
+/* Color picker + its HEX text (the colorblind-safe value readout). */
+#tool .color-field { display: inline-flex; align-items: center; gap: var(--space-sm); }
+#tool .color-field input[type="color"] {
+  width: 44px; height: 32px; padding: 0;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-control);
+  background: var(--surface);
+  cursor: pointer;
+}
+#tool .color-field input[type="color"]:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+#tool .color-hex { font-variant-numeric: tabular-nums; font-size: var(--t-sm); font-weight: 600; text-transform: uppercase; }
+
+#tool .page-picker select { max-width: 20ch; }
+#tool .place-hint { margin: 0 0 var(--space-md); font-size: var(--t-sm); color: var(--text-secondary); font-weight: 500; }
+/* Long-document lazy-render note (Fix I-1). A quiet info line, not an error;
+   the ⋯ glyph + text carry it (never hue alone — Dan is colorblind). */
+#tool .lazy-note { margin: 0 0 var(--space-md); font-size: var(--t-sm); color: var(--text-muted); }
+#tool .lazy-note::before { content: "\2026\00a0"; /* … + nbsp */ }
+
+/* --- Page preview + placement box ---------------------------------------- */
+#tool .pages {
+  display: flex; flex-direction: column; align-items: center;
+  gap: var(--space-lg);
+  max-height: 70vh; overflow: auto;
+  padding: var(--space-md);
+  background: #12140f; /* fixed dark backdrop (both themes) */
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  box-sizing: border-box;
+}
+#tool .pages:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+/* Each rendered page: sized by JS to the page's display box; the canvas fills
+   it and the placement box is absolutely positioned inside it. */
+#tool .page-frame {
+  position: relative;
+  flex: 0 0 auto;
+  max-width: 100%;
+  box-sizing: border-box;
+  border: 2px solid transparent; /* reserve width so the active border never shifts layout */
+  line-height: 0;
+}
+#tool .page-frame canvas { display: block; width: 100%; height: auto; background: #fff; }
+/* Active page: heavier border (weight, not hue) + a "▸ Signing here" caption. */
+#tool .page-frame.is-active { border-color: var(--accent); }
+#tool .page-frame .page-cap {
+  position: absolute; left: 0; top: 0;
+  font-size: var(--t-xs); font-weight: 700;
+  padding: 2px 6px; line-height: 1.2;
+  background: var(--accent); color: var(--accent-contrast);
+  border-bottom-right-radius: var(--radius-control);
+  pointer-events: none;
+}
+#tool .page-frame:not(.is-active) .page-cap { display: none; }
+#tool .page-frame .page-cap::before { content: "\25B8\00a0"; /* ▸ */ }
+/* A page that failed to render shows a plain placeholder instead of a canvas. */
+#tool .page-frame .page-fallback {
+  display: flex; align-items: center; justify-content: center;
+  min-height: 160px; padding: var(--space-lg);
+  color: var(--text-muted); font-size: var(--t-sm); text-align: center;
+  background: var(--surface-2);
+}
+
+/* Placement box: a bright outline over the page with the signature preview
+   inside and four corner handles. Only present on the active page. */
+#tool .place-box {
+  position: absolute;
+  left: 0; top: 0; width: 0; height: 0;
+  box-sizing: border-box;
+  border: 1.5px dashed var(--accent);
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.6);
+  background: rgba(255, 255, 255, 0.06);
+  cursor: move;
+  touch-action: none;
+}
+#tool .place-box:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+#tool .place-box .sig-preview {
+  display: block; width: 100%; height: 100%;
+  object-fit: contain; pointer-events: none;
+  -webkit-user-select: none; user-select: none;
+}
+/* Handles: the element is the (larger) invisible hit target; a smaller visible
+   square is drawn by ::before. Hit target ≥44px on touch devices. */
+#tool .place-box .handle {
+  position: absolute;
+  width: 24px; height: 24px;
+  transform: translate(-50%, -50%);
+  z-index: 2;
+  touch-action: none;
+}
+#tool .place-box .handle::before {
+  content: "";
+  position: absolute; left: 50%; top: 50%;
+  width: 12px; height: 12px;
+  transform: translate(-50%, -50%);
+  background: #fff;
+  border: 1.5px solid var(--accent);
+  border-radius: 2px;
+}
+#tool .place-box .handle-nw { left: 0;    top: 0;    cursor: nwse-resize; }
+#tool .place-box .handle-ne { left: 100%; top: 0;    cursor: nesw-resize; }
+#tool .place-box .handle-se { left: 100%; top: 100%; cursor: nwse-resize; }
+#tool .place-box .handle-sw { left: 0;    top: 100%; cursor: nesw-resize; }
+@media (pointer: coarse) {
+  #tool .place-box .handle { width: 44px; height: 44px; }
+  #tool .place-box .handle::before { width: 16px; height: 16px; }
+}
+
+/* --- Honesty line + actions ---------------------------------------------- */
+#tool .legal-note {
+  margin: var(--space-lg) 0 var(--space-md);
+  padding: var(--space-md);
+  font-size: var(--t-sm);
+  color: var(--text-secondary);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-control);
+  max-width: 70ch;
+}
+#tool .legal-note strong { color: var(--text); }
+
+#tool .sign-actions { display: flex; gap: var(--space-sm); flex-wrap: wrap; align-items: center; }
+#tool .sign-actions button,
+#tool .pad-actions button {
+  border: 1px solid var(--border-strong);
+  background: var(--surface);
+  color: inherit;
+  font: inherit;
+  padding: var(--space-sm) var(--space-lg);
+  border-radius: var(--radius-control);
+  cursor: pointer;
+}
+#tool #apply { background: var(--accent); color: var(--accent-contrast); border-color: var(--accent); font-weight: 500; }
+#tool #apply:disabled { opacity: 0.5; cursor: default; }
+#tool .btn-quiet { color: var(--text-secondary); }
+#tool .apply-hint { margin: var(--space-sm) 0 0; font-size: var(--t-sm); color: var(--text-secondary); font-weight: 500; }
+#tool .sign-error { margin: var(--space-sm) 0 0; font-size: var(--t-sm); font-weight: 600; color: var(--danger); }
+#tool .sign-error::before { content: "\26a0\00a0"; /* ⚠ + nbsp */ }
+
+/* --- Deep page ----------------------------------------------------------- */
+#tool .tool-copy { margin-top: var(--space-3xl); max-width: 70ch; }
+#tool .tool-copy h2 { font-size: var(--t-lg); font-weight: 600; margin: var(--space-2xl) 0 var(--space-sm); }
+#tool .tool-copy p { color: var(--text-secondary); line-height: 1.55; }
+#tool .faq dt { font-weight: 600; margin-top: var(--space-lg); }
+#tool .faq dd { margin: var(--space-xs) 0 0; color: var(--text-secondary); }
+
+/* --- Mobile -------------------------------------------------------------- */
+@media (max-width: 480px) {
+  #tool { padding-inline: var(--space-lg); }
+  #tool .seg-group { flex-direction: column; align-items: stretch; }
+  #tool .seg-btn { text-align: left; }
+  #tool .field-row { flex-direction: column; gap: var(--space-lg); }
+  #tool .field input[type="text"],
+  #tool .field select { max-width: 100%; }
+  #tool .sign-actions { flex-direction: column; align-items: stretch; }
+}

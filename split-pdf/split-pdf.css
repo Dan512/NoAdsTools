@@ -1,0 +1,143 @@
+/* split-pdf.css — tool-only styles. Tokens/chrome come from /shared/shell.css.
+   Every rule is scoped under #tool so nothing leaks onto the shared topbar's
+   injected .controls row (playbook: a bare .controls/.actions/.list leaks and
+   overflows mobile). Colorblind-safe: the active split mode carries a ✓ glyph +
+   heavier weight + filled fill (never hue alone); errors carry a ⚠ glyph + word
+   + weight. */
+#tool { max-width: 760px; margin: 0 auto; padding: var(--space-2xl) var(--space-xl) var(--space-4xl); }
+#tool h1 { margin: 0 0 var(--space-sm); font-size: var(--t-2xl); font-weight: 600; }
+.tool-lead { margin: 0 0 var(--space-xl); color: var(--text-secondary); font-size: var(--t-lg); max-width: 70ch; }
+
+/* [hidden] must beat any author display: rule below (.workspace is block,
+   .mode-input is block, .split-actions is flex, etc.). */
+#tool [hidden] { display: none !important; }
+
+/* --- Dropzone ------------------------------------------------------------ */
+#tool .dropzone {
+  border: 2px dashed var(--border-strong);
+  border-radius: var(--radius-card);
+  padding: var(--space-2xl);
+  text-align: center;
+  background: var(--surface);
+}
+#tool .dropzone.is-drag { border-color: var(--accent); background: var(--surface-2); }
+#tool .dropzone p { margin: 0 0 var(--space-sm); }
+#tool .dropzone-hint { color: var(--text-muted); font-size: var(--t-sm); margin: var(--space-sm) 0 0; }
+
+#tool .file-label {
+  position: relative;
+  display: inline-block;
+  padding: var(--space-sm) var(--space-lg);
+  border-radius: var(--radius-control);
+  background: var(--accent);
+  color: var(--accent-contrast);
+  font-weight: 500;
+  cursor: pointer;
+}
+/* Visually hidden, NOT display:none — the input stays focusable and in the
+   a11y tree so keyboard users can Tab to it and press Enter/Space. */
+#tool .file-label input {
+  position: absolute !important;
+  width: 1px !important; height: 1px !important;
+  margin: -1px !important; padding: 0 !important;
+  border: 0 !important; clip: rect(0 0 0 0) !important;
+  clip-path: inset(50%) !important; overflow: hidden !important;
+  white-space: nowrap !important;
+}
+#tool .file-label:focus-within { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+
+#tool .intake-note { margin: var(--space-lg) 0 0; font-size: var(--t-sm); color: var(--text-secondary); font-weight: 500; }
+
+/* --- Workspace ----------------------------------------------------------- */
+#tool .workspace { margin-top: var(--space-xl); }
+#tool .doc-info { margin: 0 0 var(--space-lg); font-size: var(--t-lg); display: flex; flex-wrap: wrap; gap: var(--space-xs) var(--space-md); align-items: baseline; }
+#tool .doc-name { font-weight: 600; overflow-wrap: anywhere; min-width: 0; }
+#tool .doc-pages { color: var(--text-secondary); font-size: var(--t-md); font-variant-numeric: tabular-nums; }
+
+/* --- Mode segmented control ---------------------------------------------- */
+#tool .mode-row { margin: 0 0 var(--space-lg); }
+#tool .mode-label { display: block; font-size: var(--t-sm); font-weight: 600; color: var(--text-secondary); margin: 0 0 var(--space-sm); }
+#tool .mode-group { display: flex; flex-wrap: wrap; gap: var(--space-sm); }
+#tool .mode-btn {
+  border: 1px solid var(--border-strong);
+  background: var(--surface);
+  color: inherit;
+  font: inherit;
+  font-size: var(--t-sm);
+  padding: var(--space-sm) var(--space-lg);
+  border-radius: var(--radius-control);
+  cursor: pointer;
+  white-space: nowrap;
+  /* Kill the shared :where(button) 120ms color/background transition here: as a
+     mode toggles aria-pressed, the color and background cross-fade through a
+     brief low-contrast frame that axe can sample mid-flight (a spurious serious
+     color-contrast flag; the resting state is ≥7:1). Snapping is instant and
+     deterministic, which also makes the a11y browser test stable. */
+  transition: none;
+}
+#tool .mode-btn:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+/* Active mode: glyph + weight + fill together carry state, never hue alone. */
+#tool .mode-btn[aria-pressed="true"] {
+  background: var(--accent);
+  color: var(--accent-contrast);
+  border-color: var(--accent);
+  font-weight: 700;
+}
+#tool .mode-btn[aria-pressed="true"]::before { content: "\2713\00a0"; /* ✓ + nbsp */ }
+
+/* --- Mode input ---------------------------------------------------------- */
+#tool .mode-input { margin: 0 0 var(--space-lg); }
+#tool .mode-input label { display: block; font-size: var(--t-sm); font-weight: 600; color: var(--text-secondary); margin: 0 0 var(--space-sm); }
+#tool .mode-input input {
+  width: 100%;
+  max-width: 30ch;
+  box-sizing: border-box;
+  border: 1px solid var(--border-strong);
+  background: var(--surface);
+  color: inherit;
+  font: inherit;
+  padding: var(--space-sm) var(--space-md);
+  border-radius: var(--radius-control);
+}
+#tool .mode-input input:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+#tool #n-field input { max-width: 12ch; }
+
+/* --- Preview + errors ---------------------------------------------------- */
+#tool .preview { margin: 0 0 var(--space-lg); font-size: var(--t-lg); font-weight: 600; }
+#tool .range-error { margin: 0 0 var(--space-md); font-size: var(--t-sm); font-weight: 600; color: var(--danger); }
+#tool .range-error::before { content: "\26a0\00a0"; /* ⚠ + nbsp */ }
+
+/* --- Actions ------------------------------------------------------------- */
+#tool .split-actions { display: flex; gap: var(--space-sm); flex-wrap: wrap; align-items: center; }
+#tool .split-actions button {
+  border: 1px solid var(--border-strong);
+  background: var(--surface);
+  color: inherit;
+  font: inherit;
+  padding: var(--space-sm) var(--space-lg);
+  border-radius: var(--radius-control);
+  cursor: pointer;
+}
+#tool #run { background: var(--accent); color: var(--accent-contrast); border-color: var(--accent); font-weight: 500; }
+#tool #run:disabled { opacity: 0.5; cursor: default; }
+#tool .btn-quiet { color: var(--text-secondary); }
+
+#tool .run-error { margin: var(--space-md) 0 0; font-size: var(--t-sm); font-weight: 600; color: var(--danger); }
+#tool .run-error::before { content: "\26a0\00a0"; /* ⚠ + nbsp */ }
+
+/* --- Deep page ----------------------------------------------------------- */
+#tool .tool-copy { margin-top: var(--space-3xl); max-width: 70ch; }
+#tool .tool-copy h2 { font-size: var(--t-lg); font-weight: 600; margin: var(--space-2xl) 0 var(--space-sm); }
+#tool .tool-copy p { color: var(--text-secondary); line-height: 1.55; }
+#tool .tool-copy code { font-size: 0.92em; overflow-wrap: anywhere; }
+#tool .faq dt { font-weight: 600; margin-top: var(--space-lg); }
+#tool .faq dd { margin: var(--space-xs) 0 0; color: var(--text-secondary); }
+
+/* --- Mobile -------------------------------------------------------------- */
+@media (max-width: 480px) {
+  #tool { padding-inline: var(--space-lg); }
+  #tool .mode-group { flex-direction: column; align-items: stretch; }
+  #tool .mode-btn { text-align: left; }
+  #tool .mode-input input { max-width: 100%; }
+  #tool .split-actions { flex-direction: column; align-items: stretch; }
+}

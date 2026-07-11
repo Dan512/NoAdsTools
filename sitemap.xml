@@ -66,6 +66,36 @@
     <priority>0.8</priority>
   </url>
   <url>
+    <loc>https://noadstools.com/merge-pdf/</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://noadstools.com/split-pdf/</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://noadstools.com/watermark-pdf/</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://noadstools.com/sign-pdf/</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://noadstools.com/pdf-to-jpg/</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://noadstools.com/pdf-to-text/</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
     <loc>https://noadstools.com/qr-code-generator/</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>

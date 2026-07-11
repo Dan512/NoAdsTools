@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Sign PDF — Free, No Upload, No Install · NoAdsTools</title>
+  <meta name="description" content="Add a signature to a PDF in your browser — draw it with a mouse, finger, or pen, or type your name, then place it on the page and download. Free, no upload, no account: your PDF and signature never leave your device.">
+  <meta name="theme-color" content="#0f1410">
+  <link rel="canonical" href="https://noadstools.com/sign-pdf/">
+  <link rel="icon" type="image/png" sizes="192x192" href="/photo-editor/img/favicon-light-192.png">
+  <link rel="stylesheet" href="/shared/shell.css">
+  <link rel="stylesheet" href="./sign-pdf.css">
+
+  <meta property="og:title" content="Sign PDF — Free, No Upload">
+  <meta property="og:description" content="Draw or type a signature and place it on a PDF — entirely in your browser. Nothing is uploaded.">
+  <meta property="og:url" content="https://noadstools.com/sign-pdf/">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="NoAdsTools">
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="Sign PDF — Free, No Upload">
+  <meta name="twitter:description" content="Draw or type a signature and place it on a PDF — entirely in your browser. Nothing is uploaded.">
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "NoAdsTools Sign PDF",
+    "url": "https://noadstools.com/sign-pdf/",
+    "description": "Add a signature to a PDF entirely in your browser — draw it or type your name, place it on a rendered page preview, and download the signed PDF. No upload, no account.",
+    "applicationCategory": "UtilitiesApplication",
+    "operatingSystem": "Any (browser-based)",
+    "browserRequirements": "Any modern browser. No install, no account.",
+    "isAccessibleForFree": true,
+    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+    "license": "https://www.gnu.org/licenses/agpl-3.0.html"
+  }
+  </script>
+</head>
+<body>
+  <main id="tool">
+    <h1>Sign PDF</h1>
+    <p class="tool-lead">Add a signature to a PDF — draw it with a mouse, finger, or pen, or type your name in a signature style, then place it on the page and download. Everything happens in your browser; your PDF and signature never leave your device.</p>
+
+    <section class="dropzone" id="dropzone">
+      <p><strong>Drop a PDF here</strong>, or</p>
+      <label class="file-label">Choose a PDF<input id="file-input" type="file" accept="application/pdf,.pdf"></label>
+      <p class="dropzone-hint">One PDF. Signed in your browser — nothing is uploaded.</p>
+    </section>
+
+    <p id="intake-note" class="intake-note" role="status" aria-live="polite" hidden></p>
+
+    <div id="workspace" class="workspace" hidden>
+      <p id="doc-info" class="doc-info" role="status" aria-live="polite">
+        <span id="doc-name" class="doc-name"></span>
+        <span id="doc-pages" class="doc-pages"></span>
+      </p>
+
+      <!-- Signature pad -->
+      <div class="control-row">
+        <span class="control-label" id="mode-label">Signature</span>
+        <div class="seg-group" role="group" aria-labelledby="mode-label">
+          <button type="button" class="seg-btn" data-mode="draw" aria-pressed="true">Draw</button>
+          <button type="button" class="seg-btn" data-mode="type" aria-pressed="false">Type</button>
+        </div>
+      </div>
+
+      <div id="draw-controls" class="pad-controls">
+        <canvas id="draw-canvas" class="draw-canvas" width="1" height="1" role="img" aria-label="Signature drawing area — draw with a mouse, finger, or pen"></canvas>
+        <div class="pad-actions">
+          <button type="button" id="draw-undo" class="btn-quiet">Undo</button>
+          <button type="button" id="draw-clear" class="btn-quiet">Clear drawing</button>
+        </div>
+        <p class="pad-hint">Draw your signature above.</p>
+      </div>
+
+      <div id="type-controls" class="pad-controls" hidden>
+        <div class="field">
+          <label for="type-name">Your name</label>
+          <input id="type-name" type="text" autocomplete="off" spellcheck="false" maxlength="60" placeholder="e.g. Alex Morgan">
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label for="type-font">Style</label>
+            <select id="type-font">
+              <option value="serif-italic">Formal (serif italic)</option>
+              <option value="script">Script</option>
+              <option value="sans">Plain (sans-serif)</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="type-color">Ink color</label>
+            <span class="color-field">
+              <input id="type-color" type="color" value="#12305c">
+              <span id="type-color-hex" class="color-hex" aria-hidden="true">#12305C</span>
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Page picker -->
+      <div class="field page-picker" id="page-picker" hidden>
+        <label for="page-select">Place signature on page</label>
+        <select id="page-select"></select>
+      </div>
+
+      <p id="place-hint" class="place-hint" role="status" aria-live="polite" hidden>Drag the signature box to position it, and pull a corner to resize.</p>
+
+      <!-- Long documents render lazily: only the first pages rasterize up front,
+           the rest as they scroll into view (Fix I-1 — avoids a mobile OOM). -->
+      <p id="lazy-note" class="lazy-note" role="status" aria-live="polite" hidden>Large document — previews load as you scroll.</p>
+
+      <!-- Page preview + placement box. tabindex=0 keeps the scrollable region
+           keyboard-accessible (axe scrollable-region-focusable). -->
+      <div id="pages" class="pages" aria-label="Page preview" tabindex="0"></div>
+
+      <!-- Honesty line — a visual signature, NOT a cryptographic one. -->
+      <p class="legal-note" id="legal-note">This adds a <strong>visual signature</strong> — an image of your signature stamped on the page. It is not a cryptographic or digital (PKI) e-signature, and does not provide tamper-evidence.</p>
+
+      <div class="sign-actions">
+        <button type="button" id="apply" disabled>Apply &amp; download</button>
+        <button type="button" id="clear" class="btn-quiet">Clear</button>
+      </div>
+      <p id="apply-hint" class="apply-hint" role="status" aria-live="polite" hidden></p>
+      <p id="run-error" class="sign-error" role="alert" aria-live="assertive" hidden></p>
+    </div>
+
+    <section class="prose tool-copy">
+      <h2>Sign a PDF without uploading a thing</h2>
+      <p>Add one PDF, create a signature, place it where it belongs, and download the signed file. Everything happens on your device: the PDF is rendered page by page in your browser, and the signature is stamped locally. The code that reads and writes the PDF loads from this site the first time you open a file — never a third-party server — so you can open this page, disconnect from the internet, and it still works. There is no account, no watermark of our own, and no upload step to opt out of.</p>
+      <p>There are two ways to make a signature. <strong>Draw</strong> it on the pad with a mouse, a finger, or a pen — the same motion you would use on paper — and Undo or Clear if a stroke goes wrong. Or <strong>Type</strong> your name and pick a style: a formal serif italic, a lighter script, or a plain sans-serif. Either way the signature becomes a transparent image, trimmed to the ink, so only the strokes show on the page and the background stays clear.</p>
+
+      <h2>Place it exactly where you want</h2>
+      <p>Each page of your PDF is rendered as a preview. Choose which page to sign, then drag the signature box to move it and pull a corner to resize it — the box keeps your signature's own proportions so it never stretches out of shape, and it stays inside the page. It works with a mouse, a finger, or a pen, and the corner handles have generous touch targets. When it looks right, choose Apply and download; the signature is embedded into a fresh copy of the PDF at the exact spot you placed it, and the source file's document properties are not carried into the signed copy.</p>
+
+      <h2>What this tool is honest about</h2>
+      <p>This produces a <strong>visual signature</strong>: a picture of your signature placed on the page, the digital equivalent of signing a printout and scanning it. It is not a cryptographic or PKI digital signature, so it does not carry a certificate or make the document tamper-evident — if that is a legal requirement for you, use a dedicated e-signature service. A password-protected PDF cannot be read without its password, so unlock it first and then add it again; the tool says so plainly rather than failing quietly. The full source is <a href="https://github.com/Dan512/NoAdsTools" target="_blank" rel="noopener">public on GitHub</a> (AGPL-3.0), and the privacy panel in the footer lists everything this page loads and when.</p>
+
+      <h2>Questions</h2>
+      <dl class="faq">
+        <dt>How do I sign a PDF without uploading it?</dt>
+        <dd>Add your PDF, draw or type your signature, place it on the page, then choose Apply and download. The PDF is rendered and signed in your browser using JavaScript this page loads from its own site. You can verify it: open your browser's DevTools Network tab while signing — no PDF or signature data leaves your device.</dd>
+        <dt>Can I draw my signature or type it?</dt>
+        <dd>Both. Draw switches on a pad you sign with a mouse, finger, or pen, with Undo and Clear. Type renders your name in a signature style — a formal serif italic, a script, or a plain sans-serif — and lets you set the ink color. Whichever you use becomes a transparent image trimmed to the strokes.</dd>
+        <dt>Is my signature stored or saved anywhere?</dt>
+        <dd>No. Your signature exists only in the page's memory while it is open, and it is discarded when you close or clear the tool. Nothing is uploaded, and no signature library is kept between visits. Only theme and language preferences live in local storage — never any PDF or signature data.</dd>
+        <dt>Is this a legally binding e-signature?</dt>
+        <dd>It is a visual signature — an image of your signature stamped onto the page, like signing a printout and scanning it back. It is not a cryptographic or PKI digital signature, so it carries no certificate and does not make the file tamper-evident. Many everyday documents accept a visual signature, but if you need a certified digital signature, use a dedicated e-signature service.</dd>
+        <dt>Are my PDFs uploaded to a server?</dt>
+        <dd>No. Nothing is uploaded and no copy is kept. Your PDF stays in your browser's memory only while the page is open, and the signed file is built and downloaded entirely on your device.</dd>
+      </dl>
+
+      <h2>Related tools</h2>
+      <p><a href="/merge-pdf/">Merge PDF</a> — combine PDF files in any order. <a href="/split-pdf/">Split PDF</a> — extract pages or cut one PDF into pieces. <a href="/watermark-pdf/">Watermark PDF</a> — stamp text or a logo across the pages. <a href="/image-to-pdf/">Image to PDF</a> — combine JPG, PNG, and WebP images into a single PDF. <a href="/photo-editor/">Photo Editor</a> — crop, resize, redact, and batch-edit images.</p>
+    </section>
+  </main>
+
+  <script type="module" src="./js/main.js"></script>
+</body>
+</html>
