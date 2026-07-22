@@ -60,6 +60,11 @@ export async function loadAndRender(file, { onPage, fitWidth = 900, eager = 10 }
     // `bytes` (reused by applySignature) is never detached by the worker.
     pdf = await openPdf(bytes.slice());
   } catch (err) {
+    // An engine-load failure is not the file's fault — let it propagate so
+    // main.js shows the honest, retryable "couldn't load the PDF engine"
+    // message (it already catches PdfEngineError), the same as a pdf-lib load
+    // failure. Only a genuine open failure is classified locked/corrupt here.
+    if (err instanceof PdfEngineError) throw err;
     return { status: isPasswordError(err) ? 'locked' : 'error' };
   }
 

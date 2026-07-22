@@ -11,9 +11,10 @@
 // while requestAnimationFrame fires, and a detached/hidden canvas stalls it — so
 // the CALLER must supply an OCR render canvas that is already attached to the
 // (visible) DOM. main.js keeps that canvas in an on-DOM (clipped) render stage.
-import { openPdf } from '/shared/pdfjs-loader.js';
+import { openPdf, PdfEngineError } from '/shared/pdfjs-loader.js';
 import { loadOcr } from '/shared/tesseract-loader.js';
 import { needsOcr } from './extract-opts.js';
+export { PdfEngineError };
 
 const OCR_SCALE = 2;   // ~150–200 DPI at typical page sizes — enough for OCR
 const MAX_DIM = 4096;  // canvas-side clamp (iOS ~4096²)
@@ -29,8 +30,9 @@ function isPasswordError(err) {
 /**
  * Open ONE PDF and return the pdfjs document proxy + page count.
  * @param {File} file the dropped PDF.
- * @returns {Promise<{status:'ok'|'locked'|'error', doc?:object, numPages?:number}>}
- *   'locked' = password-protected, 'error' = unreadable/corrupt.
+ * @returns {Promise<{status:'ok'|'locked'|'error'|'engine', doc?:object, numPages?:number}>}
+ *   'locked' = password-protected, 'error' = unreadable/corrupt, 'engine' = the
+ *   pdf.js engine itself could not load (a deploy/network problem, not the file).
  */
 export async function loadPdf(file) {
   let bytes;
@@ -45,6 +47,15 @@ export async function loadPdf(file) {
     // caller keeps is detached by the worker.
     doc = await openPdf(bytes.slice());
   } catch (err) {
+    // The engine itself failed to load (404/offline/blocked) — not the file's
+    // fault. Classify it separately so the UI can offer a retry instead of
+    // calling the user's PDF corrupt. The loader already logged the cause.
+    if (err instanceof PdfEngineError) return { status: 'engine' };
+    // Diagnostic: distinguish a password-protected PDF from a genuine
+    // open/parse failure. Without this the UI only shows a generic message.
+    if (!isPasswordError(err)) {
+      console.warn('[pdf-to-text] could not open PDF —', err && err.name, err && err.message, err);
+    }
     return { status: isPasswordError(err) ? 'locked' : 'error' };
   }
   return { status: 'ok', doc, numPages: doc.numPages };
@@ -97,16 +108,22 @@ async function renderForOcr(doc, pageNum, canvas) {
  *   onProgress?: (info:{page:number, index:number, total:number, phase:'text'|'ocr'}) => void,
  *   ocrCanvas?: HTMLCanvasElement   // ON-DOM canvas used for OCR rasterisation
  * }} [opts]
- * @returns {Promise<{ pages:Array<{page:number, text:string, ocr:boolean}>, ocrError:Error|null }>}
+ * @returns {Promise<{ pages:Array<{page:number, text:string, ocr:boolean}>,
+ *   ocrError:Error|null, ocrErrorKind:'load'|'page'|null }>}
  *   `ocr:true` marks a page whose text came from OCR. `ocrError` is set (once)
- *   if the Tesseract engine failed to load or recognise — the text-layer results
- *   are still returned so nothing is lost.
+ *   if OCR failed — the text-layer results are still returned so nothing is
+ *   lost. `ocrErrorKind` says WHICH failure so the UI can be honest: 'load' =
+ *   the Tesseract engine couldn't load (retry/connection); 'page' = the engine
+ *   loaded but a page couldn't be rendered/recognised (e.g. too large for
+ *   device memory) — a connection retry would not help.
  */
 export async function extractPages(doc, pageSet, opts = {}) {
   const { mode = 'auto', onProgress, ocrCanvas } = opts;
   const total = pageSet.length;
   const pages = [];
   let ocrError = null;
+  let ocrErrorKind = null;
+  const toError = (err) => (err instanceof Error ? err : new Error(String(err)));
 
   for (let i = 0; i < pageSet.length; i++) {
     const pageNum = pageSet[i];
@@ -119,28 +136,38 @@ export async function extractPages(doc, pageSet, opts = {}) {
     const wantOcr = mode === 'ocr-all' || (mode === 'auto' && needsOcr(text));
     if (wantOcr) {
       if (onProgress) onProgress({ page: pageNum, index: i, total, phase: 'ocr' });
+      // Split the ENGINE load from per-page render/recognise so the UI note can
+      // name the real cause instead of always blaming the engine/connection.
+      let worker = null;
       try {
-        if (ocrCanvas) await renderForOcr(doc, pageNum, ocrCanvas);
-        const worker = await loadOcr();               // lazy — fetches ~22 MB on first real use
-        const result = await worker.recognize(ocrCanvas);
-        const ocrText = ((result && result.text) || '').trim();
-        // Mode-aware: 'ocr-all' forces OCR to win (its whole purpose is to
-        // override a garbled/wrong text layer) unless OCR came back blank; in
-        // 'auto' OCR only replaces a thin/empty text layer, never a real one.
-        const useOcr = mode === 'ocr-all'
-          ? ocrText.length > 0
-          : ocrText.length >= text.length;
-        // The badge (ocr:true) must appear ONLY when the shown text is the OCR
-        // text — so it can never claim OCR for text that wasn't used.
-        if (useOcr) { text = ocrText; ocr = true; }
+        worker = await loadOcr();                     // lazy — fetches ~22 MB on first real use
       } catch (err) {
-        // Honest failure: remember it for the UI note, keep the text-layer text.
-        if (!ocrError) ocrError = err instanceof Error ? err : new Error(String(err));
+        if (!ocrError) { ocrError = toError(err); ocrErrorKind = 'load'; }
+      }
+      if (worker) {
+        try {
+          if (ocrCanvas) await renderForOcr(doc, pageNum, ocrCanvas);
+          const result = await worker.recognize(ocrCanvas);
+          const ocrText = ((result && result.text) || '').trim();
+          // Mode-aware: 'ocr-all' forces OCR to win (its whole purpose is to
+          // override a garbled/wrong text layer) unless OCR came back blank; in
+          // 'auto' OCR only replaces a thin/empty text layer, never a real one.
+          const useOcr = mode === 'ocr-all'
+            ? ocrText.length > 0
+            : ocrText.length >= text.length;
+          // The badge (ocr:true) must appear ONLY when the shown text is the OCR
+          // text — so it can never claim OCR for text that wasn't used.
+          if (useOcr) { text = ocrText; ocr = true; }
+        } catch (err) {
+          // The engine loaded — this is a per-page render/recognise failure
+          // (e.g. a very large page exceeding device memory), NOT a load fault.
+          if (!ocrError) { ocrError = toError(err); ocrErrorKind = 'page'; }
+        }
       }
     }
 
     pages.push({ page: pageNum, text, ocr });
   }
 
-  return { pages, ocrError };
+  return { pages, ocrError, ocrErrorKind };
 }

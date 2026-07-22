@@ -145,6 +145,11 @@ async function intake(fileList) {
     return;
   }
 
+  if (result.status === 'engine') {
+    resetWorkspace(); workspace.hidden = true;
+    setIntakeNote('Could not load the PDF engine — check your connection and add the PDF again.');
+    return;
+  }
   if (result.status === 'locked') {
     resetWorkspace(); workspace.hidden = true;
     setIntakeNote('This PDF is password-protected — unlock it first, then add it again.');
@@ -247,7 +252,7 @@ extractBtn.addEventListener('click', async () => {
 });
 
 function renderOutput(res) {
-  const { pages, ocrError } = res;
+  const { pages, ocrError, ocrErrorKind } = res;
   state.text = assembleText(pages);
   outArea.value = state.text;
 
@@ -275,7 +280,12 @@ function renderOutput(res) {
   const anyOcr = pages.some((p) => p.ocr);
   const stripped = state.text.replace(/--- Page \d+ ---/g, '').replace(/\s+/g, '');
   if (ocrError) {
-    ocrNote.textContent = 'The OCR engine could not load, so scanned pages are not recognised — the text layer is shown. Check your connection and try Extract again.';
+    // Name the real cause: a 'page' failure means the engine loaded fine but a
+    // page couldn't be rendered/recognised (often too large for device memory),
+    // so a connection retry wouldn't help — don't blame the engine/connection.
+    ocrNote.textContent = ocrErrorKind === 'page'
+      ? 'Some pages couldn’t be processed by OCR — they may be too large for this device’s memory. The text layer is shown for those; you can try Extract again.'
+      : 'The OCR engine could not load, so scanned pages are not recognised — the text layer is shown. Check your connection and try Extract again.';
     ocrNote.hidden = false;
   } else if (state.mode === 'text' && !stripped.length) {
     ocrNote.textContent = 'No text layer found on these pages — they may be scanned. Try Auto or OCR all pages.';

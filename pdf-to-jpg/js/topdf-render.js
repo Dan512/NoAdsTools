@@ -10,9 +10,10 @@
 // the CALLER must attach every render canvas to the (visible) DOM before calling
 // renderPage / exportPages. The staging canvas main.js hands to exportPages lives
 // in an on-DOM (clipped) stage for exactly this reason.
-import { openPdf } from '/shared/pdfjs-loader.js';
+import { openPdf, PdfEngineError } from '/shared/pdfjs-loader.js';
 import { outName, clampScaleForCanvas } from './render-opts.js';
 import { loadJSZip } from './zip.js';
+export { PdfEngineError };
 
 // pdfjs throws a PasswordException (name set, code 1/2) for an encrypted PDF.
 // The minified build still sets `.name`, but keep a message fallback for safety.
@@ -25,8 +26,9 @@ function isPasswordError(err) {
 /**
  * Open ONE PDF and return the pdfjs document proxy + page count.
  * @param {File} file the dropped PDF.
- * @returns {Promise<{status:'ok'|'locked'|'error', doc?:object, numPages?:number,
- *   bytes?:Uint8Array}>} 'locked' = password-protected, 'error' = unreadable.
+ * @returns {Promise<{status:'ok'|'locked'|'error'|'engine', doc?:object, numPages?:number,
+ *   bytes?:Uint8Array}>} 'locked' = password-protected, 'error' = unreadable,
+ *   'engine' = the pdf.js engine could not load (a deploy/network problem, not the file).
  */
 export async function loadPdf(file) {
   let bytes;
@@ -41,6 +43,9 @@ export async function loadPdf(file) {
     // `bytes` is never detached by the worker.
     doc = await openPdf(bytes.slice());
   } catch (err) {
+    // Engine load failure (404/offline/blocked) is not the file's fault — flag
+    // it so the UI offers a retry rather than blaming the PDF as corrupt.
+    if (err instanceof PdfEngineError) return { status: 'engine' };
     return { status: isPasswordError(err) ? 'locked' : 'error' };
   }
   return { status: 'ok', doc, numPages: doc.numPages, bytes };

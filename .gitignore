@@ -20,10 +20,13 @@ coverage/
 .prettiercache
 .cache/
 
-# Build (defensive)
-dist/
-build/
-out/
+# Build (defensive) — anchored to the mirror ROOT so a bare "build"/"dist"/"out"
+# rule can never swallow a nested vendored directory. (A vendored lib ships its
+# own build/ — e.g. vendor/pdfjs/legacy/build/pdf.min.mjs — and an unanchored
+# "build/" rule silently dropped it from the push, 404ing the PDF engine.)
+/dist/
+/build/
+/out/
 
 # Logs / scratch / backup
 *.log

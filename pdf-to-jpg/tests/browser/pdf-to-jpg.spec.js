@@ -410,3 +410,18 @@ test('12. a many-page PDF caps the grid to 150 cards and shows an honest note', 
   await expect(note).toBeVisible();
   await expect(note).toContainText('first 150 of 160 pages');
 });
+
+// --- 13. Engine-load failure is honest + retryable, never "corrupt" -----------
+
+test('13. a pdf.js engine that fails to load gets an honest engine message, not "corrupt"', async ({ page }) => {
+  await boot(page);
+  // Simulate the vendored engine 404ing (the real production bug: the build/ dir
+  // was gitignored out of the deploy). Abort the module request, then open a
+  // GENUINELY VALID PDF — so the only failure is the engine, not the file.
+  await page.route('**/vendor/pdfjs/legacy/build/pdf.min.mjs', (r) => r.abort());
+  await loadBytes(page, await makePdfBytes({ pages: 1 }), 'real.pdf');
+  const note = page.locator('#intake-note');
+  await expect(note).toBeVisible();
+  await expect(note).toContainText('engine');        // honest: blames the engine…
+  await expect(note).not.toContainText('corrupt');   // …never the user's file
+});

@@ -30,7 +30,7 @@ registerTranslations({ en: {
   pjPrivacyLead: 'This tool converts your PDF to images entirely in your browser. Your PDF never leaves your device — no upload, no account, no tracking.',
   pjPrivacyFetchHeading: 'What this page loads',
   pjPrivacyFetchList: '<li>HTML, CSS, and JavaScript from this site only — no third-party CDN.</li>'
-    + '<li>The pdf.js library (~1.66 MB main + worker, from this origin) — ONLY when you open a PDF. Used to render the pages locally; its character maps and fonts are fetched from this origin only for PDFs that need them.</li>'
+    + '<li>The pdf.js library (~1.73 MB main + worker, from this origin) — ONLY when you open a PDF. Used to render the pages locally; its character maps and fonts are fetched from this origin only for PDFs that need them.</li>'
     + '<li>The JSZip library (~97 KB, from this origin) — ONLY when you download more than one page together, to bundle the images into a ZIP locally.</li>',
   pjPrivacyStorageHeading: 'Local storage',
   pjPrivacyStorageBody: 'Theme and chrome preferences only: <code>noadstools_lang</code>, <code>noadstools:settings:global</code>, and <code>noadstools:settings:pdf-to-jpg</code>. No PDF or image data is ever stored.',
@@ -153,6 +153,11 @@ async function intake(fileList) {
     return;
   }
 
+  if (result.status === 'engine') {
+    resetWorkspace(); workspace.hidden = true;
+    setIntakeNote('Could not load the PDF engine — check your connection and add the PDF again.');
+    return;
+  }
   if (result.status === 'locked') {
     resetWorkspace(); workspace.hidden = true;
     setIntakeNote('This PDF is password-protected — unlock it first, then add it again.');

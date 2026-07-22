@@ -272,6 +272,34 @@ test('7. a corrupt PDF and a password-protected PDF each get an honest message',
   await expect(page.locator('#intake-note')).toContainText('password-protected');
 });
 
+// --- 7b. Engine-load failure is honest + retryable, never "corrupt" ----------
+
+test('7b. a pdf.js engine that fails to load gets an honest engine message, not "corrupt"', async ({ page }) => {
+  await boot(page);
+  // Simulate the vendored engine 404ing (the real production bug: the build/ dir
+  // was gitignored out of the deploy). Abort the module request, then open a
+  // GENUINELY VALID PDF — so the only failure is the engine, not the file.
+  await page.route('**/vendor/pdfjs/legacy/build/pdf.min.mjs', (r) => r.abort());
+  await loadBytes(page, await makeTextPdfBytes(['The engine is down but this file is fine']), 'real.pdf');
+  const note = page.locator('#intake-note');
+  await expect(note).toBeVisible();
+  await expect(note).toContainText('engine');        // honest: blames the engine…
+  await expect(note).not.toContainText('corrupt');   // …never the user's file
+});
+
+test('7c. a pdf.js WORKER that fails to load is also honest, not "corrupt" (openPdf reclassifies)', async ({ page }) => {
+  await boot(page);
+  // The engine MODULE loads fine, but the worker (lazily fetched at getDocument,
+  // and in the same build/ dir) 404s — a partial-deploy fault. openPdf must
+  // reclassify the worker-setup rejection as an engine failure.
+  await page.route('**/vendor/pdfjs/legacy/build/pdf.worker.min.mjs', (r) => r.abort());
+  await loadBytes(page, await makeTextPdfBytes(['Worker down, file fine']), 'real.pdf');
+  const note = page.locator('#intake-note');
+  await expect(note).toBeVisible();
+  await expect(note).toContainText('engine');
+  await expect(note).not.toContainText('corrupt');
+});
+
 // --- 8. XSS filename is inert ------------------------------------------------
 
 test('8. an XSS-crafted filename renders as inert text', async ({ page }) => {
