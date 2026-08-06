@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Resume Builder — Free, No Sign-Up, No Upload · NoAdsTools</title>
+  <meta name="description" content="Build a resume in your browser and download the PDF free. No account, no watermark, no upload — your resume never leaves your device.">
+  <link rel="canonical" href="https://noadstools.com/resume-builder/">
+  <meta property="og:title" content="Resume Builder — Free, No Sign-Up, No Upload">
+  <meta property="og:description" content="Build a resume and download the PDF free. No account, no watermark — nothing leaves your browser.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://noadstools.com/resume-builder/">
+  <meta name="twitter:card" content="summary">
+  <link rel="icon" type="image/png" sizes="192x192" href="/photo-editor/img/favicon-light-192.png">
+  <link rel="apple-touch-icon" href="/photo-editor/img/apple-touch-icon.png">
+  <link rel="stylesheet" href="/shared/shell.css">
+  <link rel="stylesheet" href="/shared/paper-doc.css">
+  <link rel="stylesheet" href="resume-builder.css">
+  <style id="page-size-style">@page { size: letter; margin: 0; }</style>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "NoAdsTools Resume Builder",
+    "url": "https://noadstools.com/resume-builder/",
+    "applicationCategory": "BusinessApplication",
+    "operatingSystem": "Any (runs in the browser)",
+    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+    "license": "https://www.gnu.org/licenses/agpl-3.0.html"
+  }
+  </script>
+</head>
+<body>
+  <div id="topbar-root"></div>
+
+  <main id="tool">
+    <h1>Resume builder — free, no sign-up, nothing uploaded</h1>
+    <p class="tool-lead">Fill in the form, watch the live preview, and download a real-text PDF.
+      The download is actually free — no account, no watermark, no paywall at the last step.
+      Your resume never leaves this browser.</p>
+
+    <div id="storage-banner" class="notice" hidden></div>
+
+    <div class="rb-resumes">
+      <label for="resume-switcher">Resume</label>
+      <select id="resume-switcher"></select>
+      <label class="visually-hidden" for="resume-name">Resume name</label>
+      <input id="resume-name" type="text" placeholder="Untitled resume" autocomplete="off">
+      <button type="button" id="resume-new">New</button>
+      <button type="button" id="resume-duplicate">Duplicate</button>
+      <button type="button" id="resume-delete">Delete</button>
+    </div>
+
+    <div class="rb-actions">
+      <div class="seg" role="group" aria-label="Paper size">
+        <button type="button" class="seg-btn" data-paper="letter" aria-pressed="true">Letter</button>
+        <button type="button" class="seg-btn" data-paper="a4" aria-pressed="false">A4</button>
+      </div>
+      <button type="button" id="download" class="btn-primary">Download PDF</button>
+      <button type="button" id="export">Export .json</button>
+      <label class="file-label" for="import-input">Import<input id="import-input" type="file"
+        accept="application/json,.json" class="visually-hidden-file"></label>
+      <button type="button" id="clear-data">Clear my data</button>
+      <span id="save-state" role="status">Not saved yet</span>
+    </div>
+    <p class="hint" id="pdf-hint">Download opens your browser’s print dialog — choose “Save as PDF”,
+      and untick “Headers and footers” if it’s on. (You can also press Ctrl+P / Cmd+P.)</p>
+    <div id="import-errors" class="notice" hidden></div>
+
+    <div class="seg rb-viewtoggle" role="group" aria-label="Edit or preview">
+      <button type="button" class="seg-btn" data-view="edit" aria-pressed="true">Edit</button>
+      <button type="button" class="seg-btn" data-view="preview" aria-pressed="false">Preview</button>
+    </div>
+
+    <div class="rb-panes" data-view="edit">
+      <div class="rb-form">
+        <section class="card" id="basics-card">
+          <h2>Contact</h2>
+          <label>Full name <input id="f-fullName" type="text" autocomplete="off"></label>
+          <label>Headline <input id="f-headline" type="text" placeholder="Senior Operations Analyst"></label>
+          <label>Email <input id="f-email" type="text" inputmode="email"></label>
+          <label>Phone <input id="f-phone" type="text" inputmode="tel"></label>
+          <label>Location <input id="f-location" type="text" placeholder="Portland, OR"></label>
+          <div id="links-list"></div>
+          <button type="button" id="add-link">Add link</button>
+        </section>
+        <section class="card">
+          <h2>Summary</h2>
+          <label class="visually-hidden" for="f-summary">Summary</label>
+          <textarea id="f-summary" rows="4" placeholder="Two or three sentences about what you do."></textarea>
+        </section>
+        <div id="form-sections"></div>
+        <div class="card rb-addsection">
+          <label for="add-section-type">Add a section</label>
+          <select id="add-section-type">
+            <option value="experience">Experience</option>
+            <option value="education">Education</option>
+            <option value="skills">Skills</option>
+            <option value="custom">Custom (Projects, Certifications…)</option>
+          </select>
+          <button type="button" id="add-section">Add section</button>
+        </div>
+      </div>
+      <div class="rb-preview">
+        <div class="rb-preview-inner">
+          <div id="paper-wrap"><div id="paper" role="region" aria-label="Resume preview"></div></div>
+          <p id="page-count" role="status"></p>
+        </div>
+      </div>
+    </div>
+
+    <section class="prose">
+      <h2>A resume builder that doesn’t hold your PDF hostage</h2>
+      <p>Most online resume builders let you type everything in, then stop you at the download
+        button: create an account, start a “free” trial, or pay to remove a watermark. This one
+        doesn’t. The PDF download is free, every time, with no account and no watermark.</p>
+      <p>It works differently under the hood, too. The form, the preview, and the PDF are all
+        produced inside your browser. Nothing you type — your name, address, phone number, or
+        work history — is ever sent to a server. There is no server to send it to: this page
+        loads no analytics, no trackers, and no third-party code at all.</p>
+      <h2>ATS-friendly by design</h2>
+      <p>Many employers run resumes through applicant tracking software before a person reads
+        them. Decorative two-column layouts often scramble in those systems. The Classic
+        template here is a single column with real text and real headings in reading order —
+        the layout that parses reliably. The PDF contains selectable text, not a picture of
+        text, so it can be read by software and by people.</p>
+      <h2>Your data stays yours</h2>
+      <p>Your draft autosaves to this browser’s local storage so a refresh never loses work,
+        and the “Clear my data” button removes it whenever you choose. You can also export your
+        resume as a small .json file — a copy you own — and import it later, or on another
+        device, to keep editing. On a shared or public computer, export your file and clear
+        your data when you finish.</p>
+      <h2>FAQ</h2>
+      <dl>
+        <dt>Is the PDF download really free?</dt>
+        <dd>Yes. No account, no trial, no watermark, no paywall. The site runs on optional tips.</dd>
+        <dt>Is my resume uploaded anywhere?</dt>
+        <dd>No. Everything runs in your browser. This page makes no network requests with your data — you can verify that in your browser’s developer tools.</dd>
+        <dt>Will it pass applicant tracking systems?</dt>
+        <dd>The Classic template is single-column real text — the layout that parses most reliably. No layout can guarantee any particular system, but this avoids the common failure modes.</dd>
+        <dt>How do I save my resume?</dt>
+        <dd>It autosaves in this browser. For a copy you own, use Export .json — importing it later restores everything exactly.</dd>
+        <dt>Can I use it on my phone?</dt>
+        <dd>Yes — the editor and preview both work on mobile. PDF saving works in mobile browsers’ print/share flow.</dd>
+      </dl>
+      <h2>Related tools</h2>
+      <ul class="related">
+        <li><a href="/cover-letter-generator/">Cover Letter Generator</a></li>
+        <li><a href="/sign-pdf/">Sign PDF</a></li>
+        <li><a href="/merge-pdf/">Merge PDF</a></li>
+        <li><a href="/image-to-pdf/">Image to PDF</a></li>
+      </ul>
+    </section>
+  </main>
+
+  <div id="footer-root"></div>
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>

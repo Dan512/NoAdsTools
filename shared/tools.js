@@ -18,6 +18,7 @@
 export const CATEGORIES = Object.freeze([
   { id: 'image',     label: 'Image tools' },
   { id: 'pdf',       label: 'PDF tools' },
+  { id: 'documents', label: 'Documents' },
   { id: 'generator', label: 'Generators' },
   { id: 'dev',       label: 'Developer' },
 ]);
@@ -73,6 +74,12 @@ export const TOOLS = Object.freeze([
     status: 'live' },
   { slug: 'pdf-to-text', title: 'PDF to Text', category: 'pdf',
     blurb: 'Extract text from a PDF, with OCR for scanned pages — nothing uploaded.',
+    status: 'live' },
+  { slug: 'resume-builder', title: 'Resume Builder', category: 'documents',
+    blurb: 'Build a resume and download the PDF free — no account, nothing uploaded.',
+    status: 'live' },
+  { slug: 'cover-letter-generator', title: 'Cover Letter Generator', category: 'documents',
+    blurb: 'Write a cover letter that matches your resume and download it free — nothing uploaded.',
     status: 'live' },
   { slug: 'qr-code-generator', title: 'QR Code Generator', category: 'generator',
     blurb: 'Make QR codes. No tracking, no account.',

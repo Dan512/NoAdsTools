@@ -1,0 +1,78 @@
+/* cover-letter-generator/cover-letter-generator.css — letter-only styles.
+   Everything scoped under #tool (playbook: bare class names leak onto the
+   injected topbar). The paper geometry, the two-pane layout, the mobile view
+   toggle and the whole @media print block live in /shared/paper-doc.css — the
+   layout + print contract shared with the other paper-document tools. It is
+   linked BEFORE this file; do not redeclare anything it owns. */
+
+#tool .tool-lead { margin: 0 0 var(--space-xl); color: var(--text-secondary); font-size: var(--t-lg); max-width: 70ch; }
+
+#tool .cl-actions { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; margin: 1rem 0 .25rem; }
+#tool .hint { font-size: .85rem; opacity: .8; margin: 0 0 .75rem; }
+#tool #save-state { font-size: .85rem; opacity: .85; margin-left: auto; }
+#tool .notice { border: 1px solid var(--border, #888); border-radius: 6px; padding: .6rem .8rem; margin: .5rem 0; }
+/* Segmented controls snap with no transition: shell.css's 120ms colour fade on
+   :where(button) makes axe sample a mid-transition low-contrast frame right
+   after a click (playbook §4), and a fading control is a worse cue than a
+   settled one. State is carried by weight + underline, never by hue alone. */
+#tool .seg-btn { transition: none; }
+#tool .seg-btn[aria-pressed="true"] { font-weight: 700; text-decoration: underline; }
+
+/* File input: visually-hidden clip pattern (playbook §4 — NEVER display:none;
+   the input stays focusable and in the a11y tree). Same block every tool uses. */
+#tool .file-label {
+  position: relative;
+  display: inline-block;
+  padding: var(--space-sm) var(--space-lg);
+  border-radius: var(--radius-control);
+  background: var(--accent);
+  color: var(--accent-contrast);
+  font-weight: 500;
+  cursor: pointer;
+}
+#tool .file-label input {
+  position: absolute !important;
+  width: 1px !important; height: 1px !important;
+  margin: -1px !important; padding: 0 !important;
+  border: 0 !important; clip: rect(0 0 0 0) !important;
+  clip-path: inset(50%) !important; overflow: hidden !important;
+  white-space: nowrap !important;
+}
+#tool .file-label:focus-within { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+
+#tool .rb-form .card { border: 1px solid var(--border, #8884); border-radius: 8px; padding: .75rem .9rem; margin-bottom: .75rem; }
+#tool .rb-form .card > h2 { margin: 0 0 .25rem; font-size: 1rem; }
+#tool .rb-form label { display: block; margin: .4rem 0; }
+#tool .rb-form input[type="text"], #tool .rb-form textarea { width: 100%; box-sizing: border-box; }
+#tool .rb-form textarea { font: inherit; line-height: 1.5; resize: vertical; }
+
+/* "Use my details from a resume". The whole row is hidden when no resume is
+   saved in this browser — a dead dropdown would imply we found data we did not.
+   [hidden] must beat the author display here (playbook §4). */
+#tool .cl-useresume { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center;
+  border: 1px dashed var(--border, #8886); border-radius: 6px; padding: .5rem .6rem; margin: 0 0 .6rem; }
+#tool .cl-useresume[hidden] { display: none; }
+#tool .cl-useresume label { margin: 0; }
+#tool .cl-useresume select { max-width: 100%; min-width: 0; }
+#tool .cl-useresume button { transition: none; }
+/* Stays in the DOM (and the a11y tree) even while empty — an aria-live region
+   that gets display:none'd between updates may not announce when it returns.
+   An empty block generates no line box, so it costs no visible height. */
+#tool .cl-note { flex-basis: 100%; margin: 0; font-size: .85rem; opacity: .85; }
+
+#tool #page-count { font-size: .85rem; opacity: .8; }
+
+/* The letter typography — shared by the on-screen preview and the printed PDF.
+   Real units (pt) because #paper is a real-size sheet; the screen preview is
+   scaled with a transform, print strips the scale. */
+#paper .tpl-letter { font-family: Georgia, 'Times New Roman', serif; font-size: 11pt; line-height: 1.5; }
+#paper .tpl-letter .cl-sender { border-bottom: 1px solid #333; padding-bottom: .5em; margin-bottom: 1.6em; }
+#paper .tpl-letter h1 { font-size: 20pt; margin: 0; font-weight: 700; }
+#paper .tpl-letter .cl-contact { margin: .3em 0 0; font-size: 9.5pt; color: #444; }
+#paper .tpl-letter .cl-date { margin: 0 0 1.3em; }
+/* <address> is italic by default in every engine; postal blocks are not. */
+#paper .tpl-letter .cl-recipient { font-style: normal; margin: 0 0 1.3em; line-height: 1.35; }
+#paper .tpl-letter .cl-salutation { margin: 0 0 .9em; }
+#paper .tpl-letter .cl-para { margin: 0 0 .8em; }
+#paper .tpl-letter .cl-closing { margin: 1.3em 0 0; }
+#paper .tpl-letter .cl-signature { margin-top: 2em; font-weight: 700; }

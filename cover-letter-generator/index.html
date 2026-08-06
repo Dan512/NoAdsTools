@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Cover Letter Generator — Free, No Sign-Up, No Upload · NoAdsTools</title>
+  <meta name="description" content="Write a cover letter in your browser and download the PDF free. No account, no watermark, nothing uploaded — your letter never leaves your device.">
+  <link rel="canonical" href="https://noadstools.com/cover-letter-generator/">
+  <meta property="og:title" content="Cover Letter Generator — Free, No Sign-Up, No Upload">
+  <meta property="og:description" content="Write a cover letter and download the PDF free. No account, no watermark — nothing leaves your browser.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://noadstools.com/cover-letter-generator/">
+  <meta name="twitter:card" content="summary">
+  <link rel="icon" type="image/png" sizes="192x192" href="/photo-editor/img/favicon-light-192.png">
+  <link rel="apple-touch-icon" href="/photo-editor/img/apple-touch-icon.png">
+  <link rel="stylesheet" href="/shared/shell.css">
+  <link rel="stylesheet" href="/shared/paper-doc.css">
+  <link rel="stylesheet" href="cover-letter-generator.css">
+  <style id="page-size-style">@page { size: letter; margin: 0; }</style>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "NoAdsTools Cover Letter Generator",
+    "url": "https://noadstools.com/cover-letter-generator/",
+    "applicationCategory": "BusinessApplication",
+    "operatingSystem": "Any (runs in the browser)",
+    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+    "license": "https://www.gnu.org/licenses/agpl-3.0.html"
+  }
+  </script>
+</head>
+<body>
+  <div id="topbar-root"></div>
+
+  <main id="tool">
+    <h1>Cover letter generator — free, no sign-up, nothing uploaded</h1>
+    <p class="tool-lead">Fill in the form, watch the live preview, and download a real-text PDF.
+      The download is actually free — no account, no watermark, no paywall at the last step.
+      Your letter never leaves this browser.</p>
+
+    <div id="storage-banner" class="notice" hidden></div>
+
+    <div class="cl-actions">
+      <div class="seg" role="group" aria-label="Paper size">
+        <button type="button" class="seg-btn" data-paper="letter" aria-pressed="true">Letter</button>
+        <button type="button" class="seg-btn" data-paper="a4" aria-pressed="false">A4</button>
+      </div>
+      <button type="button" id="download" class="btn-primary">Download PDF</button>
+      <button type="button" id="export">Export .json</button>
+      <label class="file-label" for="import-input">Import<input id="import-input" type="file"
+        accept="application/json,.json" class="visually-hidden-file"></label>
+      <button type="button" id="clear-data">Clear my data</button>
+      <span id="save-state" role="status">Not saved yet</span>
+    </div>
+    <p class="hint" id="pdf-hint">Download opens your browser’s print dialog — choose “Save as PDF”,
+      and untick “Headers and footers” if it’s on. (You can also press Ctrl+P / Cmd+P.)</p>
+    <div id="import-errors" class="notice" hidden></div>
+
+    <div class="seg rb-viewtoggle" role="group" aria-label="Edit or preview">
+      <button type="button" class="seg-btn" data-view="edit" aria-pressed="true">Edit</button>
+      <button type="button" class="seg-btn" data-view="preview" aria-pressed="false">Preview</button>
+    </div>
+
+    <div class="rb-panes" data-view="edit">
+      <div class="rb-form">
+        <section class="card">
+          <h2>Your details</h2>
+          <div id="use-resume-wrap" class="cl-useresume" hidden>
+            <label for="use-resume">Use my details from a resume</label>
+            <select id="use-resume"></select>
+            <button type="button" id="use-resume-apply">Copy details</button>
+            <p id="use-resume-note" class="cl-note" role="status"></p>
+          </div>
+          <label>Full name <input id="f-fullName" type="text" autocomplete="off"></label>
+          <label>Email <input id="f-email" type="text" inputmode="email"></label>
+          <label>Phone <input id="f-phone" type="text" inputmode="tel"></label>
+          <label>Location <input id="f-location" type="text" placeholder="Portland, OR"></label>
+        </section>
+
+        <section class="card">
+          <h2>Who it’s addressed to</h2>
+          <label>Name <input id="f-rname" type="text" placeholder="Hiring Manager"></label>
+          <label>Job title <input id="f-rtitle" type="text" placeholder="Head of Operations"></label>
+          <label>Company <input id="f-rcompany" type="text"></label>
+          <label>Address <input id="f-raddress" type="text" placeholder="120 Market St, Portland, OR"></label>
+        </section>
+
+        <section class="card">
+          <h2>The letter</h2>
+          <label>Date <input id="f-date" type="text" placeholder="4 August 2026"></label>
+          <label>Greeting <input id="f-salutation" type="text"></label>
+          <label for="f-body">Body — leave a blank line between paragraphs</label>
+          <textarea id="f-body" rows="12"
+            placeholder="Why you’re writing, what you’ve done that fits, and what you’d like to happen next."></textarea>
+          <label>Sign-off <input id="f-closing" type="text"></label>
+          <label>Signature <input id="f-signature" type="text" placeholder="Defaults to your full name"></label>
+        </section>
+      </div>
+      <div class="rb-preview">
+        <div class="rb-preview-inner">
+          <div id="paper-wrap"><div id="paper" role="region" aria-label="Cover letter preview"></div></div>
+          <p id="page-count" role="status"></p>
+        </div>
+      </div>
+    </div>
+
+    <section class="prose">
+      <h2>A cover letter generator that doesn’t stop at the download button</h2>
+      <p>Most cover letter sites let you type the whole thing, then ask for an account, a
+        “free” trial, or a payment to take the watermark off. This one doesn’t. The PDF
+        download is free, every time, with no sign-up and no watermark.</p>
+      <p>It also works differently under the hood. The form, the preview, and the PDF are all
+        produced inside your browser. Nothing you type — your name, address, phone number, the
+        company you’re applying to, or what you say about yourself — is sent anywhere. There is
+        no server to send it to: this page loads no analytics, no trackers, and no third-party
+        code at all.</p>
+      <h2>Plain formatting, because that’s what gets read</h2>
+      <p>A cover letter is judged on what it says, and it often passes through applicant
+        tracking software before a person opens it. Decorative layouts can scramble in those
+        systems. The layout here is a single column of real text in reading order: your contact
+        details, the date, who it’s addressed to, a greeting, your paragraphs, and a sign-off.
+        The PDF holds selectable text rather than a picture of text, so it can be searched,
+        copied, and parsed.</p>
+      <p>Leave a blank line between paragraphs and each one becomes its own paragraph in the
+        preview. A single line break inside a paragraph is treated as a soft wrap, so you can
+        write however is comfortable in the box.</p>
+      <h2>Matching the resume you already wrote</h2>
+      <p>If you built a resume in this browser with the
+        <a href="/resume-builder/">NoAdsTools resume builder</a>, the “Use my details from a
+        resume” control appears at the top of the form and copies your name, email, phone, and
+        location across, so the two documents agree without retyping. It reads your saved
+        resumes from this browser only, it never changes them, and it only shows up when there
+        is something to copy.</p>
+      <h2>Your data stays yours</h2>
+      <p>Your draft autosaves to this browser’s local storage so a refresh never loses work, and
+        “Clear my data” removes it whenever you choose. Clearing your letters does not touch any
+        resume you saved — the two tools use separate keys. You can also export the letter as a
+        small .json file — a copy you own — and import it later, or on another device, to keep
+        editing. On a shared or public computer, export your file and clear your data when you
+        finish.</p>
+      <h2>FAQ</h2>
+      <dl>
+        <dt>Is there a sign-up?</dt>
+        <dd>No. There is no account, no email address to hand over, and no trial. Open the page and start typing.</dd>
+        <dt>Is the download really free?</dt>
+        <dd>Yes — free PDF, no watermark, no paywall at the last step. The site runs on optional tips.</dd>
+        <dt>Is my cover letter uploaded anywhere?</dt>
+        <dd>No. Everything runs in your browser. This page makes no network requests with your text — you can verify that in your browser’s developer tools.</dd>
+        <dt>Can I use it as a free cover letter template?</dt>
+        <dd>Yes. The greeting, sign-off, and layout are filled in for you as a starting point; change any of it, and export the .json if you want to reuse it as your own template later.</dd>
+        <dt>Can it match the resume I made here?</dt>
+        <dd>Yes. If a resume is saved in this browser, one click copies your contact details into the letter. It reads those resumes without altering them.</dd>
+        <dt>Does it work on a phone?</dt>
+        <dd>Yes — the editor and the preview both work on mobile, and the Edit/Preview toggle switches between them. Saving a PDF uses your mobile browser’s print or share flow.</dd>
+      </dl>
+      <h2>Related tools</h2>
+      <ul class="related">
+        <li><a href="/resume-builder/">Resume Builder</a></li>
+        <li><a href="/sign-pdf/">Sign PDF</a></li>
+        <li><a href="/merge-pdf/">Merge PDF</a></li>
+      </ul>
+    </section>
+  </main>
+
+  <div id="footer-root"></div>
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>

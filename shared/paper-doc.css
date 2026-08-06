@@ -1,0 +1,81 @@
+/* shared/paper-doc.css — layout + print contract for paper-document tools
+   (resume-builder, cover-letter-generator). A tool opting in must use this
+   markup shape:
+       #tool[data-paper="letter|a4"]
+         .rb-viewtoggle           mobile Edit/Preview segmented control
+         .rb-panes[data-view]     two-pane grid (form | sticky preview)
+           .rb-form               the editing pane
+           .rb-preview > .rb-preview-inner > #paper-wrap > #paper
+   Class names keep the historical `rb-` prefix so already-shipped markup did
+   not have to churn; they are the shared contract, not resume-only.
+   The @media print block here is load-bearing and was hard-won — see the
+   playbook's "Print-to-PDF tools" gotcha before changing any of it.
+
+   Link this BEFORE the tool's own stylesheet. Rule order inside this file is
+   significant: the base #tool rule must precede the @media print block, which
+   relies on coming later to win the `width` declaration at equal specificity. */
+
+/* Everything scoped under #tool (playbook: bare class names leak onto the
+   injected topbar). #paper is a REAL-UNIT page; on screen it is scaled with
+   transform, in print the scale is stripped and the browser paginates it. */
+#tool { width: 100%; box-sizing: border-box; }
+
+#tool .rb-viewtoggle { display: none; margin: .5rem 0; }
+/* minmax(0, 1fr) matters: a plain 1fr track has an `auto` minimum, so it can
+   never shrink below #paper's 816px min-content — the preview column would
+   force horizontal page overflow and fitPreview() would always compute
+   scale 1. A 0 track minimum (plus min-width:0 on the item) lets the pane
+   actually narrow, and the transform scale does the fitting. */
+#tool .rb-panes { display: grid; grid-template-columns: 46% minmax(0, 1fr); gap: 1rem; align-items: start; }
+
+#tool .rb-preview { position: sticky; top: .5rem; min-width: 0; }
+#tool #paper-wrap { overflow: hidden; }
+#tool #paper {
+  width: 8.5in; min-height: 11in; padding: 0.75in; box-sizing: border-box;
+  background: #fff; color: #111; transform-origin: top left;
+  box-shadow: 0 1px 6px rgb(0 0 0 / .25);
+}
+#tool[data-paper="a4"] #paper { width: 210mm; min-height: 297mm; padding: 18mm; }
+
+/* `screen and` matters: in PRINT the media width is the paper width (~816px
+   letter / ~794px A4), which is under 900px — an unscoped max-width rule would
+   apply while printing and `display:none` the preview pane → a blank PDF. */
+@media screen and (max-width: 900px) {
+  #tool .rb-viewtoggle { display: inline-flex; }
+  #tool .rb-panes { grid-template-columns: minmax(0, 1fr); }
+  #tool .rb-panes[data-view="edit"] .rb-preview { display: none; }
+  #tool .rb-panes[data-view="preview"] .rb-form { display: none; }
+}
+
+/* Print: only the paper prints, and display:none is the LOAD-BEARING mechanism.
+   Three real bugs live in the naive visibility-only approach:
+   (a) visibility:hidden keeps the hidden form/prose LAYOUT HEIGHT → blank
+       trailing pages after a 1-page resume;
+   (b) #paper{position:absolute} resolves against the sticky .rb-preview (its
+       containing block), not the page → the resume prints offset mid-sheet;
+   (c) the 46%+816px grid makes the print layout wider than the sheet →
+       Chromium shrink-to-fit scales the whole document down (~0.68).
+   So: display:none every non-ancestor of #paper, flatten its ancestor chain to
+   plain static blocks (killing grid/sticky/inline height+overflow), and let
+   #paper sit statically at the top-left of a margin-0 page. The visibility
+   pair stays as belt-and-suspenders for anything injected later. */
+@media print {
+  body > :not(#tool),
+  #tool > :not(.rb-panes),
+  #tool .rb-form,
+  #tool #page-count { display: none !important; }
+
+  html, body { margin: 0 !important; padding: 0 !important; }
+  body { display: block !important; min-height: 0 !important; }
+  #tool { display: block; width: auto; max-width: none; margin: 0; padding: 0; }
+  #tool .rb-panes { display: block; }
+  #tool .rb-preview { position: static; display: block; }
+  #tool .rb-preview-inner { display: block; }
+  /* !important: fitPreview() sets an inline height on #paper-wrap. */
+  #tool #paper-wrap { display: block; height: auto !important; overflow: visible; }
+
+  body * { visibility: hidden; }
+  #paper, #paper * { visibility: visible; }
+  #paper { position: static; margin: 0; transform: none !important;
+    box-shadow: none; min-height: auto; }
+}

@@ -1,0 +1,80 @@
+/* resume-builder/resume-builder.css — resume-only styles. Everything scoped
+   under #tool (playbook: bare class names leak onto the injected topbar).
+   The paper geometry, the two-pane layout, the mobile view toggle and the whole
+   @media print block live in /shared/paper-doc.css — the layout + print
+   contract shared with the other paper-document tools. It is linked BEFORE this
+   file; do not redeclare anything it owns. */
+
+#tool .tool-lead { margin: 0 0 var(--space-xl); color: var(--text-secondary); font-size: var(--t-lg); max-width: 70ch; }
+
+#tool .rb-actions { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; margin: 1rem 0 .25rem; }
+#tool .hint { font-size: .85rem; opacity: .8; margin: 0 0 .75rem; }
+#tool #save-state { font-size: .85rem; opacity: .85; margin-left: auto; }
+#tool .notice { border: 1px solid var(--border, #888); border-radius: 6px; padding: .6rem .8rem; margin: .5rem 0; }
+#tool .seg-btn { transition: none; }
+#tool .seg-btn[aria-pressed="true"] { font-weight: 700; text-decoration: underline; }
+
+/* File input: visually-hidden clip pattern (playbook §4 — NEVER display:none;
+   the input stays focusable and in the a11y tree). Same block every tool uses. */
+#tool .file-label {
+  position: relative;
+  display: inline-block;
+  padding: var(--space-sm) var(--space-lg);
+  border-radius: var(--radius-control);
+  background: var(--accent);
+  color: var(--accent-contrast);
+  font-weight: 500;
+  cursor: pointer;
+}
+#tool .file-label input {
+  position: absolute !important;
+  width: 1px !important; height: 1px !important;
+  margin: -1px !important; padding: 0 !important;
+  border: 0 !important; clip: rect(0 0 0 0) !important;
+  clip-path: inset(50%) !important; overflow: hidden !important;
+  white-space: nowrap !important;
+}
+#tool .file-label:focus-within { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+
+#tool .rb-form .card { border: 1px solid var(--border, #8884); border-radius: 8px; padding: .75rem .9rem; margin-bottom: .75rem; }
+#tool .rb-form label { display: block; margin: .4rem 0; }
+#tool .rb-form input[type="text"], #tool .rb-form textarea { width: 100%; box-sizing: border-box; }
+#tool .rb-form details.entry { border: 1px solid var(--border, #8883); border-radius: 6px; padding: .3rem .5rem; margin: .4rem 0; }
+#tool .rb-form details.entry > summary { cursor: pointer; font-weight: 600; }
+#tool .entry-actions { display: flex; gap: .4rem; margin-top: .4rem; }
+
+#tool #page-count { font-size: .85rem; opacity: .8; }
+
+/* The resume typography (template A) — shared by preview and print. */
+#paper .tpl-classic { font-family: Georgia, 'Times New Roman', serif; font-size: 11pt; line-height: 1.45; }
+#paper .tpl-classic h1 { font-size: 22pt; margin: 0; font-weight: 700; }
+#paper .tpl-classic .headline { margin: .1em 0 0; font-size: 11pt; }
+#paper .tpl-classic .contact { margin: .3em 0 0; font-size: 9.5pt; color: #444; }
+#paper .tpl-classic h2 { font-size: 11pt; text-transform: uppercase; letter-spacing: .08em;
+  border-bottom: 1px solid #333; padding-bottom: .15em; margin: 1.1em 0 .5em; break-after: avoid; }
+#paper .tpl-classic .entry { break-inside: avoid; margin-bottom: .6em; }
+#paper .tpl-classic .entry-head { margin: 0; font-weight: 700; }
+#paper .tpl-classic .entry-meta { margin: 0; font-style: italic; color: #444; font-size: 9.5pt; }
+#paper .tpl-classic ul { margin: .25em 0 0 1.1em; padding: 0; }
+#paper .tpl-classic li { margin-bottom: .15em; }
+#paper .tpl-classic .skills-line { margin: 0; }
+
+/* Reordering controls. State is never carried by hue alone: ▲/▼ glyph +
+   aria-label say which way, and the drop target is an outline, not a colour. */
+#tool .move-btn { min-width: 2.2rem; line-height: 1; transition: none; }
+#tool .move-btn[disabled] { opacity: .45; cursor: default; }
+#tool .sec-head { display: flex; gap: .35rem; align-items: center; }
+#tool .sec-head input[type="text"] { flex: 1; min-width: 0; }
+
+#tool .drag-handle { display: inline-block; cursor: grab; touch-action: none;
+  border: 0; background: none; padding: 0 .35rem; font-size: 1rem; line-height: 1;
+  user-select: none; -webkit-user-select: none; transition: none; }
+#tool .entry.is-dragging, #tool .card.is-dragging { opacity: .6; }
+#tool .entry.is-drop-target, #tool .card.is-drop-target { outline: 2px dashed currentColor; outline-offset: 2px; }
+
+/* Phase 3: the saved-resume switcher. Same flex-wrap shape as .rb-actions so
+   the two rows read as one control block; the name field is the only thing
+   allowed to grow, and min-width:0 lets it actually shrink at 375px. */
+#tool .rb-resumes { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; margin: 1rem 0 .25rem; }
+#tool .rb-resumes #resume-name { flex: 1 1 12rem; min-width: 0; }
+#tool .rb-resumes button { transition: none; }
