@@ -19,7 +19,7 @@ test('boots with minimal chrome (no lang picker, no settings gear)', async ({ pa
 
 test('SEO head: title, canonical, SoftwareApplication JSON-LD, single h1', async ({ page }) => {
   await page.goto('/remove-exif/');
-  await expect(page).toHaveTitle('Remove EXIF Data — Free, No Upload · NoAdsTools');
+  await expect(page).toHaveTitle('Remove EXIF Data Online — Free, No Upload · NoAdsTools');
   await expect(page.locator('link[rel="canonical"]')).toHaveAttribute('href', 'https://noadstools.com/remove-exif/');
   const ld = await page.locator('script[type="application/ld+json"]').textContent();
   expect(ld).toContain('"SoftwareApplication"');

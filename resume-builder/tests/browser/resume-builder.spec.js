@@ -30,7 +30,7 @@ function axeBlockers(results) {
 
 test('SEO head + single h1 + JSON-LD', async ({ page }) => {
   await page.goto('/resume-builder/');
-  await expect(page).toHaveTitle('Resume Builder — Free, No Sign-Up, No Upload · NoAdsTools');
+  await expect(page).toHaveTitle('Resume Builder Online — Free, No Sign-Up · NoAdsTools');
   await expect(page.locator('link[rel="canonical"]')).toHaveAttribute('href', 'https://noadstools.com/resume-builder/');
   const ld = await page.locator('script[type="application/ld+json"]').textContent();
   expect(ld).toContain('"SoftwareApplication"');

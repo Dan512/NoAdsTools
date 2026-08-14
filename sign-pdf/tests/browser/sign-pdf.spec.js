@@ -181,7 +181,7 @@ function axeBlockers(results) {
 
 test('SEO head + minimal chrome (single h1, no lang/settings, JSON-LD)', async ({ page }) => {
   await page.goto('/sign-pdf/');
-  await expect(page).toHaveTitle('Sign PDF — Free, No Upload, No Install · NoAdsTools');
+  await expect(page).toHaveTitle('Sign PDF Online — Free, No Upload · NoAdsTools');
   await expect(page.locator('link[rel="canonical"]')).toHaveAttribute('href', 'https://noadstools.com/sign-pdf/');
   const ld = await page.locator('script[type="application/ld+json"]').textContent();
   expect(ld).toContain('"SoftwareApplication"');

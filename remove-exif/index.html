@@ -3,22 +3,22 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Remove EXIF Data — Free, No Upload · NoAdsTools</title>
-  <meta name="description" content="Remove EXIF metadata — GPS location, camera model, timestamps — from JPG, PNG, and WebP photos. Free, runs entirely in your browser, pixels untouched. No upload, no account.">
+  <title>Remove EXIF Data Online — Free, No Upload · NoAdsTools</title>
+  <meta name="description" content="Remove EXIF data from photos online — GPS, camera, and timestamp metadata gone. Free, runs in your browser: no upload, no install, no account.">
   <meta name="theme-color" content="#0f1410">
   <link rel="canonical" href="https://noadstools.com/remove-exif/">
   <link rel="icon" type="image/png" sizes="192x192" href="/photo-editor/img/favicon-light-192.png">
   <link rel="stylesheet" href="/shared/shell.css">
   <link rel="stylesheet" href="./remove-exif.css">
 
-  <meta property="og:title" content="Remove EXIF Data — Free, No Upload">
-  <meta property="og:description" content="Strip GPS location and camera metadata from photos, entirely in your browser. Lossless — pixels untouched.">
+  <meta property="og:title" content="Remove EXIF Data Online — Free, No Upload">
+  <meta property="og:description" content="Remove EXIF and GPS metadata from photos online, entirely in your browser. Nothing is uploaded — pixels untouched.">
   <meta property="og:url" content="https://noadstools.com/remove-exif/">
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="NoAdsTools">
   <meta name="twitter:card" content="summary">
-  <meta name="twitter:title" content="Remove EXIF Data — Free, No Upload">
-  <meta name="twitter:description" content="Strip GPS location and camera metadata from photos, entirely in your browser. Lossless — pixels untouched.">
+  <meta name="twitter:title" content="Remove EXIF Data Online — Free, No Upload">
+  <meta name="twitter:description" content="Remove EXIF and GPS metadata from photos online, entirely in your browser. Nothing is uploaded — pixels untouched.">
 
   <script type="application/ld+json">
   {
@@ -38,7 +38,7 @@
 </head>
 <body>
   <main id="tool">
-    <h1>Remove EXIF data</h1>
+    <h1>Remove EXIF data online</h1>
     <p class="tool-lead">Strip location, camera, and timestamp metadata from photos — entirely in your browser. Your images never leave your device, and the pixels are untouched.</p>
 
     <section class="dropzone" id="dropzone">
@@ -60,13 +60,15 @@
       <h2>What is EXIF data?</h2>
       <p>Every photo from a phone or camera carries hidden metadata called EXIF: where the photo was taken (GPS coordinates), when, on what device, with what settings, and often which software touched it. Share the file and you share all of that with it. A photo posted from your home can reveal your home's coordinates to anyone who checks.</p>
       <h2>How this tool works — and why it's private</h2>
-      <p>This page removes metadata by editing the file's bytes directly in your browser: the metadata blocks are cut out, and everything else — including every pixel — is copied through untouched. Nothing is re-compressed, so there is zero quality loss. And because the work happens on your device, your photos are never uploaded anywhere: you can load this page, disconnect from the internet, and it still works. After cleaning, the tool re-scans its own output and shows you a "verified clean" check.</p>
+      <p>This page removes metadata by editing the file's bytes directly in your browser: the metadata blocks are cut out, and everything else — including every pixel — is copied through untouched. Nothing is re-compressed, so there is zero quality loss. And because the work happens on your device, your photos are never uploaded anywhere: you can load this page, disconnect from the internet, and it still cleans your photos. (The one exception is "Download ZIP", which pulls a small packer from this site the first time you use it.) After cleaning, the tool re-scans its own output and shows you a "verified clean" check.</p>
       <p>The full source code is <a href="https://github.com/Dan512/NoAdsTools" target="_blank" rel="noopener">public on GitHub</a> (AGPL-3.0), and the privacy panel in the footer lists everything this page loads.</p>
       <h2>What gets removed — and what stays</h2>
       <p>Removed: EXIF (including GPS), XMP, IPTC/Photoshop blocks, text comments, PNG timestamps, and any data appended after the image ends (motion-photo video clips can carry their own GPS). Kept: everything that affects how your image looks — color profiles (ICC), rendering settings, and the image data itself, byte for byte.</p>
 
       <h2>Questions</h2>
       <dl class="faq">
+        <dt>How do I remove EXIF data online?</dt>
+        <dd>Drop your photos onto this page. It is a free online EXIF remover that works entirely in your browser — nothing to install, no account, and no upload. Once the page has loaded you can disconnect from the internet and it still works.</dd>
         <dt>Are my photos uploaded to a server?</dt>
         <dd>No. The cleaning happens in your browser using JavaScript this page loads from its own site. You can verify: open your browser's DevTools Network tab while using the tool — no image data leaves your device.</dd>
         <dt>Does it remove GPS location?</dt>

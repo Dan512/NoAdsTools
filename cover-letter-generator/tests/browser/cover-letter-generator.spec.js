@@ -53,7 +53,7 @@ const keysWithPrefix = (page, prefix) =>
 
 test('1. SEO head: title, canonical, JSON-LD, single h1', async ({ page }) => {
   await page.goto('/cover-letter-generator/');
-  await expect(page).toHaveTitle('Cover Letter Generator — Free, No Sign-Up, No Upload · NoAdsTools');
+  await expect(page).toHaveTitle('Cover Letter Generator Online — Free, No Sign-Up · NoAdsTools');
   await expect(page.locator('link[rel="canonical"]'))
     .toHaveAttribute('href', 'https://noadstools.com/cover-letter-generator/');
   const ld = await page.locator('script[type="application/ld+json"]').textContent();

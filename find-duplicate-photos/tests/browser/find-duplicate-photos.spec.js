@@ -101,7 +101,7 @@ test('boots with minimal chrome (no lang picker, no settings gear)', async ({ pa
 
 test('SEO head: title, canonical, SoftwareApplication JSON-LD, single h1', async ({ page }) => {
   await page.goto('/find-duplicate-photos/');
-  await expect(page).toHaveTitle('Find Duplicate Photos — Free, No Upload, No Install · NoAdsTools');
+  await expect(page).toHaveTitle('Find Duplicate Photos Online — Free, No Upload · NoAdsTools');
   await expect(page.locator('link[rel="canonical"]')).toHaveAttribute('href', 'https://noadstools.com/find-duplicate-photos/');
   const ld = await page.locator('script[type="application/ld+json"]').textContent();
   expect(ld).toContain('"SoftwareApplication"');

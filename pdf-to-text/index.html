@@ -3,22 +3,22 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>PDF to Text — Free, No Upload, No Install · NoAdsTools</title>
-  <meta name="description" content="Extract text from a PDF in your browser — pull the text layer and OCR scanned pages, then copy or download as a .txt. Free, no upload, no account: your PDF never leaves your device.">
+  <title>PDF to Text Online — Free, No Upload · NoAdsTools</title>
+  <meta name="description" content="Convert PDF to text online, free and with no account — reads the text layer and OCRs scanned pages on your device. Your PDF is never uploaded.">
   <meta name="theme-color" content="#0f1410">
   <link rel="canonical" href="https://noadstools.com/pdf-to-text/">
   <link rel="icon" type="image/png" sizes="192x192" href="/photo-editor/img/favicon-light-192.png">
   <link rel="stylesheet" href="/shared/shell.css">
   <link rel="stylesheet" href="./pdf-to-text.css">
 
-  <meta property="og:title" content="PDF to Text — Free, No Upload">
-  <meta property="og:description" content="Pull a PDF's text layer and OCR scanned pages — entirely in your browser. Copy or download as .txt. Nothing is uploaded.">
+  <meta property="og:title" content="PDF to Text Online — Free, No Upload">
+  <meta property="og:description" content="Convert PDF to text online, free and with no account — reads the text layer and OCRs scanned pages on your device. Your PDF is never uploaded.">
   <meta property="og:url" content="https://noadstools.com/pdf-to-text/">
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="NoAdsTools">
   <meta name="twitter:card" content="summary">
-  <meta name="twitter:title" content="PDF to Text — Free, No Upload">
-  <meta name="twitter:description" content="Pull a PDF's text layer and OCR scanned pages — entirely in your browser. Copy or download as .txt. Nothing is uploaded.">
+  <meta name="twitter:title" content="PDF to Text Online — Free, No Upload">
+  <meta name="twitter:description" content="Convert PDF to text online, free and with no account — reads the text layer and OCRs scanned pages on your device. Your PDF is never uploaded.">
 
   <script type="application/ld+json">
   {
@@ -111,7 +111,7 @@
 
     <section class="prose tool-copy">
       <h2>Extract text from a PDF without uploading a thing</h2>
-      <p>Add one PDF and this tool reads the text out of it and hands you plain text you can copy or save. Everything runs on your device: the pdf.js library that reads the PDF loads from this site — never a third-party server — the first time you open a file, so you can open this page, disconnect from the internet, and it still works. There is no account, no watermark, and no page cap. Most PDFs carry a real <em>text layer</em> — the selectable text behind the page — and pulling that back out is fast and exact. When a page has no text layer, because it is a scan or an image, this tool can recognise the text from the picture instead, using on-device OCR.</p>
+      <p>Add one PDF and this tool reads the text out of it and hands you plain text you can copy or save. Everything runs on your device: the pdf.js library that reads the PDF loads from this site — never a third-party server — the first time you open a file, so once you have opened your first file, you can disconnect from the internet and it keeps working. (OCR is the exception: the recognition engine is a separate download from this site, fetched the first time a scanned page needs it.) There is no account, no watermark, and no page cap. Most PDFs carry a real <em>text layer</em> — the selectable text behind the page — and pulling that back out is fast and exact. When a page has no text layer, because it is a scan or an image, this tool can recognise the text from the picture instead, using on-device OCR.</p>
       <p>There are three modes. <strong>Auto</strong> reads the text layer of every page and quietly falls back to OCR only for pages that come back with little or no text — the right choice for most files. <strong>Text layer only</strong> skips OCR entirely: it is instant, and it is honest about scanned pages, returning them empty rather than guessing. <strong>OCR all pages</strong> forces recognition on every page, which is the one to reach for when a PDF's built-in text is garbled or wrong and you would rather trust the picture. You can also read the whole document or just a range of pages, such as <code>1-3, 5, 8-10</code>.</p>
 
       <h2>A word on OCR</h2>
@@ -125,6 +125,8 @@
 
       <h2>Questions</h2>
       <dl class="faq">
+        <dt>Can I convert a PDF to text online for free without uploading it?</dt>
+        <dd>Yes. It is free and there is no signup or email to give. The page fetches its PDF reader from noadstools.com, our own site — and the OCR engine from there too, if a scanned page needs it. Your PDF itself is read and recognised entirely by your browser, and is never sent anywhere.</dd>
         <dt>How do I extract text from a PDF without uploading it?</dt>
         <dd>Add your PDF and press Extract text. The reading runs in your browser using JavaScript this page loads from its own site. You can verify it: open your browser's DevTools Network tab while extracting — no PDF data leaves your device.</dd>
         <dt>Does it work on scanned PDFs?</dt>

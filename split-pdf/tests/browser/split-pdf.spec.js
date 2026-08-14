@@ -161,7 +161,7 @@ function axeBlockers(results) {
 
 test('SEO head + minimal chrome (no lang picker, no settings gear)', async ({ page }) => {
   await page.goto('/split-pdf/');
-  await expect(page).toHaveTitle('Split PDF — Free, No Upload, No Install · NoAdsTools');
+  await expect(page).toHaveTitle('Split PDF Online — Free, No Upload · NoAdsTools');
   await expect(page.locator('link[rel="canonical"]')).toHaveAttribute('href', 'https://noadstools.com/split-pdf/');
   const ld = await page.locator('script[type="application/ld+json"]').textContent();
   expect(ld).toContain('"SoftwareApplication"');

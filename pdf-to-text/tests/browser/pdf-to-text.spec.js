@@ -119,7 +119,7 @@ function axeBlockers(results) {
 
 test('SEO head + minimal chrome (single h1, no lang/settings, JSON-LD)', async ({ page }) => {
   await page.goto('/pdf-to-text/');
-  await expect(page).toHaveTitle('PDF to Text — Free, No Upload, No Install · NoAdsTools');
+  await expect(page).toHaveTitle('PDF to Text Online — Free, No Upload · NoAdsTools');
   await expect(page.locator('link[rel="canonical"]')).toHaveAttribute('href', 'https://noadstools.com/pdf-to-text/');
   const ld = await page.locator('script[type="application/ld+json"]').textContent();
   expect(ld).toContain('"SoftwareApplication"');

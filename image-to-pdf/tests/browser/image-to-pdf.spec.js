@@ -52,7 +52,7 @@ test('boots with minimal chrome (no lang picker, no settings gear)', async ({ pa
 
 test('SEO head: title, canonical, SoftwareApplication JSON-LD, single h1', async ({ page }) => {
   await page.goto('/image-to-pdf/');
-  await expect(page).toHaveTitle('Image to PDF — Free, No Upload · NoAdsTools');
+  await expect(page).toHaveTitle('Image to PDF Online — Free, No Upload · NoAdsTools');
   await expect(page.locator('link[rel="canonical"]')).toHaveAttribute('href', 'https://noadstools.com/image-to-pdf/');
   const ld = await page.locator('script[type="application/ld+json"]').textContent();
   expect(ld).toContain('"SoftwareApplication"');

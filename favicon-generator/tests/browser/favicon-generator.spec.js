@@ -143,7 +143,7 @@ test('boots with minimal chrome (no lang picker, no settings gear)', async ({ pa
 
 test('SEO head: title, canonical, SoftwareApplication JSON-LD, single h1', async ({ page }) => {
   await page.goto('/favicon-generator/');
-  await expect(page).toHaveTitle('Favicon Generator — Free, No Upload · NoAdsTools');
+  await expect(page).toHaveTitle('Favicon Generator Online — Free, No Upload · NoAdsTools');
   await expect(page.locator('link[rel="canonical"]')).toHaveAttribute('href', 'https://noadstools.com/favicon-generator/');
   const ld = await page.locator('script[type="application/ld+json"]').textContent();
   expect(ld).toContain('"SoftwareApplication"');

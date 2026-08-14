@@ -68,7 +68,7 @@ test('boots with minimal chrome (no lang picker, no settings gear)', async ({ pa
 
 test('SEO head: title, canonical, SoftwareApplication JSON-LD, single h1', async ({ page }) => {
   await page.goto('/heic-to-jpg/');
-  await expect(page).toHaveTitle('HEIC to JPG Converter — Free, No Upload · NoAdsTools');
+  await expect(page).toHaveTitle('HEIC to JPG Converter Online — Free, No Upload · NoAdsTools');
   await expect(page.locator('link[rel="canonical"]')).toHaveAttribute('href', 'https://noadstools.com/heic-to-jpg/');
   const ld = await page.locator('script[type="application/ld+json"]').textContent();
   expect(ld).toContain('"SoftwareApplication"');
