@@ -39,7 +39,7 @@
 <body>
   <main id="tool">
     <h1>Crop images online</h1>
-    <p class="tool-lead">Crop JPG, PNG, and WebP images entirely in your browser — drag an interactive crop box, snap to aspect presets like 1:1 or 16:9, or type exact pixel dimensions. Your images never leave your device: no upload, no account, no tracking.</p>
+    <p class="tool-lead">Crop JPG, PNG, and WebP images entirely in your browser: drag an interactive crop box, snap to aspect presets like 1:1 or 16:9, or type exact pixel dimensions. Your images never leave your device: no upload, no account, no tracking.</p>
 
     <section class="dropzone" id="dropzone" aria-label="Add images">
       <p><strong>Drop images here</strong>, paste, or</p>
@@ -116,47 +116,74 @@
 
     <section class="prose tool-copy">
       <h2>What this tool does</h2>
-      <p>Drop in one JPEG, PNG, or WebP image or a whole batch, and trim each one on your own device. The active image fills a preview stage with a crop box on top: drag the box to move it, pull any of the eight handles to resize it, or type exact numbers into the X, Y, Width, and Height fields. A live W × H readout always shows the crop in source pixels, so you know precisely what you will get. The box is always kept inside the image and never shrinks below a small floor, so it cannot escape the frame or collapse to nothing. Everything works with a mouse, a finger, or a pen — the handles have oversized touch targets, and arrow keys nudge the box a pixel at a time (hold Shift for ten).</p>
+      <p>Most photos contain something you would rather not send along with them. A stranger at the edge of the frame. A parked car with a readable plate. The corner of a room that is nobody's business.</p>
+      <p>Cropping is the fix, and cropping is subtraction. Everything outside the box is gone from the file you download, which is usually the point, but it does mean the crop cannot be undone on that copy. Your original file on disk is never modified, which is the whole of the undo button.</p>
+      <p>Drop in one JPEG, PNG, or WebP, or a whole batch. The active image fills a preview stage with a crop box on top. Drag the box to move it, pull any of the eight handles to resize it, or type numbers straight into the X, Y, Width, and Height fields. A live W × H readout shows the crop in source pixels the whole time.</p>
+      <p>The box is held inside the image and will not shrink below 16 pixels on a side, so it cannot wander off the frame or collapse to nothing. Mouse, finger, and pen all work, and arrow keys nudge a focused box one pixel at a time, ten with Shift held.</p>
 
-      <h2>Aspect ratios and exact pixels</h2>
-      <p>The preset row snaps the crop to a fixed shape: a square for a profile picture (1:1), widescreen for a banner (16:9), classic photo shapes (4:3, 3:2), and their portrait counterparts (3:4, 2:3, 9:16). Original keeps the image's own proportions, and Free lets you drag any shape you like. Picking a preset re-fits the largest box of that shape, centered on your current crop, and while it is active the handles hold the ratio for you. When you need an exact result — say a 1080 × 1080 avatar — type the numbers in and the box follows, clamped to what the image can actually provide.</p>
+      <h2>Ratios and exact pixels</h2>
+      <p>The preset row snaps the crop to a fixed shape. 1:1 for a profile picture, 16:9 for a banner, 4:3 and 3:2 for the classic photo shapes, and 3:4, 2:3, and 9:16 for their portrait versions. Original keeps the image's own proportions. Free lets you drag whatever shape you want.</p>
+      <p>Choosing a preset fits the largest box of that shape the image allows, centered on where your crop already sits, and the handles then hold that ratio while you resize.</p>
+      <p>When you need a specific number, an avatar at exactly 1080 × 1080, type it in. The box follows, clamped to what the image can actually supply. It will not hand you 1080 pixels out of an 800-pixel photo.</p>
 
-      <h2>Formats, quality, and metadata</h2>
-      <p>Each cropped image keeps its original format: a JPEG stays a JPEG, a PNG stays a PNG, a WebP stays a WebP. The crop is drawn at full source resolution — the on-screen preview is only scaled to fit the stage, never the output — so nothing is downsized unless you ask for it. JPEG and WebP are re-encoded at a high quality setting and PNG stays lossless. Because the pixels are re-encoded, the hidden EXIF and GPS metadata is dropped along the way, so a cropped copy is also a cleaner, less revealing one. Rotating, straightening, and flipping are out of scope here — the <a href="/photo-editor/">Photo Editor</a> handles those. AVIF and GIF are not supported yet: reliable in-browser AVIF encoding is not available on every platform, and cropping would flatten a GIF's animation.</p>
+      <h2>What the export does to your pixels</h2>
+      <p>The crop is drawn at full source resolution. Only the stage preview is scaled to fit your screen, never the output, so a crop taken out of a 24-megapixel photo comes back at the pixel size the readout named.</p>
+      <p>Every export is re-encoded. No path here copies the original bytes through untouched, because the image is being rebuilt at a new size. Each image keeps its own format: JPEG stays JPEG, PNG stays PNG, WebP stays WebP.</p>
+      <p>For PNG that costs nothing, because PNG is lossless. For JPEG and WebP it means one more lossy pass at a high quality setting. A single pass is hard to tell from the original, but it is not the same file, and cropping the same JPEG over and over, saving each time, will eventually show.</p>
+      <p>Re-encoding also drops the hidden EXIF and GPS metadata, which for a photo you are about to post counts as a bonus rather than a loss.</p>
+      <p>Rotating, straightening, and flipping are out of scope here; <a href="/photo-editor/">Photo Editor</a> does those. AVIF and GIF are not accepted either: dependable in-browser AVIF encoding is still missing on some platforms, and cropping a GIF would flatten its animation.</p>
 
-      <h2>Nothing is uploaded</h2>
-      <p>The decoding, cropping, and re-encoding all run in your browser, using code this page loads only from its own address — never a third-party server. You can open your browser's network panel and watch: no image data leaves the machine. There is no account, no tracking, and no upload step to opt out of. The full source is <a href="https://github.com/Dan512/NoAdsTools" target="_blank" rel="noopener">public on GitHub</a> under the AGPL-3.0 licence, and the privacy panel in the footer names every file this page can load and when.</p>
+      <h2>None of this leaves the page</h2>
+      <p>Nothing is uploaded.</p>
+      <p>Decoding, cropping, and re-encoding all run in your browser, using code served only from this site. No third-party CDN is involved and there is no account to create.</p>
+      <p>Exactly one file is fetched beyond the page's own code, and only on demand: JSZip, roughly 97&nbsp;KB, at the moment you click "Download all (ZIP)" on a multi-image batch. Everything else has already arrived by the time you drop a file in, so you can load this page, disconnect from the network, and go on cropping and downloading single images.</p>
+      <p>If you would rather check than take that on faith, open DevTools on the Network tab and work through a crop. No image data leaves the machine.</p>
+      <p>The full source is <a href="https://github.com/Dan512/NoAdsTools" target="_blank" rel="noopener">public on GitHub</a> under the AGPL-3.0 license, and the privacy panel on this page lists every file this page can load and when.</p>
 
       <h2>Questions</h2>
       <div class="faq">
         <details>
           <summary>How do I crop a picture online for free?</summary>
-          <p>Drop the picture onto this page, drag the crop box, and download the result. It is a free online image cropper that runs entirely in your browser — no upload, no install, no account, and no watermark on what you get back.</p>
+          <p>Drop the picture onto this page, drag the crop box over the part you want, and download it.</p>
+          <p>It is a free online image cropper that runs in your browser, with no upload, no install, no account, and no watermark on what you get back.</p>
         </details>
         <details>
           <summary>Can I crop an image without uploading it?</summary>
-          <p>Yes. The whole process happens in your browser, on your device — you can verify it by opening your browser's DevTools Network tab while cropping and watching that no image data leaves the machine. There is no account and nothing to sign up for.</p>
+          <p>Yes. That is the only way this one works.</p>
+          <p>The file is decoded, cropped, and re-encoded on your device. Nothing is sent to a server, because no server is involved in the cropping. Open your browser's DevTools Network tab while you crop if you want to confirm it.</p>
         </details>
         <details>
           <summary>Can I crop to a square or 16:9?</summary>
-          <p>Yes. Pick 1:1 for a square or 16:9 for widescreen from the preset row, and the crop box snaps to that shape, centered on your current selection. The handles then keep the ratio as you resize, so the result stays exactly square or exactly 16:9. Portrait presets like 9:16 and 3:4 are there too, and Free lets you drag any shape.</p>
+          <p>Yes.</p>
+          <p>Pick 1:1 for a square or 16:9 for widescreen and the box snaps to that shape, centered on your current selection. The handles then hold the ratio as you resize, so the result stays exactly square or exactly 16:9.</p>
+          <p>Portrait presets are there too, and Free lets you drag any shape at all.</p>
         </details>
         <details>
           <summary>Can I crop to exact pixel dimensions?</summary>
-          <p>Yes. Type the pixel values into the Width and Height fields — and X and Y to place the box — and the crop rectangle updates to match, clamped to what the image actually contains. The live W × H readout confirms the exact source-pixel size you will download, which is handy for avatars, thumbnails, and print sizes.</p>
+          <p>Yes.</p>
+          <p>Type the values into the Width and Height fields, and into X and Y to place the box. The rectangle updates to match, clamped to what the image actually contains.</p>
+          <p>The live W × H readout confirms the source-pixel size you will download.</p>
         </details>
         <details>
-          <summary>Can I crop many images at once?</summary>
-          <p>Yes. Add as many as you like and a thumbnail strip appears above the stage. Each image keeps its own crop box and aspect setting, so switching between them never loses your work. Download each one from its own crop, or use "Download all (ZIP)" to get the whole set at once — the practical limit is your device's memory, not a server quota.</p>
+          <summary>Can I crop several images at once?</summary>
+          <p>Yes.</p>
+          <p>Add as many as you like and a thumbnail strip appears above the stage. Each image keeps its own crop box and ratio setting, so switching between them never discards work you have already done.</p>
+          <p>Download each crop from its own image, or use "Download all (ZIP)" to take the set in one file. The ceiling is your device's memory rather than a server quota.</p>
         </details>
         <details>
           <summary>Does cropping reduce quality?</summary>
-          <p>Cropping itself only removes pixels outside the box — it does not resample the pixels you keep. JPEG and WebP are re-encoded once at a high quality setting, which is visually near-lossless, and PNG stays fully lossless. The output is at full source resolution; the preview is scaled only to fit your screen.</p>
+          <p>The crop itself does not. Pixels inside the box are copied at their original resolution and never resampled, so nothing is softened or scaled.</p>
+          <p>The re-encode is where a small cost appears. JPEG and WebP are written again at a high quality setting, which is visually near-identical to the source. PNG is rewritten losslessly and comes out pixel-for-pixel exact.</p>
+        </details>
+        <details>
+          <summary>Can I get the cropped-off part back?</summary>
+          <p>Not from the downloaded file. Those pixels are not in it.</p>
+          <p>Your original is untouched on disk, though, so the recovery route is to add it again and set a different crop. Nothing this page does modifies the file you started with.</p>
         </details>
       </div>
 
       <h2>Related tools</h2>
-      <p><a href="/resize-image/">Resize Image</a> — change pixel dimensions to an exact size or percentage. <a href="/compress-images/">Compress images</a> — shrink the file size without changing dimensions. <a href="/photo-editor/">Photo Editor</a> — crop, rotate, redact, and batch-edit images. <a href="/convert-image/">Convert Image</a> — change between JPEG, PNG, WebP, and AVIF.</p>
+      <p><a href="/resize-image/">Resize Image</a> | scale the whole frame instead of trimming its edges. <a href="/compress-images/">Compress images</a> | reduce file size without changing dimensions. <a href="/convert-image/">Convert Image</a> | move between JPEG, PNG, WebP, and AVIF. <a href="/photo-editor/">Photo Editor</a> | rotate, redact, add text, and batch-edit.</p>
     </section>
   </main>
 

@@ -39,7 +39,7 @@
 <body>
   <main id="tool">
     <h1>HEIC to JPG converter</h1>
-    <p class="tool-lead">Convert iPhone HEIC photos to JPG — entirely in your browser. Your photos never leave your device: no upload, no account, no tracking.</p>
+    <p class="tool-lead">Convert iPhone HEIC photos to JPG, entirely in your browser. Your photos never leave your device: no upload, no account, no tracking.</p>
 
     <section class="dropzone" id="dropzone">
       <p><strong>Drag HEIC photos here</strong>, paste, or</p>
@@ -72,36 +72,72 @@
     </div>
 
     <section class="prose tool-copy">
-      <h2>What is a HEIC file?</h2>
-      <p>HEIC (High Efficiency Image Container) is the format iPhones and many newer Android phones use to save photos. It stores the same picture in roughly half the space of a JPG — which is great on your phone, and a nuisance everywhere else. Plenty of websites, older programs, Windows machines, and printing services still refuse HEIC files. Converting to JPG makes the photo openable everywhere, at the cost of a somewhat larger file.</p>
+      <h2>Why your photos are HEIC files</h2>
+      <p>You email a photo to someone and they reply that it will not open. An application form rejects the file. An older Windows machine shows a folder of blank thumbnails.</p>
+      <p>The file is a HEIC.</p>
+      <p>iPhones and many recent Android phones save photos in HEIC because it stores the same picture in roughly half the space of a JPG. That is a genuine gain on a phone with a full camera roll, and a nuisance almost everywhere else, because plenty of websites, older programs, and print services still refuse the format outright.</p>
+      <p>Converting to JPG makes the photo openable more or less anywhere. Two costs come with that, and they are worth knowing before you start.</p>
+      <p>The first is quality. HEIC and JPG are both lossy formats, so the conversion decodes the picture and encodes it fresh. At the default setting you will not see the difference, but it is a one-way trip and the detail does not come back.</p>
+      <p>The second is the first file. Dropping it pulls down a 1.1&nbsp;MB decoder from this site, so your first conversion is slower than every one after it.</p>
 
-      <h2>How this converter works — and why it's private</h2>
-      <p>Most "free HEIC converters" upload your photos to a server, convert them there, and keep who-knows-what. This page doesn't. Your first conversion loads a 1.1 MB open-source decoder (libheif, compiled to WebAssembly) from this site — after that, everything happens on your own device. Once your first photo has pulled the decoder from this site, you can disconnect from the internet and it keeps converting. Drop as many photos as you like; each becomes a JPG you can download individually, all at once, or as a single ZIP.</p>
-      <p>The full source code is <a href="https://github.com/Dan512/NoAdsTools" target="_blank" rel="noopener">public on GitHub</a> (AGPL-3.0), and the privacy panel in the footer lists everything this page loads.</p>
+      <h2>How the conversion works</h2>
+      <p>The decoder is libheif, an open-source HEIC decoder compiled to WebAssembly. This site keeps its own copy and fetches it when your first file lands, not on page load. Before that, nothing is fetched.</p>
+      <p>Once it arrives, the work happens in your browser on your own device. The HEIC is decoded to pixels and re-encoded as a JPG at the quality you picked.</p>
+      <p>Your photo is not uploaded. It is read from disk into the tab and stays there. This page fetches exactly three kinds of thing, all from this domain: its own code, that decoder, and a packer of about 97&nbsp;KB if you press "Download ZIP". None of them carry your image anywhere.</p>
+      <p>Which makes the offline question worth answering precisely rather than generously. Before your first file, the decoder has not arrived and nothing can be converted with the network off. After it has arrived, converting keeps working. The ZIP button is the same story one step later: it needs its packer the first time you press it.</p>
+      <p>All of that is visible. Open your browser's DevTools Network tab and convert a file. You will watch the decoder come down from this domain on the first one, and nothing at all go up.</p>
+      <p>The full source is <a href="https://github.com/Dan512/NoAdsTools" target="_blank" rel="noopener">public on GitHub</a> under the AGPL-3.0 license, and the privacy panel on this page names every file this page can load and when.</p>
 
-      <h2>What happens to the photo's metadata</h2>
-      <p>HEIC photos from a phone carry hidden metadata (EXIF): GPS coordinates of where the photo was taken, the exact time, the camera model, and more. By default this converter does <strong>not</strong> carry that into the JPG — the converted file comes out clean, which is the safer choice for anything you're about to share. If you want to keep the date, camera details, and location (say, for your own archive), switch on <em>"Keep photo info"</em> before converting and the original EXIF is copied into the JPG byte-for-byte. Already have JPGs with metadata you want gone? Use our <a href="/remove-exif/">Remove EXIF data</a> tool.</p>
+      <h2>What happens to the metadata</h2>
+      <p>A HEIC straight off a phone carries EXIF: where the photo was taken to within a few metres, when, on what camera, at what settings.</p>
+      <p>By default the JPG this tool produces carries none of it. That is the safer default for a file you are about to send to someone.</p>
+      <p>If you want it kept, for an archive or because the dates matter, switch on "Keep photo info" before converting. The original EXIF is then copied into the JPG byte for byte, GPS included.</p>
+      <p>If you already have JPGs whose metadata you want gone, that is the <a href="/remove-exif/">Remove EXIF data</a> tool's job.</p>
 
       <h2>Questions</h2>
       <dl class="faq">
         <dt>How do I convert HEIC to JPG online?</dt>
-        <dd>Drop your HEIC or HEIF files onto this page. It is a free online HEIC to JPG converter that runs entirely in your browser — no upload, no install, no account. The same page works on Windows, macOS, iPhone, and Android, because all it needs is a browser.</dd>
+        <dd>
+          <p>Drop the files onto this page.</p>
+          <p>It is a free online HEIC to JPG converter that runs in your browser, with no upload, no install, and no account.</p>
+          <p>The same page works on Windows, macOS, Android, and the iPhone the photos came from, because all it needs is a browser.</p>
+        </dd>
         <dt>Are my photos uploaded to a server?</dt>
-        <dd>No. The conversion runs in your browser using a decoder this page loads from its own site. You can verify: open your browser's DevTools Network tab while converting — no image data leaves your device.</dd>
+        <dd>
+          <p>No.</p>
+          <p>Decoding and re-encoding both happen inside the tab, using a decoder this page serves from its own address. Your file goes from disk to browser memory and no further.</p>
+          <p>Open your browser's DevTools Network tab while converting. The decoder comes down on the first file. No image data goes up on any of them.</p>
+        </dd>
         <dt>Does converting lose quality?</dt>
-        <dd>HEIC and JPG are both lossy formats, so a conversion re-encodes the image. At the default "High" quality (92%) the difference is invisible in normal use. Pick "Maximum" if every last detail matters, or "Smaller files" to save space.</dd>
+        <dd>
+          <p>A little, unavoidably.</p>
+          <p>Both formats are lossy, and going from one to the other means a decode and a fresh encode. At the default High setting the difference is not visible in normal viewing. Maximum keeps more detail and costs file size. Smaller files does the reverse.</p>
+          <p>Nothing recovers detail a previous encode discarded, so keep the HEIC originals of anything that matters.</p>
+        </dd>
         <dt>What happens to location and camera data?</dt>
-        <dd>It's stripped by default — the converted JPG carries no EXIF or GPS. Turn on "Keep photo info" to copy the original metadata into the JPG instead. If a photo has no metadata to begin with, the tool says so and converts it anyway.</dd>
-        <dt>Can I convert many photos at once?</dt>
-        <dd>Yes — drop as many as you like, then download them one by one, all at once, or packaged as a single ZIP.</dd>
-        <dt>What if my file is already a JPG or PNG?</dt>
-        <dd>The tool tells you there's nothing to convert — no fake processing. If what you actually want is the metadata removed from a JPG or PNG, that's the <a href="/remove-exif/">Remove EXIF data</a> tool's job.</dd>
-        <dt>Why does my iPhone save photos as HEIC in the first place?</dt>
-        <dd>Space. HEIC compresses about twice as efficiently as JPG, so your phone fits twice the photos. You can also make the phone shoot JPG directly: Settings → Camera → Formats → "Most Compatible".</dd>
+        <dd>
+          <p>It is dropped by default. The JPG comes out with no EXIF and no GPS.</p>
+          <p>Turn on "Keep photo info" to copy the original metadata across instead. If a photo had none to begin with, the tool says so and converts it anyway.</p>
+        </dd>
+        <dt>Can I convert a whole batch at once?</dt>
+        <dd>
+          <p>Yes. Drop in as many as you like and they queue up.</p>
+          <p>Download them one at a time, all at once, or as a single ZIP. The decoder loads once and serves the entire batch.</p>
+        </dd>
+        <dt>What if the file is already a JPG or PNG?</dt>
+        <dd>
+          <p>The tool tells you there is nothing to convert rather than running it through a pointless round trip that would only cost quality.</p>
+          <p>If what you wanted was the metadata removed, use <a href="/remove-exif/">Remove EXIF data</a>.</p>
+        </dd>
+        <dt>Why does my iPhone save HEIC in the first place?</dt>
+        <dd>
+          <p>Storage. HEIC compresses roughly twice as efficiently as JPG, so the same phone holds about twice as many photos.</p>
+          <p>You can turn it off if the conversions are getting tiresome: Settings, then Camera, then Formats, then "Most Compatible". The phone shoots JPG from then on, and fills up faster doing it.</p>
+        </dd>
       </dl>
 
       <h2>Related tools</h2>
-      <p><a href="/remove-exif/">Remove EXIF data</a> — strip location and camera metadata from JPG, PNG, and WebP photos. <a href="/photo-editor/">Photo Editor</a> — crop, resize, redact, and batch-edit images (it opens HEIC files too).</p>
+      <p><a href="/remove-exif/">Remove EXIF data</a> | strip location and camera metadata from JPG, PNG, and WebP files. <a href="/compress-images/">Compress Images</a> | shrink the converted JPGs before sending them. <a href="/photo-editor/">Photo Editor</a> | crop, resize, redact, and batch-edit images, HEIC included.</p>
     </section>
   </main>
 

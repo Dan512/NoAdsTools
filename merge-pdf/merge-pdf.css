@@ -158,3 +158,5 @@
   #tool .row-controls { flex: 1 1 100%; }
   #tool .row-controls button { flex: 1 1 auto; }
 }
+.faq dd p { margin: var(--space-sm) 0 0; }
+.faq dd p:first-child { margin-top: 0; }

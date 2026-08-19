@@ -3279,3 +3279,18 @@ dialog.heic-consent-dialog p {
    matters because the canvas may have other cursor classes applied. */
 #overlay-canvas.watermark-hover { cursor: move; }
 #overlay-canvas.watermark-dragging { cursor: grabbing; }
+
+/* --- Marketing copy block (prose + FAQ + related) -----------------------
+   Lives AFTER </main> in index.html so it never participates in
+   #workspace's flex layout or #editor-view's grid. `.prose` comes from
+   shared/shell.css; `.faq` is per-tool everywhere on this site, so its two
+   rules live here and match the other tool pages exactly.
+   The :has() guard hides the whole block while the single-image editor
+   view is open — the editor fills the viewport and marketing copy scrolled
+   underneath it is noise. Browsers without :has() keep it visible below
+   the fold, which is harmless (same selector style already used above for
+   `main#workspace:has(> #editor-view:not([hidden]))`). */
+.tool-copy { flex: 0 0 auto; margin-top: var(--space-3xl); }
+.faq dt { font-weight: 600; margin-top: var(--space-lg); }
+.faq dd { margin: var(--space-xs) 0 0; color: var(--text-secondary); }
+body:has(#editor-view:not([hidden])) .tool-copy { display: none; }

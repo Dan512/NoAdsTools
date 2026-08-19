@@ -39,7 +39,7 @@
 <body>
   <main id="tool">
     <h1>Remove EXIF data online</h1>
-    <p class="tool-lead">Strip location, camera, and timestamp metadata from photos — entirely in your browser. Your images never leave your device, and the pixels are untouched.</p>
+    <p class="tool-lead">Strip location, camera, and timestamp metadata from photos, entirely in your browser. Your images never leave your device, and the pixels are untouched.</p>
 
     <section class="dropzone" id="dropzone">
       <p><strong>Drag photos here</strong>, paste, or</p>
@@ -57,34 +57,69 @@
     </div>
 
     <section class="prose tool-copy">
-      <h2>What is EXIF data?</h2>
-      <p>Every photo from a phone or camera carries hidden metadata called EXIF: where the photo was taken (GPS coordinates), when, on what device, with what settings, and often which software touched it. Share the file and you share all of that with it. A photo posted from your home can reveal your home's coordinates to anyone who checks.</p>
-      <h2>How this tool works — and why it's private</h2>
-      <p>This page removes metadata by editing the file's bytes directly in your browser: the metadata blocks are cut out, and everything else — including every pixel — is copied through untouched. Nothing is re-compressed, so there is zero quality loss. And because the work happens on your device, your photos are never uploaded anywhere: you can load this page, disconnect from the internet, and it still cleans your photos. (The one exception is "Download ZIP", which pulls a small packer from this site the first time you use it.) After cleaning, the tool re-scans its own output and shows you a "verified clean" check.</p>
-      <p>The full source code is <a href="https://github.com/Dan512/NoAdsTools" target="_blank" rel="noopener">public on GitHub</a> (AGPL-3.0), and the privacy panel in the footer lists everything this page loads.</p>
-      <h2>What gets removed — and what stays</h2>
-      <p>Removed: EXIF (including GPS), XMP, IPTC/Photoshop blocks, text comments, PNG timestamps, and any data appended after the image ends (motion-photo video clips can carry their own GPS). Kept: everything that affects how your image looks — color profiles (ICC), rendering settings, and the image data itself, byte for byte.</p>
+      <h2>What EXIF data is</h2>
+      <p>You photograph a bike in your driveway and post the picture in a for-sale listing. The picture shows a bike. The file also carries the GPS coordinates of your driveway, the minute you took the shot, and which phone took it.</p>
+      <p>That hidden layer is called EXIF, and most phones write it into every photo by default.</p>
+      <p>This page cuts it out.</p>
+      <p>One limitation belongs here rather than in the small print. The tool parses three file structures directly: JPEG, PNG, and WebP. Hand it a HEIC file from an iPhone and it declines instead of guessing. Hand it something whose structure it cannot read and it falls back to redrawing the image, which does remove the metadata but re-compresses the picture. When that happens, the result row says so.</p>
+
+      <h2>How the cleaning works</h2>
+      <p>Most metadata removers open your photo, decode it, and save a new one. That works, and it also re-compresses every pixel on the way out.</p>
+      <p>This one edits bytes.</p>
+      <p>A JPEG, PNG, or WebP file is a sequence of labeled blocks. The tool walks that sequence, drops the blocks holding metadata, and copies every remaining byte through unchanged. The image data is never decoded, so there is nothing to re-compress and no quality to lose. The cleaned file's pixels are identical to the original's.</p>
+      <p>Then it re-scans its own output and reports whether the second scan came back clean. If verification fails, it tells you not to trust that file.</p>
+      <p>Nothing is uploaded. Your photo is read from disk into the tab and goes no further. The byte editing runs on code this page already loaded from its own address, so once the page is open there is nothing left to fetch: you can disconnect from the internet and keep cleaning photos. The one exception is the "Download ZIP" button, which pulls a packer of about 97&nbsp;KB, also from this site, the first time you press it.</p>
+      <p>You do not have to take that on faith. Open your browser's DevTools Network tab and clean a file. Nothing goes out.</p>
+      <p>The full source is <a href="https://github.com/Dan512/NoAdsTools" target="_blank" rel="noopener">public on GitHub</a> under the AGPL-3.0 license, and the privacy panel on this page names every file this page can load and when.</p>
+
+      <h2>What comes out, and what stays in</h2>
+      <p>Removed: EXIF, including GPS. XMP. IPTC and Photoshop blocks. Text comments. PNG timestamps. And anything appended after the image officially ends, which on Samsung and Google phones is often a short video clip with its own location track.</p>
+      <p>Kept: everything that affects how the picture looks. Color profiles, rendering settings, and the image data itself, byte for byte.</p>
+      <p>That trailing-clip removal is deliberate rather than incidental. A motion photo cleaned here becomes an ordinary still. The movement is gone, and so is the location data that rode along with it.</p>
 
       <h2>Questions</h2>
       <dl class="faq">
-        <dt>How do I remove EXIF data online?</dt>
-        <dd>Drop your photos onto this page. It is a free online EXIF remover that works entirely in your browser — nothing to install, no account, and no upload. Once the page has loaded you can disconnect from the internet and it still works.</dd>
+        <dt>Is there a free EXIF remover online?</dt>
+        <dd>
+          <p>Yes. This page.</p>
+          <p>It strips EXIF, GPS, and other embedded metadata from JPG, PNG, and WebP files in your browser. No upload, no install, no account, no watermark.</p>
+          <p>Drop a photo on it and a cleaned copy is ready to download.</p>
+        </dd>
         <dt>Are my photos uploaded to a server?</dt>
-        <dd>No. The cleaning happens in your browser using JavaScript this page loads from its own site. You can verify: open your browser's DevTools Network tab while using the tool — no image data leaves your device.</dd>
+        <dd>
+          <p>No.</p>
+          <p>The cleaning is byte editing performed by JavaScript this page loaded from its own site. Your photo is read into the tab and never sent anywhere.</p>
+          <p>Open DevTools, switch to the Network tab, and clean a file. No image data leaves.</p>
+        </dd>
         <dt>Does it remove GPS location?</dt>
-        <dd>Yes. GPS coordinates live in the EXIF block, which is removed entirely. The report tells you whether location data was present before cleaning.</dd>
-        <dt>Does image quality change?</dt>
-        <dd>No. Unlike tools that re-save the image, this tool removes only the metadata bytes. The image data is copied through unchanged — the cleaned file's pixels are identical to the original's.</dd>
-        <dt>Can I clean multiple photos at once?</dt>
-        <dd>Yes — drop as many as you like, then download them individually, all at once, or as a single ZIP.</dd>
-        <dt>What about "motion photos"?</dt>
-        <dd>Some phones (Samsung, Google) append a short video after the photo — with its own location track. This tool removes that trailing data and tells you when it did. The still image is untouched; the motion effect is lost, by design.</dd>
-        <dt>What about HEIC photos from iPhones?</dt>
-        <dd>Convert them with our free <a href="/heic-to-jpg/">HEIC to JPG</a> tool first, then clean them here.</dd>
+        <dd>
+          <p>Yes. Coordinates live inside the EXIF block, and the whole block is dropped.</p>
+          <p>The result row also tells you whether location data was present to begin with. People are surprised in both directions.</p>
+        </dd>
+        <dt>Does the image quality change?</dt>
+        <dd>
+          <p>No, for any JPG, PNG, or WebP the tool can parse. Only metadata bytes are removed. The picture data is copied through untouched, so the cleaned file's pixels match the original's exactly.</p>
+          <p>The exception is a file whose structure it does not recognize. That one falls back to redrawing the image, which is lossy, and the row is labeled so you know it happened.</p>
+        </dd>
+        <dt>Can I clean a batch of photos?</dt>
+        <dd>
+          <p>Yes. Drop in as many as you like.</p>
+          <p>Each gets its own result row and download button, or take them all at once, or as a single ZIP. The ZIP is the only action that fetches anything extra.</p>
+        </dd>
+        <dt>What about motion photos?</dt>
+        <dd>
+          <p>Samsung and Google phones append a short video after the still image, and that clip carries its own location track. The tool removes it and reports how many bytes it dropped.</p>
+          <p>The still image survives. The motion does not. That is the intended behavior, not an accident.</p>
+        </dd>
+        <dt>What about HEIC photos from an iPhone?</dt>
+        <dd>
+          <p>Not supported here, and the tool says so rather than pretending to work.</p>
+          <p>Convert them with the free <a href="/heic-to-jpg/">HEIC to JPG</a> tool first, then clean the JPGs on this page. That converter already drops metadata by default, so the second pass is mostly a verification.</p>
+        </dd>
       </dl>
 
       <h2>Related tools</h2>
-      <p><a href="/heic-to-jpg/">HEIC to JPG</a> — convert iPhone photos before cleaning them here. <a href="/photo-editor/">Photo Editor</a> — crop, resize, redact, and batch-edit images (it also strips metadata on export).</p>
+      <p><a href="/heic-to-jpg/">HEIC to JPG</a> | convert iPhone photos before cleaning them here. <a href="/compress-images/">Compress Images</a> | shrink file size, which drops metadata as a side effect. <a href="/photo-editor/">Photo Editor</a> | crop, resize, redact, and batch-edit images.</p>
     </section>
   </main>
 

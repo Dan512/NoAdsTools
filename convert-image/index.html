@@ -39,7 +39,7 @@
 <body>
   <main id="tool">
     <h1>Convert images online</h1>
-    <p class="tool-lead">Convert images between JPEG, PNG, WebP, and AVIF — any to any — entirely in your browser. Your images never leave your device: no upload, no account, no tracking.</p>
+    <p class="tool-lead">Convert images between JPEG, PNG, WebP, and AVIF, any to any, entirely in your browser. Your images never leave your device: no upload, no account, no tracking.</p>
 
     <section class="dropzone" id="dropzone" aria-label="Add images">
       <p><strong>Drop images here</strong>, paste, or</p>
@@ -65,7 +65,7 @@
         <p class="control-hint">Higher keeps more detail; lower makes smaller files. PNG is lossless, so quality does not apply to it.</p>
       </div>
 
-      <p class="avif-caution" id="avif-caution" hidden><strong>Note</strong> — AVIF gives small files but downloads a 3.3&nbsp;MB encoder the first time and encodes more slowly. See the Privacy panel in the footer.</p>
+      <p class="avif-caution" id="avif-caution" hidden><strong>Note</strong> — AVIF gives small files but downloads a 3.3&nbsp;MB encoder the first time and encodes more slowly. See the privacy panel on this page.</p>
     </section>
 
     <p id="status-line" class="status-line" role="status" aria-live="polite" hidden></p>
@@ -85,47 +85,70 @@
 
     <section class="prose tool-copy">
       <h2>What this tool does</h2>
-      <p>Drop in an image and convert it to a different format: JPEG, PNG, WebP, or AVIF, any to any. You can read JPEG, PNG, WebP, AVIF, GIF, and BMP files, pick a single output format for the whole batch, and — for the lossy formats — tune a quality slider. Each converted image shows its new file size and a plain <strong>source&nbsp;→&nbsp;target</strong> label, and you can download them one at a time or together as a ZIP. Animated images convert their first frame only — a GIF and an animated WebP each become a single still frame, and for a GIF the card notes this explicitly. Re-encoding also drops the image's hidden EXIF and GPS metadata, so a converted copy is a cleaner, less revealing one.</p>
+      <p>A form accepts JPEG and nothing else. A design app exports WebP that a colleague's older software refuses to open. Something arrives as an AVIF and the viewer shows a grey rectangle where the picture should be.</p>
+      <p>This tool re-encodes an image into a different format, on your machine.</p>
+      <p>It reads JPEG, PNG, WebP, AVIF, GIF, and BMP, and it writes JPEG, PNG, WebP, or AVIF. You choose one output format for the whole batch and, for the lossy formats, a quality value. Each card shows the source format, the target format, and the new file size, and you can download files one at a time or together as a ZIP.</p>
+      <p>One cost is worth knowing before you choose, because it is not spread evenly. Each output format pulls its own WebAssembly module the first time you convert to it: roughly 246&nbsp;KB for JPEG, 338&nbsp;KB for WebP, 160&nbsp;KB for the PNG optimizer, and 3.3&nbsp;MB for AVIF.</p>
+      <p>So the first conversion to any given format is slower than every one after it, and on a phone data plan AVIF is a decision rather than a free upgrade.</p>
 
-      <h2>The honest part</h2>
-      <p>Converting is not the same as compressing. Changing an image's format can make the file larger — a photographic JPEG turned into a PNG usually grows, because PNG is lossless and stores every pixel exactly. This tool shows the new size plainly and never claims it "saved" anything, because a format change is a different job from shrinking. If your goal is a smaller file, reach for <a href="/compress-images/">Compress Images</a> instead, which is built to reduce size. And if you are trying to open iPhone photos, those are HEIC files, which this converter does not read — <a href="/heic-to-jpg/">HEIC to JPG</a> handles those.</p>
+      <h2>What a format change costs</h2>
+      <p>Three more things catch people out, and none of them is obvious from the file names.</p>
+      <p>JPEG has no transparency. There is no alpha channel in the format at all. Convert a logo with a see-through background to JPEG and those areas come back filled in solid. If the transparency matters, target PNG, WebP, or AVIF instead; all three carry alpha.</p>
+      <p>Going the other direction does not repair anything. A JPEG has already thrown detail away, and turning it into a PNG will not bring that detail back. What you get is a lossless copy of a lossy image: a much larger file, and a perfectly faithful recording of every compression artifact the JPEG already had.</p>
+      <p>Which is the wider point. Converting is not compressing. A conversion can produce a bigger file than you started with, so this tool reports the new size plainly and never claims it saved you anything. If a smaller file is the actual goal, <a href="/compress-images/">Compress Images</a> is the one built for it.</p>
+      <p>Animation is the third thing to watch. GIFs and animated WebP files decode to their first frame only, so an animated GIF goes in moving and comes out as one still image. The card says so when the source is a GIF.</p>
 
-      <h2>Choosing a format</h2>
-      <p>JPEG is the safe, universal choice for photographs and is opened by everything. PNG is lossless and keeps sharp edges and transparency, which suits screenshots, logos, and line art, though photos stored as PNG get large. WebP and AVIF are the modern options: both usually produce smaller files than JPEG at the same visible quality, with AVIF the smallest and PNG-like on transparency. AVIF is the slowest to encode and downloads a larger codec the first time you use it, so it is worth it for final output rather than quick one-offs.</p>
+      <h2>Picking a target format</h2>
+      <p>JPEG is the universal one. Every device and every piece of ancient software opens it. No transparency, and fine for photographs.</p>
+      <p>PNG is lossless and holds sharp edges and transparency, which suits screenshots, logos, and line art. Photographs stored as PNG get large.</p>
+      <p>WebP is the sensible default for the web now. Smaller than JPEG at comparable visible quality, supports transparency, and opens in every current browser.</p>
+      <p>AVIF makes the smallest files of the four and costs the most to produce, in both download and encoding time. Worth it for something you are publishing, less so for a quick one-off. If its encoder cannot load, the tool disables AVIF and points you at WebP rather than silently producing nothing.</p>
 
-      <h2>Nothing is uploaded</h2>
-      <p>The conversion runs entirely in your browser, using WebAssembly codecs this page loads from its own address — never a third-party server. You can open your browser's network panel and watch: no image data leaves the machine, and a codec is fetched only when you convert to that format. There is no account, no tracking, and no upload step to opt out of. The full source is <a href="https://github.com/Dan512/NoAdsTools" target="_blank" rel="noopener">public on GitHub</a> under the AGPL-3.0 licence, and the privacy panel in the footer names every file this page can load and when.</p>
+      <h2>Where the encoding happens</h2>
+      <p>In a background thread in your browser, using WebAssembly encoders served from this site.</p>
+      <p>Only the encoder for the format you actually chose gets fetched: mozjpeg for JPEG, oxipng to losslessly shrink PNG output, and the WebP and AVIF encoders for those two, at the sizes listed above. JSZip, roughly 97&nbsp;KB, is fetched only if you click "Download all (ZIP)". Nothing else is loaded, and no third-party CDN is involved.</p>
+      <p>Your images are not part of any of that traffic. They are decoded, re-encoded, and handed back as downloads without being sent anywhere. Open the Network tab in DevTools while a batch converts and you can watch the codec arrive and nothing leave.</p>
+      <p>Decoding also discards the file's EXIF and GPS metadata, so a converted copy says less about where you were than the original did.</p>
+      <p>There is no account, no tracking, and no upload step to opt out of. The full source is <a href="https://github.com/Dan512/NoAdsTools" target="_blank" rel="noopener">public on GitHub</a> under the AGPL-3.0 license, and the privacy panel on this page names every file this page can load and when.</p>
 
       <h2>Questions</h2>
       <div class="faq">
         <details>
           <summary>Is there a free image converter online?</summary>
-          <p>This page is one. It converts between JPEG, PNG, WebP, and AVIF entirely in your browser — a free online image converter with no upload, no install, and no account. The encoders run on your device, and the only thing the page fetches is its own code.</p>
-        </details>
-        <details>
-          <summary>How do I convert a PNG to WebP?</summary>
-          <p>Drop the PNG in, choose WebP as the output format, and adjust the quality if you like. The converted file appears as a card with its new size and a Download button. WebP is usually much smaller than a PNG for photographic content, though it is lossy at anything below full quality.</p>
-        </details>
-        <details>
-          <summary>Can I convert a JPG to PNG?</summary>
-          <p>Yes. Choose PNG as the output format and the JPEG is re-encoded losslessly as a PNG. Note that a photographic JPEG usually gets larger as a PNG, because PNG stores every pixel exactly rather than discarding detail. The card shows the new size so you can judge the trade.</p>
-        </details>
-        <details>
-          <summary>How do I convert an image to AVIF?</summary>
-          <p>Choose AVIF as the output format. The first time you do, the page downloads a 3.3&nbsp;MB encoder, and AVIF encodes more slowly than the other formats, so give it a moment. AVIF produces the smallest files of the four and supports transparency. If the encoder cannot load, the tool switches you to WebP and says so.</p>
-        </details>
-        <details>
-          <summary>Can I convert HEIC photos from my iPhone?</summary>
-          <p>Not with this tool — HEIC is a separate format that this converter does not read. Use <a href="/heic-to-jpg/">HEIC to JPG</a>, which is built for exactly that and runs the same way, entirely on your device.</p>
+          <p>Yes. This page is one.</p>
+          <p>It is a free online image converter covering JPEG, PNG, WebP, and AVIF, with no upload, no install, no account, and no watermark. The encoders run on your device, and the page fetches only its own code plus the one codec your chosen format needs.</p>
         </details>
         <details>
           <summary>Are my images uploaded anywhere?</summary>
-          <p>No. Conversion happens in your browser, on your device. You can verify it: open your browser's DevTools Network tab while converting and no image data leaves your machine. There is no account, no tracking, and nothing to sign up for.</p>
+          <p>No.</p>
+          <p>Every file is decoded and re-encoded in your browser. No server sees your pictures, because no server is doing the work.</p>
+          <p>You can verify it instead of believing it: open DevTools on the Network tab and convert something. The encoder for your target format downloads once, and no image data goes the other way.</p>
+        </details>
+        <details>
+          <summary>What happens to transparency if I convert to JPEG?</summary>
+          <p>It is lost. JPEG has no alpha channel, so there is nowhere for it to go.</p>
+          <p>Transparent areas come back opaque rather than see-through, which is obvious the moment you put the result on a colored background.</p>
+          <p>If the transparency has to survive, convert to PNG, WebP, or AVIF. All three support it.</p>
+        </details>
+        <details>
+          <summary>Can I convert a JPG to PNG?</summary>
+          <p>Yes, and it is worth knowing what you get.</p>
+          <p>PNG is lossless, but that does not restore quality the JPEG already lost. It preserves exactly what is there now, artifacts included, and a photographic JPEG usually grows a good deal in the process. The card shows the new size so you can judge the trade.</p>
+        </details>
+        <details>
+          <summary>How do I convert an image to AVIF?</summary>
+          <p>Choose AVIF as the output format and give it a moment. The first conversion pulls down the 3.3&nbsp;MB encoder, and AVIF is the slowest of the four to run.</p>
+          <p>In return it makes the smallest files and it supports transparency. If the encoder fails to load, the tool disables AVIF and offers WebP instead of leaving you with nothing.</p>
+        </details>
+        <details>
+          <summary>Can I convert HEIC photos from my iPhone?</summary>
+          <p>Not here. HEIC is a different container that this converter does not read.</p>
+          <p><a href="/heic-to-jpg/">HEIC to JPG</a> is built for exactly that and runs the same way, on your device.</p>
         </details>
       </div>
 
       <h2>Related tools</h2>
-      <p><a href="/compress-images/">Compress Images</a> — shrink JPG, PNG, WebP, and AVIF files without changing format. <a href="/resize-image/">Resize Image</a> — change an image's pixel dimensions, high quality. <a href="/heic-to-jpg/">HEIC to JPG</a> — convert iPhone HEIC photos to JPG. <a href="/photo-editor/">Photo Editor</a> — crop, resize, redact, and batch-edit images.</p>
+      <p><a href="/compress-images/">Compress Images</a> | reduce file size while keeping the format. <a href="/resize-image/">Resize Image</a> | change pixel dimensions to an exact size or a percentage. <a href="/heic-to-jpg/">HEIC to JPG</a> | convert iPhone HEIC photos to JPG. <a href="/photo-editor/">Photo Editor</a> | crop, redact, and batch-edit images.</p>
     </section>
   </main>
 

@@ -39,7 +39,7 @@
 <body>
   <main id="tool">
     <h1>Compress images online</h1>
-    <p class="tool-lead">Shrink JPG, PNG, WebP, and AVIF images — by quality or to a target file size — entirely in your browser. Your images never leave your device: no upload, no account, no tracking.</p>
+    <p class="tool-lead">Shrink JPG, PNG, WebP, and AVIF images by quality or to a target file size, entirely in your browser. Your images never leave your device: no upload, no account, no tracking.</p>
 
     <section class="dropzone" id="dropzone" aria-label="Add images">
       <p><strong>Drop images here</strong>, paste, or</p>
@@ -83,7 +83,7 @@
         <p class="control-hint">Keep original re-compresses each file in its own format; PNG stays PNG (lossless). To change format on purpose, use a converter.</p>
       </div>
 
-      <p class="avif-caution" id="avif-caution" hidden><strong>Note</strong> — AVIF gives the smallest files but downloads a 3.3&nbsp;MB encoder the first time and encodes more slowly. See the Privacy panel in the footer.</p>
+      <p class="avif-caution" id="avif-caution" hidden><strong>Note</strong> — AVIF gives the smallest files but downloads a 3.3&nbsp;MB encoder the first time and encodes more slowly. See the privacy panel on this page.</p>
     </section>
 
     <p id="status-line" class="status-line" role="status" aria-live="polite" hidden></p>
@@ -103,50 +103,79 @@
 
     <section class="prose tool-copy">
       <h2>What this tool does</h2>
-      <p>Drop in JPEG, PNG, WebP, or AVIF images and shrink their file size on your own device. There are two ways to drive it. In <strong>quality</strong> mode you move a single slider and every image re-encodes at that setting, with each card showing the resulting size and how much was saved. In <strong>target size</strong> mode you name a size — say, under 500&nbsp;KB — and the tool searches for the highest quality that still fits under it, one image at a time. Either way you can add a single file or a few hundred, and download them one by one or together as a ZIP.</p>
+      <p>Something has told you the file is too big. An upload form with a 2&nbsp;MB cap. An email attachment limit. A page that loads slowly because its header image is a 6&nbsp;MB JPEG straight off a camera.</p>
+      <p>This page makes image files smaller.</p>
+      <p>Drop in JPEG, PNG, WebP, or AVIF files and drive it one of two ways. In quality mode you set one slider and every image re-encodes at that setting, each card showing the size it landed on and how much came off. In target size mode you name a number, say under 500&nbsp;KB, and the tool searches for the highest quality that still fits underneath it, image by image.</p>
+      <p>The limitation is the nature of the thing, so it goes here rather than in the small print. Lossy compression discards data permanently. A JPEG you compress today cannot be un-compressed tomorrow, recompressing an already-compressed file compounds the damage, and no tool anywhere recovers what an earlier pass threw away.</p>
+      <p>Keep your originals.</p>
 
-      <h2>The honest part</h2>
-      <p>Compression is a trade. For JPEG, WebP, and AVIF, making a file smaller means re-encoding it, and re-encoding is lossy — some detail is discarded, and repeating it on the same file compounds the effect. At everyday quality settings the change is hard to notice, but it is real, and this tool does not pretend otherwise. PNG is the exception: it is optimized losslessly, so the pixels are left untouched and only wasted bytes are removed. One side effect works in your favour — re-encoding drops the image's hidden EXIF and GPS metadata, so a compressed copy is also a cleaner, less revealing one.</p>
+      <h2>The trade you are making</h2>
+      <p>For JPEG, WebP, and AVIF, smaller means re-encoded, and re-encoding is lossy by definition. Detail is spent to buy the space. At everyday settings the change is hard to see, but it is real, and each card prints the exact before and after so you can judge the trade yourself.</p>
+      <p>PNG is the exception. It goes through oxipng, a lossless optimizer that strips redundant structure without altering a single pixel, which is why the quality slider does not apply to it.</p>
+      <p>One side effect runs in your favor. Re-encoding drops the hidden EXIF and GPS metadata a phone writes into a photo, so a compressed copy is also a less revealing one.</p>
 
       <h2>Formats, and when to force one</h2>
-      <p>By default each image keeps its own format: a JPEG stays a JPEG, a PNG stays a PNG. You can instead force JPEG, WebP, or AVIF for every image. WebP and AVIF usually beat JPEG at the same visible quality; AVIF is the smallest of the three but the slowest, and it downloads a larger encoder the first time you use it. Changing format to suit a different purpose — rather than to shrink — is really a conversion job, and a dedicated converter is the better place for that.</p>
+      <p>By default each image keeps the format it arrived in. A JPEG stays a JPEG, a PNG stays a PNG.</p>
+      <p>You can override that and force JPEG, WebP, or AVIF across the whole batch. WebP and AVIF generally beat JPEG at the same visible quality. AVIF is the smallest of the three and also the slowest, and picking it downloads a 3.3&nbsp;MB encoder the first time, by far the largest thing this page ever fetches.</p>
+      <p>If you are changing format for some reason other than size, that is a conversion rather than a compression, and <a href="/convert-image/">Convert Image</a> is the better place for it.</p>
 
-      <h2>Working with a batch</h2>
-      <p>Images are encoded one at a time in a background thread, so the page stays responsive while a large set works through. Everything stays in memory, which means the practical ceiling is your own device rather than a server quota — comfortably hundreds of images on a desktop, fewer on a phone. If a single image is too large for the browser to re-encode, that one is reported plainly and the rest carry on.</p>
+      <h2>Running a batch</h2>
+      <p>Images encode one at a time in a background thread, so the page stays usable while a long set works through. Everything stays in memory, which means the ceiling is your own device rather than a server quota: comfortably a few hundred images on a desktop, fewer on a phone.</p>
+      <p>If one image is too large for the browser to re-encode, that one is reported by name and the rest carry on. And if the smallest result would be bigger than the file you started with, which happens often with images that were already small, the tool keeps your original untouched and says so.</p>
 
       <h2>Nothing is uploaded</h2>
-      <p>The encoding runs entirely in your browser, using WebAssembly codecs this page loads from its own address — never a third-party server. You can open your browser's network panel and watch: no image data leaves the machine. There is no account, no tracking, and no upload step to opt out of. The full source is <a href="https://github.com/Dan512/NoAdsTools" target="_blank" rel="noopener">public on GitHub</a> under the AGPL-3.0 licence, and the privacy panel in the footer names every file this page can load and when.</p>
+      <p>Your images are read from disk into the tab and never sent anywhere. Encoding happens on your device.</p>
+      <p>What the page does fetch, all from this same address, are the codecs it needs, and only the ones your choices actually call for. A JPEG encoder of about 246&nbsp;KB when you compress to JPEG. A WebP encoder of about 338&nbsp;KB for WebP. The 3.3&nbsp;MB AVIF encoder for AVIF. A PNG optimizer of about 160&nbsp;KB for PNGs. A packer of about 97&nbsp;KB if you press "Download all (ZIP)".</p>
+      <p>So this is not a tool that runs with the network unplugged from the moment the page opens. It fetches its own machinery from its own domain, when that machinery is needed, and sends your pictures nowhere.</p>
+      <p>You can watch exactly that. Open your browser's DevTools Network tab and compress something: a codec comes down from this domain, and no image data goes up.</p>
+      <p>The full source is <a href="https://github.com/Dan512/NoAdsTools" target="_blank" rel="noopener">public on GitHub</a> under the AGPL-3.0 license, and the privacy panel on this page names every file this page can load and when.</p>
 
       <h2>Questions</h2>
       <div class="faq">
         <details>
           <summary>How do I compress images online for free?</summary>
-          <p>Drop them onto this page. It is a free online image compressor that runs entirely in your browser — no upload, no install, no account, and no watermark. Choose a quality level or a target file size, then download the results one at a time or as a ZIP.</p>
+          <p>Drop them onto this page.</p>
+          <p>It is a free online image compressor that runs in your browser: no upload, no install, no account, no watermark, no queue. Pick a quality level or a target file size, then download the results one at a time or as a ZIP.</p>
         </details>
         <details>
           <summary>Are my images uploaded anywhere?</summary>
-          <p>No. Compression happens in your browser, on your device. You can verify it: open your browser's DevTools Network tab while compressing and no image data leaves your machine. There is no account, no tracking, and nothing to sign up for.</p>
+          <p>No.</p>
+          <p>Compression runs in your browser on your own device. The page pulls its encoders down from this domain, and your image data travels in the other direction, which is to say nowhere.</p>
+          <p>Verify it rather than believe it. Open the DevTools Network tab, compress a file, and watch what moves.</p>
         </details>
         <details>
           <summary>Can I compress an image to a specific file size?</summary>
-          <p>Yes. Switch to target-size mode and enter a size in KB or MB. For each image the tool runs a short search over the quality setting to land just under your target, and the card shows the size it reached and the quality it used. If even the lowest quality cannot reach a very small target, it says so plainly instead of guessing — reducing the image's dimensions first (with <a href="/resize-image/">Resize Image</a>) is the usual fix.</p>
+          <p>Yes. Switch to target size mode and enter a number in KB or MB.</p>
+          <p>For each image the tool runs a short search across the quality range to land as close under your target as it can, then shows the size it reached and the quality it needed to get there.</p>
+          <p>If even the lowest quality cannot reach a very small target, it says so instead of guessing. Cutting the pixel dimensions first with <a href="/resize-image/">Resize Image</a> is the usual fix.</p>
         </details>
         <details>
           <summary>Does compressing reduce quality?</summary>
-          <p>For JPEG, WebP, and AVIF, a little — those formats are lossy, so re-encoding discards some detail. At normal settings it is hard to see, and the card always shows the exact size so you can judge the trade for yourself. PNG is compressed losslessly, so its pixels are unchanged.</p>
+          <p>For JPEG, WebP, and AVIF, yes, a little. Those formats are lossy and re-encoding discards detail.</p>
+          <p>At normal settings it is hard to see, and every card shows the exact sizes so the trade is visible rather than implied. PNG is handled losslessly, so its pixels come out unchanged.</p>
+          <p>None of the loss is reversible. Keep the originals of anything you care about.</p>
         </details>
         <details>
           <summary>Does it work on PNG files?</summary>
-          <p>Yes, losslessly. PNGs are optimized with oxipng, which strips redundant data without touching a single pixel, so the quality slider does not apply to them. Lossless optimization has a floor, though — to make a PNG dramatically smaller you would convert it to a lossy format such as WebP or JPEG, which is a separate step.</p>
+          <p>Yes, losslessly.</p>
+          <p>PNGs go through oxipng, which strips redundant structure without touching a pixel. That is why the quality slider is inactive for them.</p>
+          <p>Lossless has a floor, though. Making a PNG dramatically smaller means moving it to a lossy format such as WebP or JPEG, which is a deliberate change rather than an optimization.</p>
+        </details>
+        <details>
+          <summary>Which format gives the smallest files?</summary>
+          <p>Usually AVIF, then WebP, then JPEG.</p>
+          <p>The gap is real and so are the costs. AVIF encodes slowly and needs that 3.3&nbsp;MB encoder downloaded once, and a few older programs still cannot open the result. WebP is the sensible middle: every current browser reads it and it encodes far faster.</p>
+          <p>If the file has to open anywhere at all with no thought required, keep it a JPEG.</p>
         </details>
         <details>
           <summary>How many images can I compress at once?</summary>
-          <p>There is no fixed limit. The practical one is your device's memory: a few hundred images are comfortable on a desktop, fewer on a phone. If the browser runs short, the tool reports which images it could not finish rather than failing without a word.</p>
+          <p>There is no fixed limit built in.</p>
+          <p>The practical one is your device's memory: a few hundred are comfortable on a desktop, fewer on a phone. If the browser runs short, the tool lists the images it could not finish rather than stopping without explanation.</p>
         </details>
       </div>
 
       <h2>Related tools</h2>
-      <p><a href="/convert-image/">Convert Image</a> — change a JPG, PNG, WebP, or AVIF into another format, any to any. <a href="/resize-image/">Resize Image</a> — change an image's pixel dimensions, high quality. <a href="/photo-editor/">Photo Editor</a> — crop, resize, redact, and batch-edit images. <a href="/remove-exif/">Remove EXIF data</a> — strip location and camera metadata before sharing. <a href="/heic-to-jpg/">HEIC to JPG</a> — convert iPhone photos to JPG. <a href="/find-duplicate-photos/">Find Duplicate Photos</a> — spot duplicates and keep the best copy.</p>
+      <p><a href="/convert-image/">Convert Image</a> | change a JPG, PNG, WebP, or AVIF into another format. <a href="/resize-image/">Resize Image</a> | change an image's pixel dimensions. <a href="/photo-editor/">Photo Editor</a> | crop, resize, redact, and batch-edit images. <a href="/remove-exif/">Remove EXIF data</a> | strip location and camera metadata before sharing. <a href="/heic-to-jpg/">HEIC to JPG</a> | convert iPhone photos to JPG. <a href="/find-duplicate-photos/">Find Duplicate Photos</a> | spot duplicates and keep the best copy.</p>
     </section>
   </main>
 

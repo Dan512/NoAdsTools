@@ -39,7 +39,7 @@
 <body>
   <main id="tool">
     <h1>PDF to Text</h1>
-    <p class="tool-lead">Pull the text out of a PDF — read its text layer, and fall back to OCR for scanned or image-only pages — then copy it or download a .txt. Everything happens in your browser; your PDF never leaves your device.</p>
+    <p class="tool-lead">Pull the text out of a PDF. It reads the real text layer where there is one, falls back to OCR on scanned or image-only pages, and hands you text to copy or download as a .txt. Everything happens in your browser, and your PDF never leaves your device.</p>
 
     <section class="dropzone" id="dropzone">
       <p><strong>Drop a PDF here</strong>, or</p>
@@ -110,37 +110,81 @@
     </div>
 
     <section class="prose tool-copy">
-      <h2>Extract text from a PDF without uploading a thing</h2>
-      <p>Add one PDF and this tool reads the text out of it and hands you plain text you can copy or save. Everything runs on your device: the pdf.js library that reads the PDF loads from this site — never a third-party server — the first time you open a file, so once you have opened your first file, you can disconnect from the internet and it keeps working. (OCR is the exception: the recognition engine is a separate download from this site, fetched the first time a scanned page needs it.) There is no account, no watermark, and no page cap. Most PDFs carry a real <em>text layer</em> — the selectable text behind the page — and pulling that back out is fast and exact. When a page has no text layer, because it is a scan or an image, this tool can recognise the text from the picture instead, using on-device OCR.</p>
-      <p>There are three modes. <strong>Auto</strong> reads the text layer of every page and quietly falls back to OCR only for pages that come back with little or no text — the right choice for most files. <strong>Text layer only</strong> skips OCR entirely: it is instant, and it is honest about scanned pages, returning them empty rather than guessing. <strong>OCR all pages</strong> forces recognition on every page, which is the one to reach for when a PDF's built-in text is garbled or wrong and you would rather trust the picture. You can also read the whole document or just a range of pages, such as <code>1-3, 5, 8-10</code>.</p>
+      <h2>Two kinds of PDF, and they behave very differently</h2>
+      <p>You need the words out of a PDF. Selecting them by hand works until the document is sixty pages long, or until you drag across a paragraph and the cursor slides over it like glass.</p>
+      <p>That second case is worth understanding before you start, because it decides what you get.</p>
+      <p>Some PDFs carry a real <strong>text layer</strong>. The characters are stored as characters, sitting invisibly behind the page. Pulling them back out is fast and exact: every letter comes back the way it went in.</p>
+      <p>Other PDFs are pictures. A scan, a photo of a receipt, a fax forwarded four times. There are no characters in the file at all, only pixels arranged to look like writing. Nothing can read those exactly. They have to be recognised, and recognition guesses.</p>
+      <p>This tool does both, and it always marks which one it used.</p>
 
-      <h2>A word on OCR</h2>
-      <p>OCR — optical character recognition — reads text out of an image of a page, so it is approximate rather than exact. It handles clean, straight scans well and struggles with faint print, handwriting, heavy layout, or skew, so treat OCR output as a strong draft to proofread rather than a perfect copy. The OCR engine is a one-time download of roughly 22 MB that loads only the first time a page actually needs it — open a normal digital PDF and it is never fetched at all. For now the OCR recognises <strong>English</strong> only; other scripts will come back rough. Recognising a page takes a few seconds, so a long scanned document in OCR mode is not instant — the progress line tells you which page it is on.</p>
+      <h2>The three modes</h2>
+      <p><strong>Auto</strong> is the default. It reads the text layer of every page you asked for and reaches for OCR only on a page that comes back nearly empty, meaning fewer than eight actual characters. On an ordinary digital PDF, OCR never runs.</p>
+      <p><strong>Text layer only</strong> never runs OCR at all. It is instant, and it returns a scanned page blank rather than inventing something to fill it.</p>
+      <p><strong>OCR all pages</strong> forces recognition on every page. Reach for it when a PDF's own text layer comes back garbled, which some export tools produce, and you would rather trust the picture than the file.</p>
+      <p>You can run the whole document, or a range typed as <code>1-3, 5, 8-10</code>.</p>
 
-      <h2>Copy or download</h2>
-      <p>The extracted text appears in a box, split page by page with a <code>--- Page N ---</code> heading before each one so you can see where each page starts. <strong>Copy text</strong> puts the whole thing on your clipboard; <strong>Download .txt</strong> saves it as a plain text file named after your PDF, like <code>document.txt</code>. Pages that were read by OCR are marked with an OCR badge above the box, so you always know which text came from the reliable text layer and which was recognised from a picture.</p>
+      <h2>What OCR is good at, and what it is not</h2>
+      <p>Optical character recognition reads letters out of an image, so the result is a best guess rather than a transcript.</p>
+      <p>Clean, straight, printed scans come back well. Faint print, handwriting, multi-column layouts, tables, and pages scanned at an angle come back worse. Treat OCR output as a draft to proofread, not a copy to trust.</p>
+      <p>It recognises <strong>English</strong> only for now. Other scripts come back as noise.</p>
+      <p>It is also slow next to reading a text layer, a few seconds per page, and the progress line names the page it is working on so you can see it has not stalled.</p>
 
-      <h2>What stays on your device</h2>
-      <p>The reading, the rendering, and the OCR all run in your browser, using code this page loads from its own address. You can open your browser's network panel and watch: no PDF data leaves the machine. A password-protected PDF cannot be read without its password, so unlock it first and add it again; the tool says so plainly rather than failing quietly. The full source is <a href="https://github.com/Dan512/NoAdsTools" target="_blank" rel="noopener">public on GitHub</a> under the AGPL-3.0 licence, and the privacy panel in the footer names every file this page can load and when.</p>
+      <h2>What you get, and what this page downloads</h2>
+      <p>The result lands in a box, split page by page with a <code>--- Page 4 ---</code> heading before each one. Pages that came from OCR carry an <strong>OCR</strong> badge above the box, so exact text and recognised text are never mixed up silently. Copy the whole thing to your clipboard, or download it as a <code>.txt</code> named after your PDF.</p>
+      <p>Your PDF is never uploaded. It is read in your browser's memory, and no PDF or extracted text is written to a server, an account, or local storage.</p>
+      <p>The page itself does fetch engines, all from noadstools.com and nowhere else. Opening a PDF pulls in pdf.js, roughly 1.73 MB. A page that actually needs OCR pulls in Tesseract, roughly 22 MB with the English data included. That is a large download to produce a text file, which is exactly why it does not happen unless a page needs it. Open a normal digital PDF and it is never requested.</p>
+      <p>There is a smaller third case. A PDF built on an unusual character encoding, or on one of the standard PDF typefaces, makes pdf.js request the matching character maps or font data, again from this origin, and only for the documents that need them.</p>
+      <p>None of that is bundled into the page, so no step runs before its engine has arrived, and even a warmed-up tab can still need font data for the next document. Opening this with the network switched off will not get you an extraction.</p>
+      <p>Watch it if you want. Open the DevTools Network tab and extract something: you will see those engine files arrive from this site, and you will not see your PDF go anywhere.</p>
+      <p>The source is <a href="https://github.com/Dan512/NoAdsTools" target="_blank" rel="noopener">public on GitHub</a> under the AGPL-3.0 license, and the privacy panel on this page lists every file this page can fetch and exactly when.</p>
 
       <h2>Questions</h2>
       <dl class="faq">
-        <dt>Can I convert a PDF to text online for free without uploading it?</dt>
-        <dd>Yes. It is free and there is no signup or email to give. The page fetches its PDF reader from noadstools.com, our own site — and the OCR engine from there too, if a scanned page needs it. Your PDF itself is read and recognised entirely by your browser, and is never sent anywhere.</dd>
-        <dt>How do I extract text from a PDF without uploading it?</dt>
-        <dd>Add your PDF and press Extract text. The reading runs in your browser using JavaScript this page loads from its own site. You can verify it: open your browser's DevTools Network tab while extracting — no PDF data leaves your device.</dd>
+        <dt>Is there a free PDF to text converter online?</dt>
+        <dd>
+          <p>Yes. This page is one.</p>
+          <p>No signup, no email, no install, no page limit, and nothing to pay. Drop in a PDF, press Extract text, and copy or download the result.</p>
+          <p>The reading happens on your device. The only thing that travels over the network is the engine code this page loads from its own site.</p>
+        </dd>
+        <dt>Is my PDF uploaded to a server?</dt>
+        <dd>
+          <p>No.</p>
+          <p>The file is opened in your browser, and both the text-layer reading and the OCR run there. No copy is kept, and nothing is stored between visits except your theme preference.</p>
+          <p>You can confirm it in your browser's DevTools Network tab while an extraction runs. The engine files come down from noadstools.com. Your PDF does not go up.</p>
+        </dd>
         <dt>Does it work on scanned PDFs?</dt>
-        <dd>Yes. A scanned or image-only page has no text layer, so this tool recognises the text from the page image using on-device OCR. Leave the mode on Auto and scanned pages are OCR'd automatically; choose OCR all pages to force it on every page.</dd>
+        <dd>
+          <p>Yes, through OCR.</p>
+          <p>A scanned page has no text layer, so there is nothing to extract. The page is redrawn as an image and the OCR engine recognises the letters in it.</p>
+          <p>Leave the mode on Auto and scanned pages are handled without you doing anything. Choose OCR all pages if you want recognition run on every page regardless.</p>
+        </dd>
         <dt>How accurate is the OCR?</dt>
-        <dd>OCR is approximate. It reads clean, straight scans well and struggles with faint print, handwriting, heavy layout, or skew, so proofread the result. It recognises English only for now; other scripts come back rough.</dd>
-        <dt>Can I copy the text or download it as a file?</dt>
-        <dd>Both. Copy text puts the whole result on your clipboard, and Download .txt saves it as a plain text file named after your PDF. The text is split page by page with a heading before each page.</dd>
-        <dt>Are my PDFs uploaded to a server?</dt>
-        <dd>No. Nothing is uploaded and no copy is kept. Your PDF stays in your browser's memory only while the page is open, and both the text extraction and the OCR run entirely on your device.</dd>
+        <dd>
+          <p>Approximate. That is the honest answer for any OCR, not a limitation of this one.</p>
+          <p>A crisp, straight, printed scan usually comes back close to perfect. Faint ink, handwriting, dense tables, and skew all cost accuracy, and a badly skewed page can come back mostly wrong.</p>
+          <p>English only for now. Proofread anything a page badge marks as OCR.</p>
+        </dd>
+        <dt>Why is the OCR download 22 MB?</dt>
+        <dd>
+          <p>Because recognition needs a trained model, and the model is most of that size. The English language data is bundled into it.</p>
+          <p>It comes from noadstools.com, not from a third party, and it downloads once and only when a page genuinely needs OCR. A PDF with a working text layer never triggers it.</p>
+          <p>If you are on a metered connection and want to be certain it stays untouched, pick Text layer only before extracting.</p>
+        </dd>
+        <dt>A page came back empty. What went wrong?</dt>
+        <dd>
+          <p>Probably nothing. In Text layer only mode, a scanned page has nothing to give, so it comes back blank on purpose. Switch to Auto or OCR all pages and try again.</p>
+          <p>If OCR ran and still returned nothing, the page image may be too faint or too complex to recognise, or the page may genuinely be blank.</p>
+          <p>The note under the output says which of those happened rather than leaving you to guess.</p>
+        </dd>
+        <dt>Can it open a password-protected PDF?</dt>
+        <dd>
+          <p>No. An encrypted PDF cannot be read without its password, and this tool does not ask you for one.</p>
+          <p>Remove the protection in whatever application you normally open it with, then add the unlocked file here. The tool tells you the file is locked instead of pretending it is corrupt.</p>
+        </dd>
       </dl>
 
       <h2>Related tools</h2>
-      <p><a href="/pdf-to-jpg/">PDF to JPG</a> — turn PDF pages into JPG or PNG images. <a href="/merge-pdf/">Merge PDF</a> — combine PDF files in any order. <a href="/split-pdf/">Split PDF</a> — extract pages or cut one PDF into pieces. <a href="/image-to-pdf/">Image to PDF</a> — combine JPG, PNG, and WebP images into a single PDF. <a href="/photo-editor/">Photo Editor</a> — crop, resize, redact, and batch-edit images.</p>
+      <p><a href="/pdf-to-jpg/">PDF to JPG</a> | turn PDF pages into JPG or PNG images. <a href="/split-pdf/">Split PDF</a> | pull out the pages you want before extracting. <a href="/merge-pdf/">Merge PDF</a> | combine PDF files in any order. <a href="/sign-pdf/">Sign PDF</a> | draw or type a signature and place it on a page. <a href="/watermark-pdf/">Watermark PDF</a> | stamp text or a logo across the pages.</p>
     </section>
   </main>
 

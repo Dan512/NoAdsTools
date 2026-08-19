@@ -82,6 +82,44 @@
     <section id="editor-view" class="view" hidden></section>
   </main>
 
+  <!-- Marketing copy (prose + FAQ + related tools). Deliberately placed
+       after the main element so it never joins #workspace's flex layout or the
+       editor view's grid. style.css hides it while #editor-view is open. -->
+  <section class="prose tool-copy">
+    <h2>What this tool does</h2>
+    <p>Most image work is small and annoying. A screenshot has an address in it. Forty product shots need the same width.</p>
+    <p>This page does it in the tab you already have open.</p>
+    <p>Drop images in and you get crop, resize, rotate, flip, brightness, contrast, saturation, blur, filter presets, text, brush, shapes, watermarks, color-to-transparent, and redaction that blurs or pixelates an area, plus face and text detection. Text and shapes stay editable until export. Batch values apply to the whole queue, and one undo takes the batch back.</p>
+    <p>One cost is worth naming up front. Background removal, face detection, and text detection each run a model on your device. Those model files ship with this site, not from someone else's server. Background removal is by far the largest, up to roughly 118&nbsp;MB of model and runtime files on first use, though your browser takes only the variants it can run. Each asks first, so nothing that size lands on a phone plan by surprise.</p>
+    <p>Your pictures are not part of that traffic. They are opened and edited locally, and never uploaded. Keep the DevTools Network tab open if you would rather check. The source is <a href="https://github.com/Dan512/NoAdsTools" target="_blank" rel="noopener">public on GitHub</a> under AGPL-3.0, and the privacy panel lists every file it can load.</p>
+
+    <h2>Questions</h2>
+    <dl class="faq">
+      <dt>Is there a free photo editor online with no upload?</dt>
+      <dd>Yes. This one. No account, no install, no upload step: the files you open stay on your device.</dd>
+
+      <dt>Does the AI in this tool send my photo to a server?</dt>
+      <dd>No. Background removal, face detection, and text detection all run on your hardware. What crosses the network is the model file, not your picture. Cutouts around hair and thin edges are approximate, so check them.</dd>
+
+      <dt>Can I edit a whole batch at once?</dt>
+      <dd>Yes. Resize, adjust, rotate, trim, redact, and export across the whole queue in one pass, then open any single image to change it. Download separate files, one ZIP, or one multi-page PDF.</dd>
+
+      <dt>What can I open and save?</dt>
+      <dd>Open JPEG, PNG, WebP, GIF, and iPhone HEIC, which loads a decoder on first use. Save as PNG, JPG, WebP, or PDF. Exports are re-encoded, so EXIF and GPS come off unless you keep them for JPEG to JPEG.</dd>
+
+      <dt>Is there a size limit?</dt>
+      <dd>No fixed one. The ceiling is your device, since every pixel sits in browser memory. An image too large for this device's canvas gets an offer to downscale or skip, not a silent failure. Phones hit that first.</dd>
+    </dl>
+
+    <h2>Related tools</h2>
+    <ul class="related">
+      <li><a href="/remove-exif/">Remove EXIF Data</a> | strip location and camera metadata.</li>
+      <li><a href="/compress-images/">Compress Images</a> | shrink file size to a target.</li>
+      <li><a href="/heic-to-jpg/">HEIC to JPG</a> | convert iPhone photos in bulk.</li>
+      <li><a href="/find-duplicate-photos/">Find Duplicate Photos</a> | spot exact and near-identical copies.</li>
+    </ul>
+  </section>
+
   <!-- Import map: resolves bare specifiers used by vendored libraries.
        `onnxruntime-web` (CPU execution provider) and `onnxruntime-web/webgpu`
        (GPU execution provider) are imported by `js/vendor/bgremove/index.mjs`

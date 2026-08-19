@@ -39,7 +39,7 @@
 <body>
   <main id="tool">
     <h1>Image to PDF</h1>
-    <p class="tool-lead">Combine JPG, PNG, and WebP images into one PDF — entirely in your browser. Your images never leave your device.</p>
+    <p class="tool-lead">Combine JPG, PNG, and WebP images into one PDF, entirely in your browser. Your images never leave your device.</p>
 
     <section class="dropzone" id="dropzone">
       <p><strong>Drag images here</strong>, paste, or</p>
@@ -63,35 +63,66 @@
     </div>
 
     <section class="prose tool-copy">
-      <h2>How it works — and why it's private</h2>
-      <p>Drop in your images, put them in order with the Move buttons, pick a page size, and click Create PDF. The PDF is assembled by JavaScript running on your device: the jsPDF library loads from this site — never a third-party CDN — the moment you click Create, and your images are never uploaded anywhere. No account, no watermark, no page limit. Once you have made your first PDF — which pulls the PDF writer from this site — you can disconnect from the internet and it keeps working.</p>
-      <p>The full source code is <a href="https://github.com/Dan512/NoAdsTools" target="_blank" rel="noopener">public on GitHub</a> (AGPL-3.0), and the privacy panel in the footer lists everything this page loads.</p>
+      <h2>Photos in, one PDF out</h2>
+      <p>A form comes back as four phone photos. A receipt is a JPG. Whoever asked for it wants one PDF, and would like it today.</p>
+      <p>Add the images, put them in the order you want with the Move buttons, pick a page size, and click Create PDF. The order in the list is the order in the file.</p>
+      <p>One limit is worth knowing before you start: this tool reads JPG, PNG, and WebP, and nothing else. A HEIC photo straight off an iPhone gets a row telling you to convert it first, rather than a silent failure at the end. There is a free <a href="/heic-to-jpg/">HEIC to JPG</a> tool here for exactly that.</p>
 
-      <h2>Page sizes, explained</h2>
-      <p><strong>Fit to image</strong> (the default) makes each PDF page exactly the size of its image — edge to edge, no borders, no scaling. <strong>A4</strong> and <strong>Letter</strong> make every page a standard paper size: the page turns sideways to match each image (a landscape photo gets a landscape page), and the image sits centered inside a half-inch (36&nbsp;point) margin. Images are scaled down to fit the page when needed, but never enlarged past their natural size — so nothing gets blurry.</p>
+      <h2>Page sizes and orientation</h2>
+      <p><strong>Fit to image</strong> is the default. Each page becomes exactly the size of its image: no borders, no scaling, no white gutters around a photo that was never meant to be A4.</p>
+      <p><strong>A4</strong> and <strong>Letter</strong> give every page a standard paper size. Orientation follows the image, so a landscape photo gets a landscape page, and the image is centered inside a half-inch (36 point) margin.</p>
+      <p>Images are scaled down to fit when they need to be, and never scaled up past their natural size, so a small image stays small instead of turning soft.</p>
 
-      <h2>Quality: what changes, what doesn't</h2>
-      <p>JPEG files are embedded byte-for-byte — the PDF carries your original JPEG data with no re-compression, so there is zero quality loss. PNG files are embedded as PNG, also lossless; transparent areas simply show the white page behind them. Two exceptions, each labeled on the file's row: WebP images are converted to high-quality JPEG (92%) because PDFs can't hold WebP, and JPEGs carrying an EXIF rotation flag are rotated and re-encoded (92%) — PDF viewers ignore that flag, so embedding those untouched would leave the page sideways.</p>
-      <p>One honest side effect of embedding JPEGs unmodified: any metadata inside them — camera model, GPS location — travels into the PDF too. If you'd rather it didn't, run the photos through our <a href="/remove-exif/">Remove EXIF data</a> tool first, then build the PDF.</p>
+      <h2>What happens to image quality</h2>
+      <p>Most files are not re-compressed at all.</p>
+      <p>A JPEG goes in byte for byte. A PNG is embedded as PNG and stays lossless, though transparent areas are flattened against the page, because a PDF page is not transparent.</p>
+      <p>Two cases do get re-encoded once, to JPEG at 92 percent, and the row on screen says so before you build anything. WebP, because a PDF cannot hold WebP. And a JPEG carrying an EXIF rotation flag, because PDF viewers ignore that flag and the page would otherwise come out sideways.</p>
+      <p>Embedding JPEGs untouched has one honest side effect: the metadata inside them travels too. Camera model, timestamps, and GPS coordinates ride along into the PDF. If that matters, run the photos through <a href="/remove-exif/">Remove EXIF data</a> first.</p>
+
+      <h2>Where the work happens</h2>
+      <p>Your images are never uploaded.</p>
+      <p>They are decoded, laid out, and written into a PDF by JavaScript running in your browser, and the finished file downloads to your device as <code>noadstools-images.pdf</code>.</p>
+      <p>The page does fetch one thing of its own. When you click Create PDF, and not a moment before, it loads the jsPDF library (about 420&nbsp;KB) from noadstools.com. That is the PDF writer arriving, not your pictures leaving, and it is the only extra request this tool makes. After it lands, building PDFs needs no network at all.</p>
+      <p>You do not have to take that on faith. Open the DevTools Network tab and watch what moves while you build a file.</p>
+      <p>The full source code is <a href="https://github.com/Dan512/NoAdsTools" target="_blank" rel="noopener">public on GitHub</a> under the AGPL-3.0 license, and the privacy panel on this page lists every request this page makes.</p>
 
       <h2>Questions</h2>
       <dl class="faq">
-        <dt>Can I convert images to PDF online for free without uploading them?</dt>
-        <dd>Yes. It is free, there is no account or email to give, and the PDF carries no watermark. The page fetches its PDF-building code from noadstools.com, our own site, the first time you click Create PDF — your images themselves are read, laid out, and saved entirely by your browser, and are never sent anywhere.</dd>
+        <dt>Is there a free image to PDF converter online?</dt>
+        <dd>
+          <p>Yes. This page is one.</p>
+          <p>No account, no email, no watermark, and no page cap. Your images are read, laid out, and saved by your own browser.</p>
+        </dd>
         <dt>Are my images uploaded to a server?</dt>
-        <dd>No. The PDF is built in your browser using JavaScript this page loads from its own site. You can verify: open your browser's DevTools Network tab while using the tool — no image data leaves your device.</dd>
+        <dd>
+          <p>No.</p>
+          <p>The PDF is assembled in your browser. The only thing the page downloads is its PDF-writing library, from noadstools.com rather than a third-party CDN.</p>
+          <p>Open DevTools on the Network tab while you use the tool. No image data leaves your device.</p>
+        </dd>
         <dt>Which page sizes can I choose?</dt>
-        <dd>Fit to image (each page matches its image exactly), A4, or Letter. On A4 and Letter, page orientation follows each image, and images are centered inside a 36-point margin without ever being upscaled.</dd>
-        <dt>Does the PDF reduce my image quality?</dt>
-        <dd>Not for most files — JPEGs are embedded without re-compression, byte for byte, and PNGs stay lossless. Re-encoding (once, to JPEG at 92% quality) happens only for WebP, which PDFs can't contain, and for JPEGs whose EXIF rotation flag would otherwise leave them sideways — the row tells you when.</dd>
+        <dd>
+          <p>Three: Fit to image, A4, and Letter.</p>
+          <p>Fit to image matches each page to its image exactly. A4 and Letter follow each image's orientation and center it inside a 36 point margin.</p>
+        </dd>
+        <dt>Does making a PDF reduce my image quality?</dt>
+        <dd>
+          <p>Usually not at all.</p>
+          <p>JPEGs are embedded without re-compression and PNGs stay lossless. Only two cases are re-encoded, once, to JPEG at 92 percent: WebP files, and JPEGs whose EXIF rotation flag would otherwise leave the page sideways. The row for each file tells you which path it took.</p>
+        </dd>
         <dt>Can I change the page order?</dt>
-        <dd>Yes. Every image row has Move up and Move down buttons; the PDF pages follow the list order exactly. There's a Remove button on each row, too.</dd>
-        <dt>What about HEIC photos from iPhones?</dt>
-        <dd>PDFs (and this tool) can't read HEIC directly. Convert them with our free <a href="/heic-to-jpg/">HEIC to JPG</a> tool first, then add the JPGs here.</dd>
+        <dd>
+          <p>Yes. Every row has Move up, Move down, and Remove buttons.</p>
+          <p>The PDF follows the list exactly, top to bottom.</p>
+        </dd>
+        <dt>Can I add HEIC photos from an iPhone?</dt>
+        <dd>
+          <p>Not directly. PDF has no way to store HEIC.</p>
+          <p>Run them through the free <a href="/heic-to-jpg/">HEIC to JPG</a> tool first, then add the JPGs here. A HEIC file dropped on this page gets a row saying so, so you find out at the start rather than at the end.</p>
+        </dd>
       </dl>
 
       <h2>Related tools</h2>
-      <p><a href="/heic-to-jpg/">HEIC to JPG</a> — convert iPhone photos before adding them here. <a href="/remove-exif/">Remove EXIF data</a> — strip location and camera metadata before it ends up inside a PDF. <a href="/photo-editor/">Photo Editor</a> — crop, resize, redact, and batch-edit images.</p>
+      <p><a href="/heic-to-jpg/">HEIC to JPG</a> | convert iPhone photos before adding them here. <a href="/remove-exif/">Remove EXIF data</a> | strip location and camera metadata before it reaches a PDF. <a href="/merge-pdf/">Merge PDF</a> | join the finished PDF to other documents. <a href="/photo-editor/">Photo Editor</a> | crop, resize, redact, and batch-edit images.</p>
     </section>
   </main>
 

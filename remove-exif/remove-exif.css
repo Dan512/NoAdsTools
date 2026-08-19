@@ -66,3 +66,5 @@
 .tool-copy { margin-top: var(--space-3xl); }
 .faq dt { font-weight: 600; margin-top: var(--space-lg); }
 .faq dd { margin: var(--space-xs) 0 0; color: var(--text-secondary); }
+.faq dd p { margin: var(--space-sm) 0 0; }
+.faq dd p:first-child { margin-top: 0; }

@@ -39,7 +39,7 @@
 <body>
   <main id="tool">
     <h1>Color palette from image</h1>
-    <p class="tool-lead">Extract a dominant color and a palette from any image, entirely in your browser — with exact hex, RGB, and HSL values you can copy as a hex list, CSS variables, or JSON. Your image never leaves your device: no upload, no account, no tracking, and no third-party requests at all.</p>
+    <p class="tool-lead">Extract a dominant color and a palette from any image, entirely in your browser, with exact hex, RGB, and HSL values you can copy as a hex list, CSS variables, or JSON. Your image never leaves your device: no upload, no account, no tracking, and no third-party requests at all.</p>
 
     <section class="dropzone" id="dropzone" aria-label="Add an image">
       <p><strong>Drop an image here</strong>, paste, or</p>
@@ -96,47 +96,80 @@
 
     <section class="prose tool-copy">
       <h2>What this tool does</h2>
-      <p>Drop in a photo, screenshot, logo, or artwork and this tool reads its pixels on your own device to find a <strong>dominant color</strong> plus a <strong>palette</strong> of colors that best represent the image. Each color is shown with its exact hex, RGB, and HSL values. You can copy the whole palette as a plain hex list, as a <code>:root</code> block of CSS custom properties, or as JSON, copy any single color by clicking its swatch, or download the swatches with their hex labels as a PNG. A control lets you choose how many colors to pull — from four up to twelve — and the palette re-computes instantly, without re-reading the image.</p>
+      <p>Somewhere in an image you already have is a color you want to use somewhere else. The green in a logo you are matching. The blue of one particular sky. The three tones a screenshot of someone else's site turns out to be built from.</p>
+      <p>This tool reads the pixels and gives you the codes.</p>
+      <p>Drop in a photo, screenshot, logo, or piece of artwork and you get a dominant color plus a palette of four to twelve, each printed with its values as text. Click a swatch to copy that code, or take the whole set as a hex list, a <code>:root</code> block of CSS custom properties, JSON, or a labelled PNG.</p>
+      <p>One thing is worth saying before you start: the palette of an image is not a fact. It is an opinion produced by an algorithm.</p>
+      <p>A photograph can hold tens of thousands of distinct colors, and reducing those to six means deciding which differences matter. There is no objectively correct way to decide that. Different tools use different methods and all of them give different, defensible answers.</p>
+      <p>So treat the result as a starting point rather than a verdict.</p>
 
-      <h2>The cleanest privacy story on the site</h2>
-      <p>Most "color from image" tools either upload your picture to a server or pull in a third-party palette library that phones home. This page does neither. The palette math — a classic median-cut quantization — is written by hand and runs entirely in your browser, so this page makes <strong>no third-party requests and loads no extra libraries</strong>. The only things it fetches are its own HTML, CSS, and JavaScript from this address; there is no analytics script, no font from a CDN, and no image upload. You can open your browser's network panel and watch: once the page has loaded, nothing about your image leaves the machine.</p>
+      <h2>How the palette is chosen</h2>
+      <p>Your image is drawn into a working canvas no larger than 256 pixels on its longest side, then sampled down toward a target of ten thousand opaque pixels. That keeps a 40-megapixel photo about as quick as a thumbnail, and it means the numbers come from a slightly smoothed copy, since scaling down blends neighbouring pixels. Anything less than about half opaque is skipped, so a logo on a transparent background gives its real colors rather than a muddy edge.</p>
+      <p>The samples then go through median cut, a quantization method that dates back to 8-bit displays. Every sample starts inside one box in RGB space. The box with the most visual mass, its pixel count multiplied by its widest color spread, is sorted along that widest axis and split at the median. Repeat until there are as many boxes as colors you asked for.</p>
+      <p>Each swatch is the average of the pixels in its box, which means a swatch is often a color no single pixel in your image actually has. On a sunset photo, the orange swatch is the mean of several thousand different oranges: a color the image is about, rather than a color the image contains.</p>
+      <p>The dominant color is whichever box holds the most pixels, so it appears among the swatches too, only larger. If an image has fewer distinct colors than you asked for, you get fewer swatches, because nothing is invented to fill the grid. Ask a photo of a foggy beach for twelve colors and you will get twelve greys, and it will be right.</p>
 
-      <h2>Colors you can actually use</h2>
-      <p>Design work needs exact values, not a picture of a palette. Every swatch shows its hex code for CSS and design tools, its RGB triplet, and its HSL values, and the hex is drawn as text with an automatically contrasted label so it stays readable on both light and dark colors. Because the values are shown as text on every swatch, you never have to identify a color by eye — you copy it by its code. The dominant color is called out separately and larger, since it is usually the one you want first for a background or a brand accent.</p>
+      <h2>Values you can paste</h2>
+      <p>Every swatch prints its hex code onto the color itself, in black or white depending on which gives the higher contrast against that swatch, with its RGB triplet as text just beneath. You should never have to identify a color by looking at it.</p>
+      <p>The dominant color adds HSL. HSL for every color in the palette is in the JSON export.</p>
+      <p><strong>Copy hex list</strong> gives one comma-separated line. <strong>Copy CSS variables</strong> gives a <code>:root</code> block numbered <code>--color-1</code> upward. <strong>Copy JSON</strong> gives hex, RGB, and HSL for each color. <strong>Download palette (PNG)</strong> gives a strip of swatches with the codes drawn onto them.</p>
+      <p>Copying is confirmed with a word rather than a color change: the swatch reads "Copied", then goes back to its hex. Changing the palette size re-splits the samples already in memory, so it happens at once, without re-reading the file.</p>
 
-      <h2>Formats</h2>
-      <p>Any raster image your browser can open works: JPEG, PNG, WebP, AVIF, GIF, and BMP. For an animated GIF the first frame is read. Transparent pixels are ignored so a logo on a transparent background gives you its real colors rather than a muddied edge. The full source is <a href="https://github.com/Dan512/NoAdsTools" target="_blank" rel="noopener">public on GitHub</a> under the AGPL-3.0 licence, and the privacy panel in the footer names every file this page can load.</p>
+      <h2>Load it once, then disconnect</h2>
+      <p>Nothing is uploaded.</p>
+      <p>That is true of every tool here, but this page can claim more than most. Once its own HTML, CSS, and JavaScript have arrived, it fetches nothing at all. No palette library, no CDN, no web font, no analytics. The quantizer is under a hundred lines of plain JavaScript that came with the page.</p>
+      <p>Which means the offline test genuinely works. Load the page, turn off your network, then drop in an image. It behaves exactly the same.</p>
+      <p>If you would rather watch than trust, open your browser's DevTools Network tab and add an image. The request list stops growing.</p>
+      <p>The full source is <a href="https://github.com/Dan512/NoAdsTools" target="_blank" rel="noopener">public on GitHub</a> under the AGPL-3.0 licence, and the privacy panel on this page lists everything this page can load.</p>
 
       <h2>Questions</h2>
       <div class="faq">
         <details>
           <summary>Is there a free online color palette generator from an image?</summary>
-          <p>This page is one. Drop in a photo or a screenshot and it pulls out the dominant color and a full palette with hex, RGB, and HSL codes. It is a free online image color picker that runs entirely in your browser — no upload, no install, no account — and once the page has loaded it makes no further requests at all.</p>
+          <p>Yes. This page is one.</p>
+          <p>Drop in a photo or a screenshot and it returns a dominant color and a full palette with hex, RGB, and HSL codes. It is a free online image color tool that runs entirely in your browser, with no upload, no install, and no account.</p>
+          <p>Once the page itself has loaded, it makes no further requests at all.</p>
         </details>
         <details>
-          <summary>Can I extract colors from an image without uploading it?</summary>
-          <p>Yes. The image is read and analysed in your browser, on your device — nothing is sent anywhere. You can confirm it by opening your browser's DevTools Network tab while you use the tool: after the page itself loads, there are no further requests at all. There is no account and nothing to sign up for.</p>
+          <summary>Can I get colors out of an image without uploading it?</summary>
+          <p>Yes.</p>
+          <p>The file is decoded and sampled on your own device, and there is no account to create.</p>
+          <p>Open your browser's DevTools Network tab and add an image while you watch. Nothing new appears in the list.</p>
         </details>
         <details>
-          <summary>How do I get the hex codes from a photo?</summary>
-          <p>Drop the photo in and the palette appears with each color's hex code shown as text. Click any swatch to copy that one hex code, or use "Copy hex list" to copy them all at once as a comma-separated list. The dominant color's hex is shown larger at the top.</p>
+          <summary>Why is a swatch a color I cannot find in the picture?</summary>
+          <p>Because each swatch is an average, not a sample.</p>
+          <p>Median cut sorts the pixels into boxes and reports the mean color of each box. If a box holds three thousand slightly different browns, the swatch is their average, which may be none of them exactly.</p>
+          <p>If you need a color that is literally present, ask for more colors: narrower boxes put each average closer to the pixels inside it. Cropping to the region you care about first works too.</p>
         </details>
         <details>
-          <summary>How many colors can I pull from an image?</summary>
-          <p>Choose 4, 6, 8, 10, or 12 from the "Colors in palette" control; the default is 6. Changing it re-computes the palette instantly from the pixels already read. If an image has fewer distinct colors than you ask for — a two-tone logo, say — you get only the colors that are actually there, never invented filler.</p>
+          <summary>Why does the palette change when I ask for more colors?</summary>
+          <p>Because it is recomputed, not extended.</p>
+          <p>Eight is not the same six plus two. The extra splits divide boxes that already existed, so those boxes get new averages and several swatches shift. The order changes as well, since swatches are sorted by how many pixels they stand for.</p>
+          <p>Six and eight are both honest answers to the same image. They are just different answers.</p>
         </details>
         <details>
           <summary>Can I copy the palette as CSS variables?</summary>
-          <p>Yes. "Copy CSS variables" puts a <code>:root</code> block on your clipboard with one custom property per color (<code>--color-1</code>, <code>--color-2</code>, and so on), ready to paste into a stylesheet. There is also "Copy JSON" for a structured list with hex, RGB, and HSL for each color.</p>
+          <p>Yes. "Copy CSS variables" puts a <code>:root</code> block on your clipboard with one custom property per color, <code>--color-1</code> upward, in palette order.</p>
+          <p>"Copy JSON" gives the same colors as an array with hex, RGB, and HSL for each, which is easier to feed to a script.</p>
+          <p>If your browser blocks the clipboard API, the page falls back to an older copy method, and says so plainly if both are refused.</p>
+        </details>
+        <details>
+          <summary>Can I pick the color of one exact spot?</summary>
+          <p>No.</p>
+          <p>This tool reads the whole image and reports groups of similar pixels. It does not report the color under a cursor, so it is not an eyedropper.</p>
+          <p>If you need one specific region, crop the image down to it and read that. For a single pixel on screen, your operating system's own color picker is the better instrument.</p>
         </details>
         <details>
           <summary>Does it work on any image?</summary>
-          <p>It works on any raster image the browser can decode — JPEG, PNG, WebP, AVIF, GIF, and BMP. Very large images are sampled from a downscaled copy so the analysis stays fast, which does not change the palette. SVG and other vector formats are not supported, since they have no fixed pixels to sample.</p>
+          <p>It works on any raster image your browser can decode: JPEG, PNG, WebP, AVIF, GIF, and BMP. For an animated GIF, the first frame is read.</p>
+          <p>SVG is not supported, because a vector file has no fixed pixels to sample until something decides what size to draw it at.</p>
+          <p>Very large files are fine, since the sampling runs on a downscaled copy rather than on the original.</p>
         </details>
       </div>
 
       <h2>Related tools</h2>
-      <p><a href="/photo-editor/">Photo Editor</a> — crop, redact, and batch-edit images. <a href="/crop-image/">Crop Image</a> — trim to an exact box or aspect ratio. <a href="/compress-images/">Compress images</a> — shrink the file size without changing dimensions. <a href="/resize-image/">Resize Image</a> — change pixel dimensions to an exact size or percentage.</p>
+      <p><a href="/crop-image/">Crop Image</a> | trim to the region whose colors you want. <a href="/photo-editor/">Photo Editor</a> | crop, redact, and batch-edit images. <a href="/compress-images/">Compress images</a> | shrink file size without changing dimensions. <a href="/resize-image/">Resize Image</a> | change pixel dimensions to an exact size or percentage.</p>
     </section>
   </main>
 

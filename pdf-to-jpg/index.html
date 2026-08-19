@@ -39,7 +39,7 @@
 <body>
   <main id="tool">
     <h1>PDF to JPG</h1>
-    <p class="tool-lead">Turn the pages of a PDF into JPG or PNG images — pick a resolution, render each page, and download one image or all of them as a ZIP. Everything happens in your browser; your PDF never leaves your device.</p>
+    <p class="tool-lead">Turn the pages of a PDF into JPG or PNG images. Pick a resolution, render each page, and download one image or all of them as a ZIP. Everything happens in your browser, and your PDF never leaves your device.</p>
 
     <section class="dropzone" id="dropzone">
       <p><strong>Drop a PDF here</strong>, or</p>
@@ -119,37 +119,77 @@
     </div>
 
     <section class="prose tool-copy">
-      <h2>Convert a PDF to images without uploading a thing</h2>
-      <p>Add one PDF and this tool draws each page and hands you an image of it. Everything runs on your device: the pdf.js library that reads and renders the PDF loads from this site — never a third-party server — the first time you open a file, so once you have opened your first file, you can disconnect from the internet and it keeps working. There is no account, no watermark, and no page cap. You choose the output format and the resolution, then download a single page or all of them together.</p>
-      <p>By default each page becomes a <strong>JPG</strong>, which is small and ideal for photos, scans, and sharing. Switch to <strong>PNG</strong> when you want lossless output or need to keep sharp edges on text and line art crisp. The quality slider applies to JPG only, because PNG does not throw any detail away; moving it trades file size against fidelity so you can tune each export to the job.</p>
+      <h2>Pages go in, pictures come out</h2>
+      <p>A diagram on page 6 needs to go into an email. A scanned form has to be uploaded somewhere that accepts JPG and nothing else. A cover page needs to become a thumbnail.</p>
+      <p>Drop the PDF here and every page becomes an image you can download.</p>
+      <p>The limitation is in that sentence, so it is worth saying plainly: once a page is an image, the text in it stops being text. You cannot select it, search it, or copy a phrase out of it. It is a picture of the words. If what you actually want is the words, <a href="/pdf-to-text/">PDF to Text</a> is the tool next door.</p>
+      <p>Assuming a picture is what you want, pick a format and a size and every page turns up in a grid with its own Download button.</p>
+      <p><strong>JPG</strong> is the default: small files, fine for photos, scans, and anything you are emailing. Its quality slider runs from 10 to 100 and starts at 90. <strong>PNG</strong> is lossless, so text edges and thin lines stay sharp, the file is much larger, and the quality slider does not apply. Both formats render onto a white page, so a PDF with a transparent background will not come out transparent.</p>
 
-      <h2>Choosing a resolution</h2>
-      <p>A PDF page has no fixed pixel size — it is drawn fresh at whatever scale you ask for, so you decide how many pixels each page becomes. <strong>Screen</strong> (1×) matches the page's typical on-screen size and is good for viewing on a display; <strong>Good</strong> (2×) doubles that for a sharper result; <strong>High</strong> (3×) triples it, the sort of density you want for print or zooming in. The live hint shows the exact pixel dimensions each page will produce at the current setting. Higher resolutions are sharper but make larger files and take longer to render, and there is an honest ceiling: browsers cap how large a single canvas can be, so at a very high resolution on a large page the tool quietly reduces the scale to fit and tells you it did — the image is still produced, just at the largest size this browser allows.</p>
+      <h2>There is no original resolution</h2>
+      <p>This one surprises people. A PDF page does not contain pixels. It contains instructions for drawing shapes and glyphs, which is why you can zoom into a PDF forever and the text stays sharp. There is no native image in there to extract, so there is no "original quality" to preserve. Every image here is drawn fresh at a size you choose.</p>
+      <p><strong>Screen</strong> (1x) draws at 72 pixels per inch, putting a US Letter page around 612 by 792 pixels. <strong>Good</strong> (2x) doubles that to roughly 144, which is the default and suits most uses. <strong>High</strong> (3x) triples it to roughly 216, the density you want for printing or zooming in. The hint under the buttons shows the exact dimensions before you commit.</p>
+      <p>There is a ceiling. Browsers refuse to allocate a drawing surface past a certain size and phones give up earliest, so the longest side of any rendered page is held to 4096 pixels. A large page at 3x can cross that line, and when it does the scale drops just enough to fit and that page's card says "Reduced resolution to fit this browser" instead of quietly handing you something smaller than you asked for.</p>
 
-      <h2>One page or the whole document</h2>
-      <p>Leave Pages set to <strong>All</strong> to render every page, or choose <strong>A range</strong> and type the pages you want, such as <code>1-3, 5, 8-10</code>. Every rendered page appears in a grid with its pixel size and its own Download button, so you can grab just the one you need. When more than one page is selected, Download all bundles them into a single ZIP — each image named after the document, like <code>document-p1.jpg</code> and <code>document-p2.jpg</code> — so you download once. A single selected page skips the ZIP and downloads as a plain image.</p>
+      <h2>One page, a range, or all of them</h2>
+      <p>Leave Pages on <strong>All</strong>, or choose <strong>A range</strong> and type something like <code>1-3, 5, 8-10</code>.</p>
+      <p>Each page in the grid downloads on its own, named after the document: <code>report-p1.jpg</code>, <code>report-p2.jpg</code>. Select more than one page and Download all bundles them into <code>report-pages.zip</code>. The ZIP stores the images as they are rather than compressing them again, because JPG and PNG are already compressed and squeezing them twice only costs time.</p>
+      <p>One practical cap: the grid renders at most 150 pages at a time, because each card holds its own canvas and a 400 page document would exhaust a phone's memory. When your selection is larger than that, a note says how many of how many are shown, and the page range control reaches the rest.</p>
 
-      <h2>What stays on your device</h2>
-      <p>The rendering and the encoding both run in your browser, using code this page loads from its own address. You can open your browser's network panel and watch: no PDF data leaves the machine. A password-protected PDF cannot be read without its password, so unlock it first and add it again; the tool says so plainly rather than failing quietly. The full source is <a href="https://github.com/Dan512/NoAdsTools" target="_blank" rel="noopener">public on GitHub</a> under the AGPL-3.0 licence, and the privacy panel in the footer names every file this page can load and when.</p>
+      <h2>What leaves your device, and what arrives</h2>
+      <p>Your PDF does not leave. It is opened in your browser's memory, drawn there, encoded there, and saved from there. No copy is kept, no account exists, and nothing about the file reaches local storage.</p>
+      <p>Code does come down, all of it from noadstools.com and none of it from a third-party CDN. Opening a PDF fetches pdf.js, about 1.73 MB, which is what draws the pages. Downloading more than one image together fetches JSZip, about 97 KB, which builds the archive locally. And a PDF written with an unusual character encoding, or with one of the standard PDF typefaces, will have pdf.js ask for the matching character maps or font data, still from this origin, only for the documents that need them.</p>
+      <p>Since all of that arrives on demand, this is not an offline tool, and even a warmed-up page can need font data for the next document you open. Load it with no connection and you get a dropzone and not much else.</p>
+      <p>You can check all of it yourself: open the DevTools Network tab, convert a page, and watch what moves.</p>
+      <p>The source is <a href="https://github.com/Dan512/NoAdsTools" target="_blank" rel="noopener">public on GitHub</a> under the AGPL-3.0 license, and the privacy panel on this page names every file this page can fetch and the moment it fetches it.</p>
 
       <h2>Questions</h2>
       <dl class="faq">
-        <dt>Can I convert PDF to JPG online for free without uploading it?</dt>
-        <dd>Yes. It is free, there is no signup or email to give, and the images carry no watermark. The page fetches its PDF renderer from noadstools.com, our own site, the first time you add a file — your PDF itself is drawn to a canvas and saved entirely by your browser, and is never sent anywhere.</dd>
-        <dt>How do I convert a PDF to JPG without uploading it?</dt>
-        <dd>Add your PDF, leave the format on JPG, pick a resolution, and download the page you want. The PDF is rendered in your browser using JavaScript this page loads from its own site. You can verify it: open your browser's DevTools Network tab while converting — no PDF data leaves your device.</dd>
-        <dt>Can I convert a PDF to PNG instead?</dt>
-        <dd>Yes. Switch the output format to PNG. PNG is lossless, so it keeps text and line art crisp and does not use the quality slider; the trade is a larger file than JPG for the same page.</dd>
-        <dt>What resolution should I use?</dt>
-        <dd>For viewing on a screen, Screen (1×) is enough. For a sharper image, or to zoom in, choose Good (2×). For print, High (3×) triples the screen density. The live hint shows the exact pixel size each page will produce, so you can match it to your need.</dd>
-        <dt>Can I convert only specific pages?</dt>
-        <dd>Yes. Choose A range under Pages and type the pages you want, such as <code>1-3, 5, 8-10</code>. Only those pages are rendered, each with its own Download button, and Download all zips just that set.</dd>
-        <dt>Are my PDFs uploaded to a server?</dt>
-        <dd>No. Nothing is uploaded and no copy is kept. Your PDF stays in your browser's memory only while the page is open, and every image is rendered and downloaded entirely on your device.</dd>
+        <dt>Can I convert a PDF to JPG online for free?</dt>
+        <dd>
+          <p>Yes. This page does it.</p>
+          <p>No account, no email, no watermark on the output, and no trial that expires. Drop in a PDF, pick a format and a resolution, and download one page or all of them.</p>
+          <p>The conversion runs on your device. Only the rendering code travels, and it comes from this site.</p>
+        </dd>
+        <dt>Is my PDF uploaded anywhere?</dt>
+        <dd>
+          <p>No.</p>
+          <p>The file is read into your browser and each page is drawn onto a canvas there. The image encoding is done by the browser's own encoder. Nothing about the document is sent to a server.</p>
+          <p>Open DevTools, switch to the Network tab, and run a conversion. You will see pdf.js come down from noadstools.com and you will not see your PDF go up.</p>
+        </dd>
+        <dt>Should I choose JPG or PNG?</dt>
+        <dd>
+          <p>JPG for anything photographic, scanned, or destined for email. It is much smaller and the loss is hard to see at quality 90.</p>
+          <p>PNG when the page is text, diagrams, or line art and you want the edges perfectly clean, or when something downstream demands a lossless file. Expect it to be several times larger.</p>
+          <p>PNG does not give you a transparent background here. Pages are rendered onto white in both formats.</p>
+        </dd>
+        <dt>Which resolution should I pick?</dt>
+        <dd>
+          <p>Screen (1x) for looking at on a display. Good (2x) for most things, which is why it is the default. High (3x) for printing or for zooming in.</p>
+          <p>Each step up multiplies the pixel count and the file size, and takes longer to render.</p>
+          <p>The hint under the resolution buttons shows the exact pixel size you will get, so match it to the job rather than reaching for the highest setting by reflex.</p>
+        </dd>
+        <dt>Why did it say it reduced the resolution?</dt>
+        <dd>
+          <p>Because the image you asked for was larger than a browser can reliably draw. The tool holds the longest side to 4096 pixels, which is roughly where phone browsers stop cooperating.</p>
+          <p>Rather than fail, it steps the scale down to the largest size that fits and says so on that page's card.</p>
+          <p>A big page at 3x is the usual cause. Dropping to 2x normally clears it.</p>
+        </dd>
+        <dt>Can I convert only certain pages?</dt>
+        <dd>
+          <p>Yes. Choose A range under Pages and type the pages you want, such as <code>1-3, 5, 8-10</code>.</p>
+          <p>Only those pages are rendered, each gets its own Download button, and Download all zips exactly that set.</p>
+        </dd>
+        <dt>My PDF has hundreds of pages and only some are showing.</dt>
+        <dd>
+          <p>That is deliberate. The grid renders 150 pages at a time because each one holds a live canvas, and a few hundred at once will crash a phone.</p>
+          <p>The note above the grid tells you how many of how many you are looking at.</p>
+          <p>Use the page range control to work through the rest in batches. Nothing is lost, it just arrives in more than one download.</p>
+        </dd>
       </dl>
 
       <h2>Related tools</h2>
-      <p><a href="/merge-pdf/">Merge PDF</a> — combine PDF files in any order. <a href="/split-pdf/">Split PDF</a> — extract pages or cut one PDF into pieces. <a href="/watermark-pdf/">Watermark PDF</a> — stamp text or a logo across the pages. <a href="/sign-pdf/">Sign PDF</a> — draw or type a signature and place it on a page. <a href="/image-to-pdf/">Image to PDF</a> — combine JPG, PNG, and WebP images into a single PDF. <a href="/photo-editor/">Photo Editor</a> — crop, resize, redact, and batch-edit images.</p>
+      <p><a href="/pdf-to-text/">PDF to Text</a> | pull the actual text out instead of a picture of it. <a href="/split-pdf/">Split PDF</a> | extract pages or cut one PDF into pieces. <a href="/merge-pdf/">Merge PDF</a> | combine PDF files in any order. <a href="/image-to-pdf/">Image to PDF</a> | go the other way and build a PDF from images. <a href="/compress-images/">Compress Images</a> | shrink the JPGs once you have them.</p>
     </section>
   </main>
 

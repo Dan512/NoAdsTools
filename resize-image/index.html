@@ -39,7 +39,7 @@
 <body>
   <main id="tool">
     <h1>Resize images online</h1>
-    <p class="tool-lead">Resize JPG, PNG, and WebP images — to exact pixel dimensions or by percentage — entirely in your browser, with high-quality downscaling. Your images never leave your device: no upload, no account, no tracking.</p>
+    <p class="tool-lead">Resize JPG, PNG, and WebP images to exact pixel dimensions or by percentage, entirely in your browser, with high-quality downscaling. Your images never leave your device: no upload, no account, no tracking.</p>
 
     <section class="dropzone" id="dropzone" aria-label="Add images">
       <p><strong>Drop images here</strong>, paste, or</p>
@@ -101,47 +101,70 @@
 
     <section class="prose tool-copy">
       <h2>What this tool does</h2>
-      <p>Drop in JPEG, PNG, or WebP images and change their pixel size on your own device. There are two ways to drive it. <strong>By dimensions</strong>, you give a width and a height in pixels: with the aspect ratio locked, each image is scaled to fit inside that box while keeping its own proportions, so a mixed set of photos all come out no larger than the size you named. Fill in only one field and that side is constrained while the other follows along. <strong>By percentage</strong>, you give a single number and every image is scaled to that fraction of its own size. Either way you can add one file or a few hundred, and download them one at a time or together as a ZIP.</p>
+      <p>Something always wants the image at a particular size. An upload field capped at 1600 pixels wide. A forum that rejects anything over a few megapixels. A profile slot asking for exactly 400 by 400.</p>
+      <p>This tool changes the pixel dimensions of JPEG, PNG, and WebP images on your own device.</p>
+      <p>There are two ways to drive it. <strong>By dimensions</strong> takes a width and a height: with the ratio locked, each image is scaled to fit inside that box while keeping its own proportions, so a mixed batch all comes out no larger than the size you named. Fill in one field only and that side is constrained while the other follows. <strong>By percentage</strong> takes a single number and scales every image to that fraction of its own size.</p>
+      <p>One limitation belongs up front, because it decides whether this tool can help you at all: shrinking works, enlarging is guesswork.</p>
+      <p>Making an image smaller has real pixels to average together. Making one bigger has to invent pixels that were never captured. Enlarging a 200-pixel thumbnail to poster size gets you a larger thumbnail. That is why "Allow upscaling" is off by default; with it off, an image already smaller than your target is left at its native size and the card says so.</p>
 
-      <h2>Why the quality holds up</h2>
-      <p>Shrinking an image well is harder than it sounds — a naive scale throws away pixels and leaves edges jagged or shimmering. This tool resizes with pica, which uses a Lanczos filter and works in linear light, so fine detail is averaged properly rather than dropped. The result is noticeably cleaner than a plain browser resize, especially on big reductions like a camera photo down to web size. If pica cannot load for some reason, the tool falls back to the browser's own high-quality scaler and says so plainly on the card, rather than failing.</p>
+      <h2>How the resizing works</h2>
+      <p>Your browser decodes the file, then hands the pixels to pica, a resampling library served from this site.</p>
+      <p>pica uses a Lanczos filter and works in linear light, so the pixels being merged are averaged the way light actually adds up rather than the way the stored numbers happen to look. On a big reduction, a 4000-pixel camera photo down to 800 for the web, the difference from a plain browser scale is visible: fewer stair-stepped diagonals, less shimmer in fine texture like brick or hair.</p>
+      <p>pica is about 53&nbsp;KB, and it arrives with your first resize rather than when the page opens.</p>
+      <p>If it cannot load, the tool does not fail with it. It falls back to the browser's own high-quality scaler and labels that card, so you always know which one produced the file in front of you.</p>
 
-      <h2>Formats and file size</h2>
-      <p>Each image keeps its original format: a JPEG stays a JPEG, a PNG stays a PNG, a WebP stays a WebP. Resizing is about dimensions, not about tuning file size, so JPEG and WebP are re-encoded at a fixed high quality and PNG stays lossless. Because the pixels are re-encoded, the hidden EXIF and GPS metadata is dropped along the way — a resized copy is also a cleaner, less revealing one. (An image left at its native size — because it was already smaller than your target — is passed through untouched, so it keeps its metadata.) If your real goal is a smaller <em>file</em> rather than smaller dimensions, <a href="/compress-images/">Compress images</a> is the better tool, and it can be used after this one.</p>
+      <h2>What comes out</h2>
+      <p>Each image keeps its original format. A JPEG stays a JPEG, a PNG stays a PNG, a WebP stays a WebP. Resizing is a dimensions job rather than a file-size job, so JPEG and WebP are re-encoded at a fixed high quality and PNG stays lossless. If a smaller <em>file</em> is what you are really after, <a href="/compress-images/">Compress images</a> is built for that, and it works on the output of this one.</p>
+      <p>Re-encoding drops the hidden EXIF and GPS metadata as a side effect, so a resized copy is also a less revealing one. The exception is an image left at its native size: those original bytes pass through untouched, metadata included.</p>
+      <p>AVIF and GIF are not accepted. AVIF because dependable in-browser encoding is still missing on some platforms, GIF because a resize would flatten the animation.</p>
+      <p>Download images one at a time from their cards, or the whole batch as a ZIP.</p>
 
       <h2>Nothing is uploaded</h2>
-      <p>The decoding, resizing, and re-encoding all run in your browser, using code this page loads only from its own address — never a third-party server. You can open your browser's network panel and watch: no image data leaves the machine. There is no account, no tracking, and no upload step to opt out of. The full source is <a href="https://github.com/Dan512/NoAdsTools" target="_blank" rel="noopener">public on GitHub</a> under the AGPL-3.0 licence, and the privacy panel in the footer names every file this page can load and when. AVIF and GIF are not supported yet — AVIF because reliable in-browser encoding is not available on every platform, GIF because resizing would flatten its animation.</p>
+      <p>Decoding, resizing, and re-encoding all happen in your browser. Beyond its own code, this page fetches two things and names both: pica when you resize, and JSZip, roughly 97&nbsp;KB, only if you click "Download all (ZIP)". No third-party CDN is involved, and there is no account to create.</p>
+      <p>Open DevTools on the Network tab while a batch runs and watch it for yourself. No image data goes out.</p>
+      <p>The full source is <a href="https://github.com/Dan512/NoAdsTools" target="_blank" rel="noopener">public on GitHub</a> under the AGPL-3.0 license, and the privacy panel on this page lists every file this page can load and when.</p>
 
       <h2>Questions</h2>
       <div class="faq">
         <details>
           <summary>How do I resize an image online for free?</summary>
-          <p>Drop the image onto this page and give it a width, a height, or a percentage. It is a free online image resizer that runs entirely in your browser — no upload, no install, no account, and no watermark. Single photos, screenshots, and whole folders all work the same way.</p>
+          <p>Drop the image onto this page and give it a width, a height, or a percentage.</p>
+          <p>It is a free online image resizer that runs in your browser, with no upload, no install, no account, and no watermark.</p>
         </details>
         <details>
-          <summary>Can I resize an image without uploading it?</summary>
-          <p>Yes. The whole process happens in your browser, on your device — you can verify it by opening your browser's DevTools Network tab while resizing and watching that no image data leaves the machine. There is no account and nothing to sign up for.</p>
+          <summary>Do my images get uploaded?</summary>
+          <p>No.</p>
+          <p>Decoding, resampling, and re-encoding all run locally. Your files are read by the page and handed straight back as downloads.</p>
+          <p>You can check rather than trust: open your browser's DevTools Network tab while a resize runs. You will see this page's own code and the pica library arrive, and no image data leave.</p>
         </details>
         <details>
           <summary>Can I resize to exact pixel dimensions?</summary>
-          <p>Yes. Choose "By dimensions" and enter a width and a height. With the aspect ratio locked, each image fits inside that box while keeping its proportions. Unlock the ratio to force the exact width and height on every image — the card marks any image that had to be stretched to reach it.</p>
+          <p>Yes.</p>
+          <p>Choose "By dimensions" and enter both numbers. With the ratio locked, each image fits inside that box while keeping its proportions, which usually leaves one side short of the figure you typed.</p>
+          <p>Unlock the ratio to force the exact width and height on every image. Any image that had to be stretched to reach it is marked on its card, so a distorted result is never a surprise.</p>
         </details>
         <details>
-          <summary>Can I resize many images at once?</summary>
-          <p>Yes. Add as many as you like — a whole folder's worth — and the same settings apply to all of them. Download them one by one from their cards, or all together with "Download all (ZIP)". The practical limit is your device's memory rather than a server quota.</p>
+          <summary>Can it enlarge a small image and make it sharp?</summary>
+          <p>No.</p>
+          <p>It can enlarge. Tick "Allow upscaling" and images scale past their original size with the same high-quality filter. What it cannot do is add detail, because that detail was never recorded.</p>
+          <p>An upscaled image looks smoother than a crude enlargement and softer than a photo actually taken at that size. Nothing running in a browser changes that.</p>
         </details>
         <details>
-          <summary>Does resizing reduce quality?</summary>
-          <p>Making an image smaller always discards some pixels — that is what resizing means — but this tool does it carefully with a high-quality filter, so the result stays sharp. JPEG and WebP are re-encoded at a high quality setting; PNG is kept lossless. Enlarging cannot invent detail that was never captured, so an upscaled image looks softer than one shot at that size.</p>
+          <summary>Can I resize a batch of images at once?</summary>
+          <p>Yes.</p>
+          <p>Add as many files as you like, by dropping them in, pasting, or picking several at once. The same settings apply to all of them, and changing a setting re-runs everything against the new numbers.</p>
+          <p>Images are processed one at a time so memory stays bounded, which matters on phones. The ceiling is your device rather than a server quota, and anything that fails is listed instead of quietly dropped.</p>
         </details>
         <details>
-          <summary>Can it enlarge an image, not just shrink it?</summary>
-          <p>Yes, but it is off by default. Tick "Allow upscaling" and the tool will scale images past their original size; without it, an image already smaller than your target is left at its native size and the card says so. Upscaling smooths the result but cannot add detail that was not there to begin with.</p>
+          <summary>Does it work offline?</summary>
+          <p>Mostly, with one caveat worth naming.</p>
+          <p>The page loads its own code when you open it, but pica only arrives with your first resize. Once you have resized something, you can drop the network and keep resizing and downloading individual files.</p>
+          <p>"Download all (ZIP)" is the exception. It fetches JSZip at the moment you click it, so that button needs a connection the first time you use it.</p>
         </details>
       </div>
 
       <h2>Related tools</h2>
-      <p><a href="/compress-images/">Compress images</a> — shrink the file size without changing dimensions. <a href="/photo-editor/">Photo Editor</a> — crop, redact, and batch-edit images. <a href="/remove-exif/">Remove EXIF data</a> — strip location and camera metadata before sharing. <a href="/find-duplicate-photos/">Find Duplicate Photos</a> — spot duplicates and keep the best copy.</p>
+      <p><a href="/compress-images/">Compress images</a> | shrink the file size while keeping the dimensions. <a href="/crop-image/">Crop Image</a> | trim the edges instead of scaling the whole frame. <a href="/convert-image/">Convert Image</a> | move between JPEG, PNG, WebP, and AVIF. <a href="/remove-exif/">Remove EXIF data</a> | strip location and camera metadata before sharing.</p>
     </section>
   </main>
 

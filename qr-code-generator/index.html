@@ -39,7 +39,7 @@
 <body>
   <main id="tool">
     <h1>QR code generator</h1>
-    <p class="tool-lead">Make a QR code for a link, some text, or your WiFi network. The code is generated on your device — nothing you type leaves your browser.</p>
+    <p class="tool-lead">Make a QR code for a link, some text, or your WiFi network. The code is generated on your device, so nothing you type leaves your browser.</p>
 
     <div class="mode-tabs" role="group" aria-label="What the code contains">
       <button type="button" class="pill is-active" id="tab-text" aria-pressed="true">Text / URL</button>
@@ -105,31 +105,59 @@
     </section>
 
     <section class="prose tool-copy">
-      <h2>Generated on your device</h2>
-      <p>Most online QR generators are web services: what you type is sent to their server, which sends a code image back. This page works differently. The generator is a small open-source library loaded from this site, and the code is generated on your device — URLs and WiFi passwords never leave your browser. You can load this page, go offline, and it still works. The privacy panel in the footer lists everything this page loads.</p>
-      <h2>Static codes — the honest kind</h2>
-      <p>QR services like to sell "dynamic" codes: the printed code points at their server, which redirects to your content. That's what lets them count scans and charge a subscription — and why those codes die when the subscription does. The codes made here are static: your text is encoded directly into the pattern. They never expire, can't be tracked, and there is no account to lapse. The honest trade-off: a static code can't be edited after printing, because the content <em>is</em> the pattern.</p>
-      <h2>WiFi QR codes</h2>
-      <p>A WiFi code lets guests join your network by pointing their camera at it — no typing, no reading the password aloud. Switch to the WiFi tab, enter the network name exactly as your router broadcasts it, the password, and the security type. Print the code and put it where guests sit; phones running iOS 11+ or Android 10+ scan it with the built-in camera.</p>
+      <h2>Static codes, printed once</h2>
+      <p>Sooner or later you have to hand someone a link without reading it out loud. On a poster, a table card, the back of a business card, a label on a machine.</p>
+      <p>Type the address, or any other text, into the box and the square appears underneath. Pick 256, 512, or 1024 pixels and download a PNG, or take the SVG, which is vector and stays sharp at poster size.</p>
+      <p>The limitation is also the design. These codes are static: your text is encoded into the black-and-white pattern itself, so the pattern <em>is</em> the destination. Once printed, it points where it points. If the link changes, you print a new code.</p>
+      <p>Two smaller things. There is a ceiling on how much text fits in one code, and the page says so when you cross it. And the white margin is part of the code, not padding, so keep it.</p>
+
+      <h2>Nothing sits in the middle</h2>
+      <p>Commercial generators mostly sell "dynamic" codes. The printed square points at their server, which forwards each scan to your content. That extra hop lets them count scans, change the destination later, and charge monthly for it. It is also why those codes die when someone stops paying.</p>
+      <p>A static code has nothing in the middle. The camera reads your text straight off the paper. No scan touches this site or anyone else's, and there is no account to lapse.</p>
+      <p>The honest cost: we cannot show you scan statistics, because from here there is no scan to see.</p>
+      <p>The encoding is local too. The generator is Project Nayuki's qrcodegen, about 42 KB, served from this site and loaded with the page rather than on demand, so once the page is open you can disconnect and it still works. URLs and WiFi passwords never leave your device.</p>
+      <p>The full source is <a href="https://github.com/Dan512/NoAdsTools">public on GitHub</a> under the AGPL-3.0 license, and the privacy panel on this page lists everything this page loads.</p>
+
+      <h2>WiFi codes for guests</h2>
+      <p>On the WiFi tab, a scan joins the network instead of opening a link. Enter the network name exactly as the router broadcasts it, capitals included, then the password and the security type. Phones running iOS 11 or later and Android 10 or later read these with the built-in camera.</p>
+      <p>Worth saying plainly: the code is the password. It is written into the pattern in readable form, so anyone who can photograph the card can join your network. Fine for a card on the coffee table, a poor idea for a public noticeboard. If your router can run a guest network, that is the safer thing to hand out.</p>
 
       <h2>Questions</h2>
       <dl class="faq">
         <dt>Is there a free QR code generator online with no tracking?</dt>
-        <dd>This is one. The page loads no ads, no analytics, and no third-party code; the generator library is served from this site and runs on your device, so nothing you type is uploaded. The codes are static, so there is no scan to count either.</dd>
+        <dd>
+          <p>Yes. This page is one.</p>
+          <p>It loads no ads, no analytics, and no third-party code. The encoder is served from this site and runs on your device, so nothing you type is uploaded. The codes are static, so there is no scan to count either.</p>
+        </dd>
+        <dt>Can I change where the code points after it is printed?</dt>
+        <dd>
+          <p>No.</p>
+          <p>The destination is the pattern, so changing it means generating a new code. If you expect an address to move, point the code at a page on your own site you can update later.</p>
+        </dd>
         <dt>Does my QR code expire?</dt>
-        <dd>No. The code encodes your text directly, so there is no service behind it that could shut down or start charging. It will scan for as long as QR readers exist.</dd>
+        <dd>
+          <p>No.</p>
+          <p>There is no service behind it that could shut down, raise its price, or forget to renew a domain. Your text is in the pattern, so it scans as long as QR readers exist.</p>
+        </dd>
         <dt>Can anyone track how often my code is scanned?</dt>
-        <dd>No. Scanning happens entirely between the reader's camera and your content — nothing routes through this site or anyone else's. That also means we can't show you scan statistics; services that do are redirecting every scan through their servers.</dd>
+        <dd>
+          <p>No.</p>
+          <p>A scan happens between the reader's camera and your content, with nothing in between. That cuts both ways: nobody can count your scans, and neither can you. Services that report scan counts route every scan through their own servers first.</p>
+        </dd>
         <dt>How do I make a WiFi QR code?</dt>
-        <dd>Choose the WiFi tab, type the network name (SSID) and password, pick the security type — WPA/WPA2 for almost every modern router — and download the code. Tick "hidden network" only if your router doesn't broadcast its name.</dd>
+        <dd>
+          <p>Choose the WiFi tab, type the network name (SSID) and password, pick the security type, and download the PNG or SVG. WPA/WPA2 is right for almost every modern router.</p>
+          <p>Tick "hidden network" only if your router does not broadcast its name. For an open network, choose None and the password field switches itself off.</p>
+        </dd>
         <dt>What does the error correction setting do?</dt>
-        <dd>QR codes carry redundant data so they still scan when partly obscured or damaged. Low tolerates about 7% damage, Medium 15%, Quartile 25%, High 30%. Higher levels make denser codes, so Medium is the sensible default; pick High for stickers and prints that will get scuffed.</dd>
-        <dt>Why is there no sign-up?</dt>
-        <dd>Because there is nothing to sign up for. No code is stored anywhere, no scan passes through a server, and the download is yours the moment it's generated. Accounts exist to meter usage and bill for it — a static generator needs neither.</dd>
+        <dd>
+          <p>QR codes carry redundant data so they still scan when part of the pattern is dirty, scuffed, or covered. Low tolerates about 7% damage, Medium 15%, Quartile 25%, and High 30%.</p>
+          <p>Higher levels pack more modules into the same square, so the code gets denser and harder to read from a distance. Medium is the default; choose High for stickers and labels that will take a beating.</p>
+        </dd>
       </dl>
 
       <h2>Related tools</h2>
-      <p><a href="/remove-exif/">Remove EXIF Data</a> — strip location and camera metadata from photos before sharing. <a href="/photo-editor/">Photo Editor</a> — crop, resize, redact, and batch-edit images. All in your browser, like this one.</p>
+      <p><a href="/remove-exif/">Remove EXIF Data</a> | strip location and camera metadata from photos before sharing. <a href="/photo-editor/">Photo Editor</a> | crop, resize, redact, and batch-edit images. Both run in your browser, like this one.</p>
     </section>
   </main>
 

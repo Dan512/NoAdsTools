@@ -39,7 +39,7 @@
 <body>
   <main id="tool">
     <h1>Watermark PDF</h1>
-    <p class="tool-lead">Stamp a text or logo watermark onto a PDF — choose position, opacity, rotation, and tiling, on every page or a page range. Everything happens in your browser; your PDF never leaves your device.</p>
+    <p class="tool-lead">Stamp a text or logo watermark onto a PDF: choose position, opacity, rotation, and tiling, on every page or a page range. Everything happens in your browser; your PDF never leaves your device.</p>
 
     <section class="dropzone" id="dropzone">
       <p><strong>Drop a PDF here</strong>, or</p>
@@ -158,34 +158,63 @@
     </div>
 
     <section class="prose tool-copy">
-      <h2>Watermark a PDF without uploading a thing</h2>
-      <p>Add one PDF, choose a text or logo watermark, and download the result. Everything happens on your device: the pdf-lib library loads from this site — never a third-party CDN — the first time you add a PDF, reads how many pages it has, and stamps the watermark locally. There is no account, no forced watermark of our own, and no page cap. Once your first PDF has pulled the engine from this site, you can disconnect from the internet and it keeps working.</p>
-      <p>A <strong>text</strong> watermark is the classic case — a word like <code>CONFIDENTIAL</code> or <code>DRAFT</code> laid across the page. Pick from a small set of built-in fonts, set the size and color, and choose how strong it shows. An <strong>image</strong> watermark stamps a PNG or JPEG logo instead, scaled to a share of the page width. Both share the same placement controls, so a company mark and a status stamp behave the same way.</p>
+      <h2>Stamping DRAFT across every page</h2>
+      <p>A document is going to people who need to read it but should not treat it as final, or as theirs. The usual answer is a word laid diagonally across the page.</p>
+      <p>Add the PDF, set the text or pick a logo, and apply.</p>
+      <p>Now the thing this page will not pretend about. A watermark is not security. What gets added is page content, drawn on top of what is there. Anyone with a PDF editor can take it off, and that is true of every watermark tool.</p>
+      <p>What it is good for is signaling: it tells an honest reader that this is a draft, a review copy, or confidential. It does not stop a determined one. If the file needs restricting, you want a password, not a stamp.</p>
 
-      <h2>Text or logo, placed the way you want</h2>
-      <p>Position the watermark in the <strong>center</strong>, in any <strong>corner</strong>, or <strong>tiled</strong> in a repeating grid across the whole page. Opacity runs from faint to solid, so the mark reads without hiding the text underneath, and rotation lets you set the familiar diagonal look. You can stamp every page or only a range you type, such as <code>1-3, 5, 8-10</code>. A live preview line states exactly what you will get — which word or logo, how many pages, the position, the angle, and the opacity — before you build anything. The watermark is drawn on top of each page's existing content, which is the standard, readable-through watermark look.</p>
+      <h2>Text or logo, and where it sits</h2>
+      <p>A <strong>text</strong> watermark uses the fonts built into the PDF format itself: Helvetica, Helvetica Bold, Times Roman, Times Italic, and Courier. That keeps the file readable in any viewer, and it means custom typefaces are not available. You choose the wording, size, and color.</p>
+      <p>An <strong>image</strong> watermark stamps a PNG or JPEG logo, sized as a percentage of the page width. SVG is not supported.</p>
+      <p>Both share the same placement controls: <strong>center</strong>, any <strong>corner</strong>, or <strong>tiled</strong> in a repeating grid. Rotation gives the familiar diagonal. Opacity runs from faint to solid, and it decides whether the page underneath stays readable.</p>
+      <p>You can stamp every page, or switch Apply to over to Page range and type something like <code>1-3, 5, 8-10</code>. A preview line spells out the instruction before you commit: which mark, how many pages, position, angle, and opacity.</p>
 
-      <h2>What is honest about this tool</h2>
-      <p>This version uses the standard built-in PDF fonts, so custom or handwriting typefaces are not available yet. A password-protected PDF cannot be read without its password, so it must be unlocked before it can be watermarked; the tool says so plainly rather than failing quietly. The watermark sits over the page rather than behind it, and the source file's document properties — title, author, and the like — are not carried into the watermarked copy. The full source code is <a href="https://github.com/Dan512/NoAdsTools" target="_blank" rel="noopener">public on GitHub</a> (AGPL-3.0), and the privacy panel in the footer lists everything this page loads.</p>
+      <h2>What happens to the original</h2>
+      <p>Your source file is not modified. The tool works on a copy in memory and returns a new PDF named after the original, with <code>-watermarked</code> appended.</p>
+      <p>Inside it, the pages are the originals with the mark drawn over them. Nothing is flattened into an image, so the text underneath stays selectable.</p>
+      <p>Document properties are cleared on the way out. Title, author, subject, keywords, and the source XMP metadata block do not carry into the copy. That matters when the copy is the version leaving your organization.</p>
+      <p>A password-protected PDF has to be unlocked first. An encrypted file cannot be read without its password, so the tool says so directly.</p>
+
+      <h2>Nothing is uploaded</h2>
+      <p>Not the PDF, and not the logo.</p>
+      <p>Both are read into your browser, and the watermarked file is assembled and downloaded there. Given what people usually watermark, that is the part worth being sure of.</p>
+      <p>The page loads one thing of its own. Adding a PDF fetches the pdf-lib library (about 511&nbsp;KB) from noadstools.com, to read the page count and draw the mark. That is the only extra request, it comes from this site rather than a third-party CDN, and once it has loaded the stamping needs no network.</p>
+      <p>Open DevTools on the Network tab while you apply a mark: one library down, nothing of yours up.</p>
+      <p>There is no account, and no mark of ours on top of yours. The full source code is <a href="https://github.com/Dan512/NoAdsTools" target="_blank" rel="noopener">public on GitHub</a> under the AGPL-3.0 license, and the privacy panel on this page lists every request this page makes.</p>
 
       <h2>Questions</h2>
       <dl class="faq">
-        <dt>Can I watermark a PDF online for free without uploading it?</dt>
-        <dd>Yes. It is free, there is no signup or email to give, and the only mark added to the file is the one you set. The page fetches its PDF engine from noadstools.com, our own site, the first time you add a file — your PDF and any logo you choose are read and stamped entirely by your browser, and are never sent anywhere.</dd>
-        <dt>How do I watermark a PDF without uploading it?</dt>
-        <dd>Add your PDF, set the text or logo and its position, then choose Apply and download. The watermark is drawn in your browser using JavaScript this page loads from its own site. You can verify it: open your browser's DevTools Network tab while applying — no PDF data leaves your device.</dd>
+        <dt>Is there a free PDF watermark tool online that does not upload my file?</dt>
+        <dd>
+          <p>Yes. This one.</p>
+          <p>No signup, no page cap, and the only mark on the result is the one you set.</p>
+        </dd>
+        <dt>Can the watermark be removed by someone else?</dt>
+        <dd>
+          <p>Yes, by anyone with a PDF editor.</p>
+          <p>A watermark is ordinary page content, so an editor can select and delete it. No tool prevents that, including this one. Treat it as a label, not a lock.</p>
+        </dd>
         <dt>How do I add a CONFIDENTIAL stamp to a PDF?</dt>
-        <dd>Keep the type on Text, type <code>CONFIDENTIAL</code> (it is the default), and pick a position — Center or Tile with a rotation of about 45 degrees gives the classic diagonal stamp. Set the opacity so the mark shows without hiding the content, then apply.</dd>
+        <dd>
+          <p>Leave the type on Text and type <code>CONFIDENTIAL</code>, which is already the default.</p>
+          <p>Choose Center or Tile, keep the rotation near 45 degrees, and set the opacity so the mark reads without burying the text.</p>
+        </dd>
         <dt>Can I use my own logo as a watermark?</dt>
-        <dd>Yes. Switch the type to Image, choose a PNG or JPEG logo, and set its width as a share of the page. The logo is embedded directly into the PDF; SVG logos are not supported in this version, so export your mark to PNG or JPEG first.</dd>
-        <dt>Can I watermark only specific pages?</dt>
-        <dd>Yes. Under Apply to, choose Page range and type the pages you want, like <code>1-3, 5, 8-10</code>. Only those pages are stamped; the rest are copied through untouched.</dd>
-        <dt>Are my PDFs uploaded to a server?</dt>
-        <dd>No. Nothing is uploaded and no copy is kept. Your PDF and any logo stay in your browser's memory only while the page is open, and the watermarked file is built and downloaded entirely on your device.</dd>
+        <dd>
+          <p>Yes, as a PNG or JPEG.</p>
+          <p>Switch the type to Image, choose the file, and set its width as a share of the page. The logo is embedded directly, so it stays sharp at any zoom.</p>
+          <p>SVG is not supported, so export your mark to PNG first.</p>
+        </dd>
+        <dt>Can I watermark only some of the pages?</dt>
+        <dd>
+          <p>Yes.</p>
+          <p>Under Apply to, choose Page range and type the pages you want, such as <code>1-3, 5, 8-10</code>. Every other page is copied through unchanged.</p>
+        </dd>
       </dl>
 
       <h2>Related tools</h2>
-      <p><a href="/merge-pdf/">Merge PDF</a> — combine PDF files in any order. <a href="/split-pdf/">Split PDF</a> — extract pages or cut one PDF into pieces. <a href="/image-to-pdf/">Image to PDF</a> — combine JPG, PNG, and WebP images into a single PDF. <a href="/photo-editor/">Photo Editor</a> — crop, resize, redact, and batch-edit images.</p>
+      <p><a href="/merge-pdf/">Merge PDF</a> | combine PDF files in any order. <a href="/split-pdf/">Split PDF</a> | extract pages or cut a PDF apart. <a href="/sign-pdf/">Sign PDF</a> | place a signature on a page. <a href="/image-to-pdf/">Image to PDF</a> | turn images into a PDF.</p>
     </section>
   </main>
 

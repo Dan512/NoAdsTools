@@ -39,7 +39,7 @@
 <body>
   <main id="tool">
     <h1>Merge PDF</h1>
-    <p class="tool-lead">Combine several PDF files into one — in the order you choose, entirely in your browser. Your PDFs never leave your device.</p>
+    <p class="tool-lead">Combine several PDF files into one, in the order you choose, entirely in your browser. Your PDFs never leave your device.</p>
 
     <section class="dropzone" id="dropzone">
       <p><strong>Drop PDF files here</strong>, or</p>
@@ -61,35 +61,63 @@
     </div>
 
     <section class="prose tool-copy">
-      <h2>Combine PDFs without uploading a thing</h2>
-      <p>Add the PDF files you want to join, drag them into the order you want, and click Merge &amp; download. The whole thing happens on your device: the pdf-lib library loads from this site — never a third-party CDN — the first time you add a PDF, reads how many pages each file has, and stitches them together when you merge. No account, no watermark, no page cap. Once your first PDF has pulled the engine from this site, you can disconnect from the internet and it keeps working.</p>
-      <p>Each file becomes a row showing its name, page count, and size, with a clear number marking its place in the final document. Reorder by dragging a row, or with the up and down buttons on each row — whichever suits your device. The summary keeps a running total, so you always know how many pages the merged PDF will have before you build it.</p>
+      <h2>Putting several PDFs back into one document</h2>
+      <p>Scanned contracts arrive one page per file. A report gets emailed as a cover letter, a body, and three appendices. Somebody on the other end needs it as a single document.</p>
+      <p>Add the files, put them in the order you want, and click Merge &amp; download.</p>
+      <p>Before you rely on it, here is what a merge actually moves: the pages. This tool copies page content into a brand new document, so anything that lived outside the pages does not follow. Bookmarks and the document outline are gone. Fillable form fields stop being fillable. Links that jumped to another page inside the old file may not land in the new one.</p>
+      <p>For scans, reports, and ordinary text documents that is invisible. For an interactive form it is not, so open the result before you send it on.</p>
 
-      <h2>What travels into the merged file — and what doesn't</h2>
-      <p>The pages themselves are copied across faithfully: text stays selectable, and each page keeps its own size, so mixing a landscape scan with portrait pages is fine. The merged PDF is given fresh, minimal information of its own — it is not stamped with the title, author, or other document properties of the files you combined. That is a small privacy plus: metadata from the originals is left behind rather than carried forward.</p>
-      <p>One honest limit: a PDF that is password-protected cannot be read without its password, so this tool cannot merge it. Those files are listed with a plain note asking you to unlock them first, and the rest still merge normally. Page-level editing — reordering or removing individual pages within a file — is not part of this tool yet; for now it combines whole files in order.</p>
-      <p>The full source code is <a href="https://github.com/Dan512/NoAdsTools" target="_blank" rel="noopener">public on GitHub</a> (AGPL-3.0), and the privacy panel in the footer lists everything this page loads.</p>
+      <h2>What the merged file carries</h2>
+      <p>Page content comes across faithfully. Text stays selectable rather than being flattened into pictures, and each page keeps its own size, so a landscape scan can sit between portrait pages without either one being stretched.</p>
+      <p>Document properties do not come across, and that is deliberate. Title, author, subject, and keywords are cleared, along with the XMP metadata block that PDF readers show in a properties dialog. The merged file starts clean rather than inheriting whoever's name was on the first appendix.</p>
+      <p>A password-protected PDF cannot be opened without its password, so this tool does not pretend to merge it. It appears in the list with a lock, marked excluded, and holds no position number, while everything else still merges normally around it.</p>
+      <p>A corrupt file gets a different note, so you can tell locked from broken at a glance.</p>
+      <p>This tool works on whole files. Page-level editing is a job for <a href="/split-pdf/">Split PDF</a>.</p>
+
+      <h2>Nothing leaves your device</h2>
+      <p>Your PDFs are not uploaded.</p>
+      <p>They are read into your browser's memory, combined there, and written back out as a download called <code>merged.pdf</code>. No copy is kept, and closing the tab is enough to be rid of all of it.</p>
+      <p>The page does make one request of its own. The first time you add a PDF, it fetches the pdf-lib library (about 511&nbsp;KB) from noadstools.com so it can count pages and do the combining. That library is the only extra thing this tool loads, it comes from this site rather than a third-party CDN, and once it has arrived the merging needs no network.</p>
+      <p>Watch it if you like. Open DevTools on the Network tab and merge something: the library arrives once, and no PDF data goes the other way.</p>
+      <p>There is no account, no page cap, and no watermark on the result. The full source code is <a href="https://github.com/Dan512/NoAdsTools" target="_blank" rel="noopener">public on GitHub</a> under the AGPL-3.0 license, and the privacy panel on this page lists every request this page makes.</p>
 
       <h2>Questions</h2>
       <dl class="faq">
         <dt>Can I merge PDF files online for free without uploading them?</dt>
-        <dd>Yes. It is free, there is no account or email to give, and nothing is stamped on the merged file. The page fetches its PDF engine from noadstools.com, our own site, the first time you add a PDF — your files themselves are opened, combined, and saved entirely by your browser, and are never sent anywhere.</dd>
-        <dt>Can I merge PDFs without uploading them?</dt>
-        <dd>Yes. The merge runs in your browser using JavaScript this page loads from its own site. You can verify it: open your browser's DevTools Network tab while merging — no PDF data leaves your device. There is no account and nothing to sign up for.</dd>
-        <dt>How do I combine several PDF files into one?</dt>
-        <dd>Add the files with the Choose PDFs button or by dropping them onto the page, put them in the order you want, then click Merge &amp; download. You get a single <code>merged.pdf</code> containing every page, in order.</dd>
-        <dt>Can I reorder the files before merging?</dt>
-        <dd>Yes. Drag any row to a new position, or use the up and down buttons on each row if you prefer the keyboard. The number on each row shows its place, and the merged PDF follows that order exactly.</dd>
-        <dt>Is there a limit on how many PDFs I can merge?</dt>
-        <dd>There is no fixed limit. The practical ceiling is your device's memory, since the whole merge happens locally: a handful of ordinary documents is effortless on a phone, and desktops handle far more. If a very large merge runs short of memory, the tool says so rather than failing silently.</dd>
-        <dt>Can I merge a password-protected PDF?</dt>
-        <dd>Not while it is locked. A password-protected PDF cannot be read without its password, so this tool lists it with a note asking you to unlock it first, and merges the rest of your files normally. Once you have removed the password in the app that made the PDF, add it here again.</dd>
+        <dd>
+          <p>Yes. That is what this page is for.</p>
+          <p>No signup, no page cap, and nothing stamped on the result. Your PDFs are opened, combined, and saved entirely by your browser.</p>
+        </dd>
         <dt>Are my PDFs uploaded to a server?</dt>
-        <dd>No. Nothing is uploaded, and no copy is kept. The files stay in your browser's memory only while the page is open, and the merged PDF is built and downloaded entirely on your device.</dd>
+        <dd>
+          <p>No.</p>
+          <p>The only thing this page downloads is the pdf-lib library that does the combining, and that comes from noadstools.com. Your documents stay in browser memory.</p>
+        </dd>
+        <dt>Do bookmarks and form fields survive the merge?</dt>
+        <dd>
+          <p>No. This is the real limitation of the tool.</p>
+          <p>Bookmarks, the outline, and the structure that makes a form fillable all live outside the pages, so a merge leaves them behind. Internal links to other pages may also stop working.</p>
+          <p>Text, images, and page sizes are unaffected.</p>
+        </dd>
+        <dt>Can I reorder the files before merging?</dt>
+        <dd>
+          <p>Yes, two ways.</p>
+          <p>Drag a row to a new position, or use the up and down buttons if dragging is awkward on your device. The number on each row is its place in the finished document.</p>
+        </dd>
+        <dt>Can I merge a password-protected PDF?</dt>
+        <dd>
+          <p>Not while it is locked.</p>
+          <p>An encrypted PDF cannot be read without its password, so the tool marks it password-protected and excluded, then merges the rest of your list normally. Remove the password in the app that made it, then add it here again.</p>
+        </dd>
+        <dt>Is there a limit on how many PDFs I can merge?</dt>
+        <dd>
+          <p>No fixed limit.</p>
+          <p>The practical ceiling is your device's memory, because the whole merge happens locally. If a large merge runs out of room, the tool says so rather than handing you a truncated file.</p>
+        </dd>
       </dl>
 
       <h2>Related tools</h2>
-      <p><a href="/split-pdf/">Split PDF</a> — extract pages or split one PDF into pieces. <a href="/image-to-pdf/">Image to PDF</a> — combine JPG, PNG, and WebP images into a single PDF. <a href="/photo-editor/">Photo Editor</a> — crop, resize, redact, and batch-edit images.</p>
+      <p><a href="/split-pdf/">Split PDF</a> | extract pages or cut one PDF into pieces. <a href="/image-to-pdf/">Image to PDF</a> | turn images into a PDF you can then merge. <a href="/watermark-pdf/">Watermark PDF</a> | stamp text or a logo across the finished document. <a href="/sign-pdf/">Sign PDF</a> | add a signature to a page.</p>
     </section>
   </main>
 

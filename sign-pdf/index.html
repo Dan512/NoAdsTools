@@ -39,7 +39,7 @@
 <body>
   <main id="tool">
     <h1>Sign PDF</h1>
-    <p class="tool-lead">Add a signature to a PDF — draw it with a mouse, finger, or pen, or type your name in a signature style, then place it on the page and download. Everything happens in your browser; your PDF and signature never leave your device.</p>
+    <p class="tool-lead">Draw a signature with a mouse, finger, or pen, or type your name in a signature style, then place it on the page and download the signed copy. This stamps a visual signature, not a cryptographic one. Everything happens in your browser, and your PDF and signature never leave your device.</p>
 
     <section class="dropzone" id="dropzone">
       <p><strong>Drop a PDF here</strong>, or</p>
@@ -125,34 +125,75 @@
     </div>
 
     <section class="prose tool-copy">
-      <h2>Sign a PDF without uploading a thing</h2>
-      <p>Add one PDF, create a signature, place it where it belongs, and download the signed file. Everything happens on your device: the PDF is rendered page by page in your browser, and the signature is stamped locally. The code that reads and writes the PDF loads from this site the first time you open a file — never a third-party server — so once you have opened your first file, you can disconnect from the internet and it keeps working. There is no account, no watermark of our own, and no upload step to opt out of.</p>
-      <p>There are two ways to make a signature. <strong>Draw</strong> it on the pad with a mouse, a finger, or a pen — the same motion you would use on paper — and Undo or Clear if a stroke goes wrong. Or <strong>Type</strong> your name and pick a style: a formal serif italic, a lighter script, or a plain sans-serif. Either way the signature becomes a transparent image, trimmed to the ink, so only the strokes show on the page and the background stays clear.</p>
+      <h2>What this tool actually produces</h2>
+      <p>A form arrives by email with a line near the bottom and your name printed under it, and the sender wants it back today. Printing it, signing it, and scanning it back means owning a printer that currently has ink, which is a bigger assumption than it sounds.</p>
+      <p>Read this next part first, though, because "sign a PDF" means two different things and people arrive here wanting each of them.</p>
+      <p>This tool makes a <strong>visual signature</strong>. It draws a picture of your signature onto the page and saves a new PDF with that picture in it. Same result as signing a printout and scanning it, without the printout.</p>
+      <p>It is <strong>not</strong> a cryptographic digital signature. No certificate, no identity check, no audit trail, no tamper-evidence. Nothing in the file records who signed it or proves the document is unaltered. If you have been told the document needs a digital, PKI, or qualified electronic signature, this tool does not produce one and no setting will change that. Use a dedicated e-signature service for those.</p>
+      <p>Plenty of everyday documents are fine with a visual signature, and that is the job this is built for. Whether a given signature is binding depends on the document and where you are, which is a question for whoever asked you to sign.</p>
 
-      <h2>Place it exactly where you want</h2>
-      <p>Each page of your PDF is rendered as a preview. Choose which page to sign, then drag the signature box to move it and pull a corner to resize it — the box keeps your signature's own proportions so it never stretches out of shape, and it stays inside the page. It works with a mouse, a finger, or a pen, and the corner handles have generous touch targets. When it looks right, choose Apply and download; the signature is embedded into a fresh copy of the PDF at the exact spot you placed it, and the source file's document properties are not carried into the signed copy.</p>
+      <h2>Making the signature and putting it in place</h2>
+      <p>There are two ways to produce the mark.</p>
+      <p><strong>Draw</strong> gives you a pad you sign with a mouse, a finger, or a stylus, with Undo for one bad stroke and Clear drawing to start over. <strong>Type</strong> renders your name in one of three styles, a formal serif italic, a script, or a plain sans-serif, in an ink color you choose.</p>
+      <p>Either way the result is cropped tightly to the ink and kept transparent, so what lands on the page is your strokes and nothing else. No white box sitting on top of the form.</p>
+      <p>Then you place it. Pick the page, drag the box where the signature belongs, and pull a corner to resize. The corner drag keeps the signature's proportions, so it cannot be squashed or stretched, and the box stays on the page. Long documents render the first ten pages up front and the rest as you scroll, which is what keeps a hundred-page contract from exhausting a phone.</p>
+      <p>Apply and download writes a fresh copy with the signature embedded at that exact spot. It places one signature on one page per pass.</p>
+      <p>That copy also drops the source document's properties, both the info dictionary and the embedded XMP metadata, so the original author name and producing application are not carried into what you send back.</p>
 
-      <h2>What this tool is honest about</h2>
-      <p>This produces a <strong>visual signature</strong>: a picture of your signature placed on the page, the digital equivalent of signing a printout and scanning it. It is not a cryptographic or PKI digital signature, so it does not carry a certificate or make the document tamper-evident — if that is a legal requirement for you, use a dedicated e-signature service. A password-protected PDF cannot be read without its password, so unlock it first and then add it again; the tool says so plainly rather than failing quietly. The full source is <a href="https://github.com/Dan512/NoAdsTools" target="_blank" rel="noopener">public on GitHub</a> (AGPL-3.0), and the privacy panel in the footer lists everything this page loads and when.</p>
+      <h2>What leaves your device</h2>
+      <p>Your PDF does not, and neither does your signature. The file is opened in your browser, the pages are drawn there, the signature becomes an image there, and the signed copy is assembled and saved there. No account, no upload step, no signature kept for next time. Close the tab and it is gone.</p>
+      <p>The page does fetch code, from noadstools.com and nowhere else. Opening a PDF pulls in pdf.js, about 1.73 MB, which renders the previews you place the signature on. Pressing Apply pulls in pdf-lib, about 511 KB, which writes the signature into the file. A document built on an unusual text encoding, or on one of the standard PDF typefaces, also makes pdf.js request the matching character maps or font data, from this same origin and only for the documents that need them.</p>
+      <p>Those arrival times matter if you were counting on working offline. Opening a document does not fetch the library that signs it, so a connection that drops between opening and applying stops you at the last step.</p>
+      <p>None of this needs taking on faith. Open the DevTools Network tab, sign something, and watch: those two libraries come down, and nothing carrying your PDF or your signature goes up.</p>
+      <p>The full source is <a href="https://github.com/Dan512/NoAdsTools" target="_blank" rel="noopener">public on GitHub</a> under the AGPL-3.0 license, and the privacy panel on this page lists every file this page can fetch and when it fetches it.</p>
 
       <h2>Questions</h2>
       <dl class="faq">
         <dt>Can I sign a PDF online for free without an account?</dt>
-        <dd>Yes. There is no signup, no email, and nothing to install or pay for. The page fetches its PDF engine from noadstools.com, our own site, the first time you add a file — your PDF and your signature are rendered, placed, and saved entirely by your browser, and are never sent anywhere.</dd>
-        <dt>How do I sign a PDF without uploading it?</dt>
-        <dd>Add your PDF, draw or type your signature, place it on the page, then choose Apply and download. The PDF is rendered and signed in your browser using JavaScript this page loads from its own site. You can verify it: open your browser's DevTools Network tab while signing — no PDF or signature data leaves your device.</dd>
-        <dt>Can I draw my signature or type it?</dt>
-        <dd>Both. Draw switches on a pad you sign with a mouse, finger, or pen, with Undo and Clear. Type renders your name in a signature style — a formal serif italic, a script, or a plain sans-serif — and lets you set the ink color. Whichever you use becomes a transparent image trimmed to the strokes.</dd>
-        <dt>Is my signature stored or saved anywhere?</dt>
-        <dd>No. Your signature exists only in the page's memory while it is open, and it is discarded when you close or clear the tool. Nothing is uploaded, and no signature library is kept between visits. Only theme and language preferences live in local storage — never any PDF or signature data.</dd>
-        <dt>Is this a legally binding e-signature?</dt>
-        <dd>It is a visual signature — an image of your signature stamped onto the page, like signing a printout and scanning it back. It is not a cryptographic or PKI digital signature, so it carries no certificate and does not make the file tamper-evident. Many everyday documents accept a visual signature, but if you need a certified digital signature, use a dedicated e-signature service.</dd>
-        <dt>Are my PDFs uploaded to a server?</dt>
-        <dd>No. Nothing is uploaded and no copy is kept. Your PDF stays in your browser's memory only while the page is open, and the signed file is built and downloaded entirely on your device.</dd>
+        <dd>
+          <p>Yes. This page does it.</p>
+          <p>No signup, no email address, no trial, and no watermark added to your document.</p>
+          <p>Add the PDF, draw or type your signature, place it, and download the signed copy. The file never leaves your browser.</p>
+        </dd>
+        <dt>Is this a legally binding signature?</dt>
+        <dd>
+          <p>It produces a visual signature, which is an image of your signature stamped onto the page. That is the same thing you get by signing a printout and scanning it, and plenty of documents are routinely accepted that way.</p>
+          <p>It is not a cryptographic or PKI digital signature. It carries no certificate, verifies nobody's identity, and does not make the file tamper-evident.</p>
+          <p>Whether any signature is binding is a legal question that depends on the document and your jurisdiction, and this page cannot answer it for you. If the person asking for your signature specified a certified or digital signature, use a dedicated e-signature service instead.</p>
+        </dd>
+        <dt>Is my PDF or my signature uploaded?</dt>
+        <dd>
+          <p>No, and there is no server-side step to opt out of.</p>
+          <p>The document is rendered in your browser, the signature is drawn to a canvas in your browser, and the signed file is built and downloaded there. Nothing is stored beyond the theme setting.</p>
+          <p>Check it in DevTools on the Network tab while you sign. You will see two libraries arrive from noadstools.com and no document data leave.</p>
+        </dd>
+        <dt>Can I sign with a finger or a stylus?</dt>
+        <dd>
+          <p>Yes. The pad accepts a mouse, a touchscreen, and a pen, and a stylus on a tablet gives by far the most natural-looking result.</p>
+          <p>Undo removes the last stroke and Clear drawing starts the whole thing over, so a slip is not a reason to reload the page.</p>
+          <p>If you would rather not draw at all, switch to Type and pick a style.</p>
+        </dd>
+        <dt>Is my signature saved for next time?</dt>
+        <dd>
+          <p>No. There is deliberately no signature library.</p>
+          <p>The signature lives in the page's memory while the tab is open and is discarded when you close or clear it. Nothing about it is written to local storage or anywhere else.</p>
+          <p>That means you redraw or retype it on your next visit, which is the trade for it never being stored anywhere.</p>
+        </dd>
+        <dt>Can I put the signature on more than one page?</dt>
+        <dd>
+          <p>Not in a single pass. Each Apply places one signature on the page you selected.</p>
+          <p>To sign a second page, add the downloaded signed PDF back to the tool and repeat. It works, but a document needing initials on every page will be tedious.</p>
+        </dd>
+        <dt>Why can it not open my password-protected PDF?</dt>
+        <dd>
+          <p>An encrypted PDF cannot be read without its password, and this tool does not prompt for one.</p>
+          <p>Remove the protection in the application you normally open it with, then add the unlocked file here.</p>
+          <p>The tool says the file is locked rather than reporting it as corrupt, so you know which problem you are looking at.</p>
+        </dd>
       </dl>
 
       <h2>Related tools</h2>
-      <p><a href="/merge-pdf/">Merge PDF</a> — combine PDF files in any order. <a href="/split-pdf/">Split PDF</a> — extract pages or cut one PDF into pieces. <a href="/watermark-pdf/">Watermark PDF</a> — stamp text or a logo across the pages. <a href="/image-to-pdf/">Image to PDF</a> — combine JPG, PNG, and WebP images into a single PDF. <a href="/photo-editor/">Photo Editor</a> — crop, resize, redact, and batch-edit images.</p>
+      <p><a href="/merge-pdf/">Merge PDF</a> | combine PDF files in any order. <a href="/split-pdf/">Split PDF</a> | extract only the page that needs signing. <a href="/watermark-pdf/">Watermark PDF</a> | stamp text or a logo across the pages. <a href="/pdf-to-jpg/">PDF to JPG</a> | turn PDF pages into JPG or PNG images. <a href="/image-to-pdf/">Image to PDF</a> | combine JPG, PNG, and WebP images into a single PDF.</p>
     </section>
   </main>
 

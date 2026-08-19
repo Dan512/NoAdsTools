@@ -219,3 +219,6 @@
   #tool .run-actions { flex-direction: column; align-items: stretch; }
   #tool .output-head { flex-direction: column; align-items: stretch; }
 }
+
+.faq dd p { margin: var(--space-sm) 0 0; }
+.faq dd p:first-child { margin-top: 0; }

@@ -39,7 +39,7 @@
 <body>
   <main id="tool">
     <h1>Favicon generator</h1>
-    <p class="tool-lead">Turn one image into a full favicon package — a multi-resolution <code>favicon.ico</code>, the PNG sizes, an apple-touch-icon, a <code>site.webmanifest</code>, and the exact HTML snippet to paste into your site — all built in your browser and zipped. Your image never leaves your device: no upload, no account, no tracking.</p>
+    <p class="tool-lead">Turn one image into a full favicon package: a multi-resolution <code>favicon.ico</code>, the PNG sizes, an apple-touch-icon, a <code>site.webmanifest</code>, and the exact HTML snippet to paste into your site. All of it built in your browser and zipped. Your image never leaves your device: no upload, no account, no tracking.</p>
 
     <section class="fg-dropzone" id="dropzone" aria-label="Add a source image">
       <p><strong>Drop an image here</strong>, paste, or</p>
@@ -112,7 +112,7 @@
               <figcaption>180 px · apple-touch</figcaption>
             </figure>
           </div>
-          <p class="fg-apple-note" id="apple-note">The apple-touch-icon is drawn on a solid background — Apple does not show transparency.</p>
+          <p class="fg-apple-note" id="apple-note">The apple-touch-icon is drawn on a solid background, because Apple does not show transparency.</p>
         </div>
       </div>
 
@@ -130,47 +130,80 @@
 
     <section class="fg-prose fg-tool-copy">
       <h2>What this tool does</h2>
-      <p>Drop in one PNG, JPEG, or WebP image and this page turns it into everything a modern site needs to show a favicon — the little icon in the browser tab, the bookmark, the phone home screen, and the install prompt. It builds a real multi-resolution <code>favicon.ico</code> containing the 16×16, 32×32, and 48×48 icons, standalone PNGs at 16, 32, 48, 192, and 512 pixels, a 180-pixel <code>apple-touch-icon.png</code> for iOS, a <code>site.webmanifest</code> that names your site and points to the large icons, and a ready-to-paste HTML snippet. Everything is packed into a single <code>favicon-package.zip</code>. A canvas cannot save an <code>.ico</code> file on its own, so the ICO container is assembled byte by byte here in the page.</p>
+      <p>A favicon is the smallest thing on your website and one of the most looked at. It sits in the browser tab, the bookmark bar, the history list, and a phone home screen if anyone saves you there.</p>
+      <p>Producing one is fussier than it should be. Old browsers want a <code>.ico</code>. Current ones prefer PNGs at specific sizes. iOS wants its own icon at 180 pixels and ignores transparency. Android wants a manifest pointing at 192 and 512. Nine files and a block of markup.</p>
+      <p>Drop in one PNG, JPEG, or WebP and this page builds all of it.</p>
+      <p>The constraint worth knowing before you start: a 16 by 16 favicon is 256 pixels. That is the entire budget.</p>
+      <p>Thin strokes vanish. Text becomes texture. A mark with three elements becomes a smudge with a hint of your brand color. A logo that reads well on a business card usually needs simplifying before it works in a tab: one letter or one shape, heavier lines, more contrast, no wordmark.</p>
+      <p>This tool will not do that simplifying for you. What it does is refuse to hide the problem: the previews render at 16, 32, and 180 actual pixels beside a mock browser tab, so you find out here rather than after you deploy.</p>
 
-      <h2>Square, background, and fit</h2>
-      <p>Favicons are square, so a non-square image has to be squared first — and this tool never stretches it. By default it pads: the whole image is centered and the margins are left transparent, or filled with a background color if you pick one. If you would rather trim than pad, switch Fit to Crop and the image is cut to a centered square instead. A live preview renders the icon at 16, 32, and 180 pixels next to a browser-tab mock, so you can judge legibility at real favicon scale before you download — fine detail and thin text tend to disappear at 16 pixels, and it is better to find that out here.</p>
+      <h2>Squaring, fitting, and shrinking</h2>
+      <p>Favicons are square, so a source that is not square has to be squared. Your image is never stretched to get there.</p>
+      <p><strong>Pad</strong>, the default, centres the whole image on a square and leaves the margins transparent, or fills them with a background color you pick. <strong>Crop</strong> trims to a centred square instead, keeping more detail but losing the edges.</p>
+      <p>The shrinking happens in steps. Your image is drawn onto a square canvas at its native resolution, halved repeatedly until it is close to the target, then drawn once at exactly that size. A single draw from 1000 pixels straight down to 16 aliases badly, discarding whole rows of your logo and keeping others. Halving averages instead, which is why the 16 pixel preview looks like a small logo rather than a broken one.</p>
+      <p>There is no equivalent trick in the other direction. If the short side of your source is under 512 pixels, the largest icons are upscaled and will look soft. The page says so when you load an image that small.</p>
+      <p>Transparency survives into the PNGs and the <code>.ico</code>; the previews sit on a checkerboard so you can see it. The exception is the apple-touch-icon: iOS composites home screen icons onto an opaque tile, so that file is always drawn on a solid background, white unless you pick a color.</p>
 
-      <h2>Install it</h2>
-      <p>Unzip the package into the root of your site — the same folder as your home page — and paste the snippet from <code>favicon-snippet.html</code> into your page's <code>&lt;head&gt;</code>. The tags point at <code>/favicon.ico</code>, the two PNG sizes browsers ask for, the apple-touch-icon, the manifest, and your chosen theme color. That is the whole install: no build step, no plugin. Older browsers read the <code>.ico</code>; modern ones prefer the PNGs and the manifest.</p>
+      <h2>What is in the ZIP, and where to put it</h2>
+      <p>Nine files, packed as <code>favicon-package.zip</code>.</p>
+      <p><code>favicon.ico</code> holding 16, 32, and 48 pixel versions in one file. Standalone PNGs at 16, 32, 48, 192, and 512. An <code>apple-touch-icon.png</code> at 180. A <code>site.webmanifest</code> carrying your site name, theme color, and the two large icons. And <code>favicon-snippet.html</code>, the six tags to paste into your page.</p>
+      <p>The ICO is assembled here byte by byte, because a browser canvas can write PNG and JPEG but has never been able to write <code>.ico</code>. The format is a six byte header, a sixteen byte directory entry per size, then each size's PNG data appended in order. The encoder is about thirty lines.</p>
+      <p>To install, unzip everything into your site's root folder, then paste the contents of <code>favicon-snippet.html</code> into your <code>&lt;head&gt;</code>. No build step, no plugin. Old browsers take the <code>.ico</code>, current ones prefer the PNGs, and the manifest handles install prompts and the Android home screen.</p>
 
       <h2>Nothing is uploaded</h2>
-      <p>Decoding, squaring, resizing, ICO assembly, and zipping all run in your browser, using code this page loads only from its own address. You can open your browser's network panel and watch: no image data leaves the machine. There is no account and nothing to sign up for. The ZIP library is fetched only when you click Download package, and nothing else. The full source is <a href="https://github.com/Dan512/NoAdsTools" target="_blank" rel="noopener">public on GitHub</a> under the AGPL-3.0 licence, and the privacy panel in the footer names every file this page can load and when. SVG source is not supported yet — export a PNG for now — and a source smaller than 512 pixels still works, though the 192 and 512 icons will be upscaled and may look soft.</p>
+      <p>Your image is decoded, squared, resized, PNG-encoded, packed into an ICO, and zipped, all inside your browser. It is never sent anywhere.</p>
+      <p>One thing this page fetches after it has loaded is worth naming exactly. When you press <strong>Download package</strong>, and only then, it pulls in a ZIP library of roughly 97&nbsp;KB from this same address, which builds the archive locally. Your image is not part of that request.</p>
+      <p>You can see the shape of that in the failure case. Go offline, press Download package for the first time, and the button tells you the ZIP library could not load. Everything before that point, previews and settings included, keeps working with no network at all.</p>
+      <p>For the rest, open your browser's DevTools Network tab while you work. Your image never appears in the list.</p>
+      <p>SVG sources are not supported yet, so export your logo to PNG first, ideally at 512 pixels or larger. The full source is <a href="https://github.com/Dan512/NoAdsTools" target="_blank" rel="noopener">public on GitHub</a> under the AGPL-3.0 licence, and the privacy panel on this page names every file this page can load and when.</p>
 
       <h2>Questions</h2>
       <div class="faq">
         <details>
           <summary>Is there a free favicon generator online?</summary>
-          <p>This page is one. Drop in a PNG, JPEG, or WebP and it builds the whole package — a multi-resolution <code>favicon.ico</code>, the standalone PNG sizes, an apple-touch-icon, a web manifest, and the HTML snippet — as a single ZIP. It is a free online favicon generator with no upload, no install, and no account.</p>
+          <p>Yes. This page is one.</p>
+          <p>Drop in a PNG, JPEG, or WebP and it builds a multi-resolution <code>favicon.ico</code>, the standalone PNG sizes, an apple-touch-icon, a web manifest, and the HTML snippet, then hands them over as one ZIP. It is a free online favicon generator with no upload, no install, and no account.</p>
         </details>
         <details>
           <summary>Can I make a favicon without uploading my image?</summary>
-          <p>Yes. The whole process happens in your browser, on your device — you can verify it by opening your browser's DevTools Network tab while you work and watching that no image data leaves the machine. There is no account and nothing to sign up for.</p>
+          <p>Yes.</p>
+          <p>Decoding, squaring, resizing, ICO assembly, and zipping all happen on your device. Your image is never sent to a server.</p>
+          <p>Open your browser's DevTools Network tab while you work. The one request you will see is the roughly 97&nbsp;KB ZIP library, loaded from this site when you press Download package. Your image is not in it.</p>
         </details>
         <details>
           <summary>Can I make a favicon.ico from a PNG or JPEG?</summary>
-          <p>Yes. Drop in a PNG, JPEG, or WebP and the tool builds a real multi-resolution <code>favicon.ico</code> that packs the 16×16, 32×32, and 48×48 icons into one file. Because a browser canvas cannot save the <code>.ico</code> format directly, the ICO container is assembled byte by byte in the page from the PNG-encoded sizes.</p>
+          <p>Yes, and it is a real multi-resolution ICO rather than a renamed PNG.</p>
+          <p>The file holds 16, 32, and 48 pixel icons, each rendered independently from your source rather than scaled from one another. Windows and older browsers take whichever size they need out of it.</p>
         </details>
         <details>
           <summary>What favicon sizes do I actually need?</summary>
-          <p>This tool covers the practical modern set: a <code>favicon.ico</code> with 16, 32, and 48 pixels for legacy support; standalone 16, 32, 48, 192, and 512 pixel PNGs for browsers and the manifest; and a 180 pixel apple-touch-icon for iOS home screens. The 192 and 512 sizes are what the web manifest uses for install prompts and the Android home screen.</p>
+          <p>The practical modern set, which is what you get.</p>
+          <p>16, 32, and 48 inside <code>favicon.ico</code>, for legacy browsers and Windows shortcuts. The same 16 and 32 as standalone PNGs, which is what current browsers reach for first, plus a standalone 48 in case something wants it.</p>
+          <p>180 for the apple-touch-icon, used when someone adds your site to an iOS home screen. 192 and 512 for the web manifest, which drive Android home screen icons and install prompts.</p>
+        </details>
+        <details>
+          <summary>My logo turns into a smudge at 16 pixels. What do I do?</summary>
+          <p>Simplify the source, then come back.</p>
+          <p>The usual fixes: drop the wordmark and keep the symbol, or drop the symbol and keep one letter. Thicken the strokes. Raise the contrast against the background. Remove anything smaller than about a tenth of the width, because it will land on one or two pixels.</p>
+          <p>Switching Fit from Pad to Crop helps too, since padding spends pixels on empty margin. On a 16 pixel icon, a tenth of the width in margin costs you a pixel and a half at every edge.</p>
+          <p>Judge it in the tab mock, not in the 180 pixel preview. The 180 always looks fine.</p>
         </details>
         <details>
           <summary>How do I install the favicon on my site?</summary>
-          <p>Unzip the package into your site's root folder and paste the contents of <code>favicon-snippet.html</code> into your page's <code>&lt;head&gt;</code>. The snippet references the <code>.ico</code>, the two PNG sizes, the apple-touch-icon, the manifest, and your theme color. No build step or plugin is involved.</p>
+          <p>Unzip the package into your site's root folder, the same directory as your home page, then paste the contents of <code>favicon-snippet.html</code> into your <code>&lt;head&gt;</code>.</p>
+          <p>The snippet references <code>/favicon.ico</code>, the 16 and 32 pixel PNGs, the apple-touch-icon, <code>/site.webmanifest</code>, and your theme color. If your site lives in a subfolder, adjust the leading slashes to match.</p>
+          <p>Browsers cache favicons stubbornly, so a hard refresh or a private window is usually what it takes to see the new one.</p>
         </details>
         <details>
           <summary>Does it support transparency?</summary>
-          <p>Yes. If you keep the background transparent, the padded favicon PNGs and the <code>.ico</code> preserve the transparency of your source. The one exception is the apple-touch-icon: Apple does not show transparency on home screens, so that icon is always drawn on a solid background — white by default, or the background color you choose.</p>
+          <p>Yes, with one exception.</p>
+          <p>Leave Background set to Transparent and the padded margins stay transparent, in the standalone PNGs and inside the <code>.ico</code> alike.</p>
+          <p>The exception is <code>apple-touch-icon.png</code>. iOS draws home screen icons on its own opaque tile and will not honour transparency there, so that one file is always rendered on a solid background: white by default, or whatever background color you set.</p>
         </details>
       </div>
 
       <h2>Related tools</h2>
-      <p><a href="/crop-image/">Crop Image</a> — square your logo before generating icons. <a href="/resize-image/">Resize Image</a> — change pixel dimensions to an exact size. <a href="/compress-images/">Compress images</a> — shrink file size without changing dimensions. <a href="/photo-editor/">Photo Editor</a> — crop, redact, remove backgrounds, and batch-edit images.</p>
+      <p><a href="/crop-image/">Crop Image</a> | square a logo before you generate icons. <a href="/resize-image/">Resize Image</a> | change pixel dimensions to an exact size. <a href="/compress-images/">Compress images</a> | shrink file size without changing dimensions. <a href="/photo-editor/">Photo Editor</a> | crop, redact, remove backgrounds, and batch-edit images.</p>
     </section>
   </main>
 

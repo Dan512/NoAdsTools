@@ -35,8 +35,8 @@
 
   <main id="tool">
     <h1>Online cover letter generator — free, no sign-up, nothing uploaded</h1>
-    <p class="tool-lead">Fill in the form, watch the live preview, and download a real-text PDF.
-      The download is actually free — no account, no watermark, no paywall at the last step.
+    <p class="tool-lead">Write the letter, watch the live preview, and download a real-text PDF.
+      Free every time: no account, no watermark, no paywall at the last step.
       Your letter never leaves this browser.</p>
 
     <div id="storage-banner" class="notice" hidden></div>
@@ -106,61 +106,73 @@
     </div>
 
     <section class="prose">
-      <h2>A cover letter generator that doesn’t stop at the download button</h2>
-      <p>Most cover letter sites let you type the whole thing, then ask for an account, a
-        “free” trial, or a payment to take the watermark off. This one doesn’t. The PDF
-        download is free, every time, with no sign-up and no watermark.</p>
-      <p>It also works differently under the hood. The form, the preview, and the PDF are all
-        produced inside your browser. Nothing you type — your name, address, phone number, the
-        company you’re applying to, or what you say about yourself — is sent anywhere. There is
-        no server to send it to: this page loads no analytics, no trackers, and no third-party
-        code at all.</p>
-      <h2>Plain formatting, because that’s what gets read</h2>
-      <p>A cover letter is judged on what it says, and it often passes through applicant
-        tracking software before a person opens it. Decorative layouts can scramble in those
-        systems. The layout here is a single column of real text in reading order: your contact
-        details, the date, who it’s addressed to, a greeting, your paragraphs, and a sign-off.
-        The PDF holds selectable text rather than a picture of text, so it can be searched,
-        copied, and parsed.</p>
-      <p>Leave a blank line between paragraphs and each one becomes its own paragraph in the
-        preview. A single line break inside a paragraph is treated as a soft wrap, so you can
-        write however is comfortable in the box.</p>
+      <h2>You write it, this lays it out</h2>
+      <p>A cover letter is the part of an application you redo every time. Same contact block at
+        the top, different company underneath, and three or four paragraphs in the middle that only
+        make sense for this one job.</p>
+      <p>One thing to be clear about first, since “generator” has come to mean something else: this
+        page does not write those paragraphs. Nothing here invents enthusiasm for a job it has not
+        read about. You supply the words; the page handles the address block, the date, the page
+        breaks, and the PDF.</p>
+      <p>Type into the three cards, watch the letter assemble itself beside the form, and press
+        Download PDF. No account, no watermark, no charge at the last step. The greeting and
+        sign-off arrive filled in as a starting point.</p>
+      <p>Leave a blank line between paragraphs and each becomes its own paragraph in the letter. A
+        single line break inside a paragraph is a soft wrap, so you can write however is
+        comfortable in the box.</p>
+
+      <h2>Plain formatting, because that is what gets read</h2>
+      <p>Download PDF opens your browser’s print dialog, where you pick “Save as PDF”. No PDF
+        library is involved: the browser’s own print engine renders the letter, so the file holds
+        real text that can be selected and searched, not an image of text.</p>
+      <p>The layout is one column in reading order: your contact details, the date, who it is
+        addressed to, the greeting, your paragraphs, the sign-off. Letter or A4, and the readout
+        under the preview says when it has spilled onto a second page.</p>
+      <p>Letters often pass through applicant tracking software before a person opens them, and
+        decorative layouts scramble there. Plain text in one column parses most reliably. Nobody
+        can promise a specific system will read a given file correctly, so this page does not.</p>
+
       <h2>Matching the resume you already wrote</h2>
       <p>If you built a resume in this browser with the
-        <a href="/resume-builder/">NoAdsTools resume builder</a>, the “Use my details from a
-        resume” control appears at the top of the form and copies your name, email, phone, and
-        location across, so the two documents agree without retyping. It reads your saved
-        resumes from this browser only, it never changes them, and it only shows up when there
-        is something to copy.</p>
-      <h2>Your data stays yours</h2>
-      <p>Your draft autosaves to this browser’s local storage so a refresh never loses work, and
-        “Clear my data” removes it whenever you choose. Clearing your letters does not touch any
-        resume you saved — the two tools use separate keys. You can also export the letter as a
-        small .json file — a copy you own — and import it later, or on another device, to keep
-        editing. On a shared or public computer, export your file and clear your data when you
-        finish.</p>
+        <a href="/resume-builder/">NoAdsTools resume builder</a>, a “Use my details from a resume”
+        control appears at the top of the form. Pick one, press Copy details, and your name, email,
+        phone, and location come across without retyping.</p>
+      <p>It reads those resumes and does nothing else. It never edits or deletes one, and it stays
+        hidden when no resume is saved here, so it is never a dropdown pretending to have found
+        something.</p>
+
+      <h2>Where the letter lives</h2>
+      <p>In this browser, and nowhere else.</p>
+      <p>Your draft autosaves a moment after you stop typing, so a refresh never loses it. Export
+        .json gives you a copy you own, and Import brings it back.</p>
+      <p>Nothing you type is uploaded, and this page makes no third-party requests at all, ever. No
+        analytics, no trackers, no code from anywhere but this site. Here is a simple way to prove
+        it: once the page has loaded, turn the network off. You can still write, produce the PDF,
+        and export the .json.</p>
+      <p>The full source is <a href="https://github.com/Dan512/NoAdsTools">public on GitHub</a>
+        under the AGPL-3.0 license, and the privacy panel on this page lists everything this page
+        loads.</p>
+
       <h2>FAQ</h2>
       <dl>
         <dt>Is this a free cover letter generator online?</dt>
-        <dd>Yes. It runs online in your browser, the PDF download is free and unwatermarked, and nothing you write is uploaded — the letter stays in this browser until you clear it.</dd>
-        <dt>Is there a sign-up?</dt>
-        <dd>No. There is no account, no email address to hand over, and no trial. Open the page and start typing.</dd>
-        <dt>Is the download really free?</dt>
-        <dd>Yes — free PDF, no watermark, no paywall at the last step. The site runs on optional tips.</dd>
+        <dd>Yes. It runs in your browser, the PDF is free and unwatermarked, and there is no account or email address to hand over. The greeting, sign-off, and structure come pre-filled, so it doubles as a free cover letter template.</dd>
+        <dt>Does it write the letter for me?</dt>
+        <dd>No. There is no AI here and no library of stock sentences. It handles the layout, the date and address block, the page breaks, and the PDF. The words are yours.</dd>
         <dt>Is my cover letter uploaded anywhere?</dt>
-        <dd>No. Everything runs in your browser. This page makes no network requests with your text — you can verify that in your browser’s developer tools.</dd>
-        <dt>Can I use it as a free cover letter template?</dt>
-        <dd>Yes. The greeting, sign-off, and layout are filled in for you as a starting point; change any of it, and export the .json if you want to reuse it as your own template later.</dd>
-        <dt>Can it match the resume I made here?</dt>
-        <dd>Yes. If a resume is saved in this browser, one click copies your contact details into the letter. It reads those resumes without altering them.</dd>
+        <dd>No. The form, the preview, and the PDF are all produced on your device, and this page makes no third-party requests, so there is nowhere for the text to go. Watch the Network tab in your developer tools to confirm it.</dd>
+        <dt>Can it fill in my details from a resume?</dt>
+        <dd>Yes, if the resume was built in this browser with the resume builder. One click copies your name, email, phone, and location across. It only reads those resumes, never changes them, and it is hidden when there are none.</dd>
+        <dt>Where is the letter saved, and will clearing it delete my resume?</dt>
+        <dd>In this browser’s local storage on this device, so clearing your browsing data clears it too. “Clear my data” asks for a second click, and removes letters only; a saved resume is left alone.</dd>
         <dt>Does it work on a phone?</dt>
-        <dd>Yes — the editor and the preview both work on mobile, and the Edit/Preview toggle switches between them. Saving a PDF uses your mobile browser’s print or share flow.</dd>
+        <dd>Yes. The Edit and Preview buttons swap between the form and the letter, and saving the PDF uses your mobile browser’s print or share flow.</dd>
       </dl>
       <h2>Related tools</h2>
       <ul class="related">
-        <li><a href="/resume-builder/">Resume Builder</a></li>
-        <li><a href="/sign-pdf/">Sign PDF</a></li>
-        <li><a href="/merge-pdf/">Merge PDF</a></li>
+        <li><a href="/resume-builder/">Resume Builder</a> | build the resume this letter goes with.</li>
+        <li><a href="/sign-pdf/">Sign PDF</a> | add a signature to a PDF someone sent you.</li>
+        <li><a href="/merge-pdf/">Merge PDF</a> | combine the letter and resume into one file.</li>
       </ul>
     </section>
   </main>

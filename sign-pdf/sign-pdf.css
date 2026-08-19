@@ -279,3 +279,6 @@
   #tool .field select { max-width: 100%; }
   #tool .sign-actions { flex-direction: column; align-items: stretch; }
 }
+
+.faq dd p { margin: var(--space-sm) 0 0; }
+.faq dd p:first-child { margin-top: 0; }

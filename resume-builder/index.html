@@ -36,7 +36,7 @@
   <main id="tool">
     <h1>Online resume builder — free, no sign-up, nothing uploaded</h1>
     <p class="tool-lead">Fill in the form, watch the live preview, and download a real-text PDF.
-      The download is actually free — no account, no watermark, no paywall at the last step.
+      The download is free every time: no account, no watermark, no paywall at the last step.
       Your resume never leaves this browser.</p>
 
     <div id="storage-banner" class="notice" hidden></div>
@@ -110,47 +110,71 @@
     </div>
 
     <section class="prose">
-      <h2>A resume builder that doesn’t hold your PDF hostage</h2>
-      <p>Most online resume builders let you type everything in, then stop you at the download
-        button: create an account, start a “free” trial, or pay to remove a watermark. This one
-        doesn’t. The PDF download is free, every time, with no account and no watermark.</p>
-      <p>It works differently under the hood, too. The form, the preview, and the PDF are all
-        produced inside your browser. Nothing you type — your name, address, phone number, or
-        work history — is ever sent to a server. There is no server to send it to: this page
-        loads no analytics, no trackers, and no third-party code at all.</p>
-      <h2>ATS-friendly by design</h2>
-      <p>Many employers run resumes through applicant tracking software before a person reads
-        them. Decorative two-column layouts often scramble in those systems. The Classic
-        template here is a single column with real text and real headings in reading order —
-        the layout that parses reliably. The PDF contains selectable text, not a picture of
-        text, so it can be read by software and by people.</p>
-      <h2>Your data stays yours</h2>
-      <p>Your draft autosaves to this browser’s local storage so a refresh never loses work,
-        and the “Clear my data” button removes it whenever you choose. You can also export your
-        resume as a small .json file — a copy you own — and import it later, or on another
-        device, to keep editing. On a shared or public computer, export your file and clear
-        your data when you finish.</p>
+      <h2>No paywall at the download button</h2>
+      <p>You know the pattern. You type in every job, every date, every bullet point, you get the
+        preview looking right, and then the download button asks for an account, a “free” trial, or
+        a payment to remove a watermark.</p>
+      <p>This one downloads.</p>
+      <p>Fill in the form, watch the page build itself beside it, and press Download PDF. No
+        account, no email address, no watermark, no charge at the last step. You can keep several
+        resumes at once, duplicate one to tailor it for a particular job, and switch between them
+        from the dropdown.</p>
+      <p>One limitation is worth stating before you start: your resume lives in this browser and
+        nowhere else. No account is holding a copy for you. Clear your browsing data, switch
+        browsers, or work in a private window, and the draft goes with it.</p>
+      <p>That is what Export .json is for. It hands you a small file you own, and Import puts it
+        back, here or on another computer.</p>
+
+      <h2>Real text, in a single column</h2>
+      <p>Download PDF opens your browser’s own print dialog, where you choose “Save as PDF”. There
+        is no PDF library on this page. The browser’s print engine lays out the same document you
+        were looking at, which is why the file holds selectable, searchable text instead of a
+        picture of text.</p>
+      <p>The layout is deliberately plain: one column, real headings, in reading order, on Letter
+        or A4 paper. A readout under the preview tells you how many pages you are running to.</p>
+      <p>That plainness is the point. Many employers run resumes through applicant tracking
+        software before a person sees them, and what comes out scrambled is usually two-column
+        layouts, text inside boxes, and text baked into an image. A single column of real text
+        parses most reliably. No layout can guarantee that a particular system will read it
+        correctly, and anyone who promises that is guessing.</p>
+
+      <h2>Nothing leaves this browser</h2>
+      <p>Your name, your address, your phone number, and every job you have ever held stay on this
+        device.</p>
+      <p>This page has the shortest privacy disclosure on the site. It loads its own HTML, CSS, and
+        JavaScript from this site, and nothing else at all: no analytics, no trackers, no
+        third-party code, ever.</p>
+      <p>You do not have to take that on trust. Open developer tools, switch to the Network tab,
+        and fill in the whole form. The request list stops growing once the page has loaded.</p>
+      <p>Your draft autosaves a moment after you stop typing, and the status line beside the
+        buttons shows the time it last saved. “Clear my data” wipes every stored resume and asks
+        for a second click first, so it cannot happen by accident. On a shared computer, export
+        your file and clear your data before you walk away.</p>
+      <p>The full source is <a href="https://github.com/Dan512/NoAdsTools">public on GitHub</a>
+        under the AGPL-3.0 license, and the privacy panel on this page lists everything this page
+        loads.</p>
+
       <h2>FAQ</h2>
       <dl>
         <dt>Is there a free resume builder online with no sign-up?</dt>
-        <dd>This is one. It runs online in your browser, there is no account or email address to hand over, and the PDF download is free and unwatermarked. Nothing is uploaded — your resume stays in this browser until you clear it.</dd>
+        <dd>Yes. This page is one. It runs in your browser, there is no account or email address to hand over, and the PDF comes out free and unwatermarked every time.</dd>
         <dt>Is the PDF download really free?</dt>
-        <dd>Yes. No account, no trial, no watermark, no paywall. The site runs on optional tips.</dd>
+        <dd>Yes. No trial, no watermark, no charge at the last step. The site is paid for by optional tips.</dd>
         <dt>Is my resume uploaded anywhere?</dt>
-        <dd>No. Everything runs in your browser. This page makes no network requests with your data — you can verify that in your browser’s developer tools.</dd>
-        <dt>Will it pass applicant tracking systems?</dt>
-        <dd>The Classic template is single-column real text — the layout that parses most reliably. No layout can guarantee any particular system, but this avoids the common failure modes.</dd>
-        <dt>How do I save my resume?</dt>
-        <dd>It autosaves in this browser. For a copy you own, use Export .json — importing it later restores everything exactly.</dd>
+        <dd>No. The form, the preview, and the PDF are all produced on your device, and this page makes no third-party requests at all, so there is nowhere for your details to go. Open the Network tab in your developer tools and fill in the form if you want to confirm that.</dd>
+        <dt>Will it get through applicant tracking systems?</dt>
+        <dd>A single column of real text in reading order parses most reliably, and that is what this produces. No tool can guarantee any particular system, and this one does not claim to. It does avoid the common failure modes: columns, text boxes, and text inside images.</dd>
+        <dt>Where is my resume saved?</dt>
+        <dd>In this browser’s local storage, on this device only. It survives a refresh and a restart, but not clearing your browsing data, and it does not follow you to another browser or another computer. Export .json is the copy you keep, and Import brings it back, here or on another machine.</dd>
         <dt>Can I use it on my phone?</dt>
-        <dd>Yes — the editor and preview both work on mobile. PDF saving works in mobile browsers’ print/share flow.</dd>
+        <dd>Yes. The Edit and Preview buttons swap between the form and the page so neither is squeezed. Saving the PDF uses your mobile browser’s own print or share flow.</dd>
       </dl>
       <h2>Related tools</h2>
       <ul class="related">
-        <li><a href="/cover-letter-generator/">Cover Letter Generator</a></li>
-        <li><a href="/sign-pdf/">Sign PDF</a></li>
-        <li><a href="/merge-pdf/">Merge PDF</a></li>
-        <li><a href="/image-to-pdf/">Image to PDF</a></li>
+        <li><a href="/cover-letter-generator/">Cover Letter Generator</a> | the matching letter, same layout, no sign-up.</li>
+        <li><a href="/sign-pdf/">Sign PDF</a> | add a signature to a PDF someone sent you.</li>
+        <li><a href="/merge-pdf/">Merge PDF</a> | combine your resume and cover letter into one file.</li>
+        <li><a href="/image-to-pdf/">Image to PDF</a> | turn photos or scans into a single PDF.</li>
       </ul>
     </section>
   </main>
