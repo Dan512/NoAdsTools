@@ -39,7 +39,7 @@
 <body>
   <main id="tool" class="tool-main">
     <h1>Find duplicate photos online</h1>
-    <p class="tool-tagline">Spot duplicate and near-duplicate photos — even at different sizes — and keep only the best copy. Free, in your browser. Your photos never leave your device.</p>
+    <p class="tool-tagline">Spot duplicate and near-duplicate photos, even at different sizes, and keep only the best copy. Free, in your browser. Your photos never leave your device.</p>
 
     <section id="dropzone" class="dropzone" aria-label="Add photos">
       <p><strong>Drop photos or a whole folder here</strong></p>
@@ -52,11 +52,12 @@
           <input type="file" id="folder-input" webkitdirectory>
         </label>
       </p>
+      <p class="dz-note" id="upload-prompt-note">Picking a folder makes the browser ask <strong>"Upload N files to this site?"</strong> That is Chrome's wording for granting access. Nothing is uploaded: your photos are read on your device.</p>
       <p class="dz-note">JPEG, PNG, WebP, GIF, AVIF, BMP, HEIC.</p>
     </section>
 
     <p id="scan-status" class="scan-status" aria-live="polite" hidden></p>
-    <p id="heic-note" class="dz-note" hidden>HEIC photos take longer to read. Reading them loads a 1.1&nbsp;MB decoder from this site — see Privacy.</p>
+    <p id="heic-note" class="dz-note" hidden>HEIC photos take longer to read. Reading them loads a 1.1&nbsp;MB decoder from this site. See Privacy.</p>
 
     <section id="results" hidden>
       <p id="summary" class="summary" role="status"></p>
@@ -73,7 +74,7 @@
         <button type="button" id="download-list">Download list (.txt)</button>
         <button type="button" id="clear-all" class="btn-quiet">Clear all</button>
       </div>
-      <p id="zip-warning" class="zip-warning" hidden>This is a large set — building the ZIP may fail on phones or low-memory devices.</p>
+      <p id="zip-warning" class="zip-warning" hidden>This is a large set. Building the ZIP may fail on phones or low-memory devices.</p>
       <div id="groups"></div>
       <details id="issues" hidden>
         <summary id="issues-summary"></summary>
@@ -83,47 +84,85 @@
 
     <section class="prose tool-copy">
       <h2>What this tool does</h2>
-      <p>Photo collections grow copies. The same shot saved twice under different names, a recompressed version sent back through a messaging app, a resized export sitting next to the full-size original. This page finds them: drop in photos — or a whole folder — and it groups exact duplicates and visually similar ones, suggests the best copy of each group, and shows you everything before anything happens.</p>
-      <p>One limitation, stated up front: a website cannot delete files from your computer. No page you open in a browser can. What this tool gives you instead is a clean copy of your collection with the duplicates left out, and a precise list of the files marked as duplicates, so you can remove them yourself.</p>
+      <p>Photo collections have a habit of multiplying. The same shot gets saved twice under different names, sent through a messaging app and recompressed, or exported at a smaller size and left sitting next to the original forever.</p>
+      <p>This tool finds those copies.</p>
+      <p>Drop in some photos, or an entire folder, and it groups exact duplicates and visually similar images. It also suggests which copy is probably worth keeping, and shows you everything before you make any decisions. No surprise cleanup button. No "we deleted 847 files, good luck" moment.</p>
+      <p>One limitation is worth stating up front: a website cannot delete files from your computer. Browsers simply do not allow that.</p>
+      <p>Instead, this tool can create a clean copy of your collection with the duplicates left out, and it gives you an exact list of the files marked as duplicates so you can remove them yourself.</p>
 
       <h2>How the matching works</h2>
-      <p>Two passes, both computed on your device. First, every file gets a SHA-256 checksum — two files with the same checksum are byte-for-byte identical, with no guesswork involved. Second, each photo is reduced to a pair of small perceptual fingerprints that describe its broad structure; photos whose fingerprints nearly match are grouped as visually similar. This second pass is what catches the same picture at two different sizes, or re-saved at a different quality. It is a judgment rather than a certainty, so every group is labeled with how it matched — "identical files" or "visually similar" — and a sensitivity control lets you tighten or loosen it.</p>
-      <p>Within each group the tool marks a suggested keeper: the copy with the most pixels, then the largest file. You can override any of it with a click.</p>
+      <p>The scan happens in two passes, both on your device.</p>
+      <p>First, every file gets a SHA-256 checksum. If two files have the same checksum, they are byte-for-byte identical. No judgment call involved.</p>
+      <p>Second, each photo is turned into a pair of small perceptual fingerprints that describe its overall visual structure. Photos with very similar fingerprints are grouped together. This is what helps catch the same picture after it has been resized, recompressed, or saved in another format.</p>
+      <p>Perceptual matching is not absolute, so the tool does not pretend otherwise. Each group tells you how it was matched, either <strong>"identical files"</strong> or <strong>"visually similar"</strong>, and there is a sensitivity control if you want the matching to be stricter or more forgiving.</p>
+      <p>For each group, the tool suggests a keeper. It prefers the image with the most pixels, then the larger file if there is still a tie.</p>
+      <p>That is only a suggestion. You can change the keeper with a click. Computers are useful, but they do not know that the blurry photo is the one where your dog is making a better face.</p>
 
       <h2>What you get</h2>
-      <p>Three outputs. A visual report of every group, with thumbnails, paths, dimensions, and sizes. A "unique set" ZIP holding the keepers plus every unmatched photo — original bytes, nothing recompressed, folder structure preserved. And a plain-text list of the files marked as duplicates, to copy or download, formatted so you can work through it in your file manager.</p>
-      <p>Nothing is uploaded. The scan runs in your browser using its own crypto and canvas machinery — you can watch the network tab while it works. The full source code is <a href="https://github.com/Dan512/NoAdsTools" target="_blank" rel="noopener">public on GitHub</a> (AGPL-3.0), and the privacy panel in the footer lists everything this page loads.</p>
+      <p>After the scan, you get three useful things.</p>
+      <p>A visual report shows every duplicate group with thumbnails, file paths, dimensions, and file sizes.</p>
+      <p>You can also download a <strong>unique set</strong> ZIP containing the selected keepers plus every photo that did not match anything else. The original file bytes are preserved, nothing is recompressed, and folder structure is kept where possible.</p>
+      <p>Finally, there is a plain-text list of every file marked as a duplicate. You can copy it or download it and work through the files in your normal file manager.</p>
+      <p>Nothing is uploaded.</p>
+      <p>The scan runs locally in your browser using its built-in cryptography and image-processing features. If you want to check, open the browser's Network tab while a scan is running.</p>
+      <p>The full source code is <a href="https://github.com/Dan512/NoAdsTools">public on GitHub</a> under the AGPL-3.0 license, and the privacy panel in the footer shows everything this page loads.</p>
 
       <h2>Questions</h2>
       <div class="faq">
         <details>
           <summary>Is there a free duplicate photo finder online?</summary>
-          <p>This page is one. It is a free online duplicate photo finder that runs entirely in your browser — no upload, no install, no account. Add a folder or a pile of loose files and it groups byte-identical copies and visually similar shots on your own device. Deleting the extras stays your call, in your own file manager.</p>
+          <p>Yes. This page is one.</p>
+          <p>It is a free duplicate photo finder that runs entirely in your browser, with no upload, install, or account required. Add a folder or a collection of individual files and it will look for both byte-identical copies and visually similar photos on your own device.</p>
+          <p>It will not delete anything for you. That part stays in your hands.</p>
         </details>
         <details>
           <summary>Do my photos get uploaded?</summary>
-          <p>No. The hashing and comparison run entirely in your browser, on your device. You can verify this: open your browser's DevTools Network tab while scanning — no image data leaves your machine. There is no account, no tracking, and nothing to sign up for.</p>
+          <p>No.</p>
+          <p>Hashing, image decoding, and comparison all happen locally in your browser. Your photos are not sent to a server for processing.</p>
+          <p>You can verify this yourself by opening your browser's DevTools Network tab while a scan is running. No image data should leave your machine.</p>
+          <p>There is also no account to create and nothing to sign up for.</p>
+        </details>
+        <details>
+          <summary>Why does Chrome say "Upload 952 files to this site?"</summary>
+          <p>That prompt is the browser asking whether to let this page read the folder you chose. "Upload" is Chrome's wording for granting that access, and it appears whether or not a site actually sends anything anywhere.</p>
+          <p>This one does not. The files are opened locally and fingerprinted on your device.</p>
+          <p>You can confirm it the same way as above. Keep DevTools open on the Network tab while the scan runs and you will see no image data leave your machine.</p>
         </details>
         <details>
           <summary>Can it find the same photo at two different sizes?</summary>
-          <p>Yes. Exact checksums only catch byte-identical files, so this tool also compares perceptual fingerprints, which survive resizing, recompression, and format conversion. A 4032×3024 original and its 1024×768 copy will land in the same group, labeled "visually similar."</p>
+          <p>Yes.</p>
+          <p>Checksums only find files that are completely identical, so the tool also uses perceptual fingerprints. Those fingerprints are designed to remain similar when an image has been resized, recompressed, or converted to another format.</p>
+          <p>For example, a 4032&times;3024 original and a 1024&times;768 copy of the same photo can still end up in the same group. That group will be labeled <strong>"visually similar"</strong> rather than <strong>"identical files."</strong></p>
         </details>
         <details>
           <summary>Does it work with iPhone HEIC photos?</summary>
-          <p>Yes. The first HEIC file loads a 1.1&nbsp;MB decoder — fetched from this site, not a third party — and decoding happens locally. HEIC files take longer to read than JPEGs, so large batches are slower; the progress counter keeps that honest.</p>
+          <p>Yes.</p>
+          <p>The first time a HEIC file is encountered, the page loads a roughly 1.1&nbsp;MB HEIC decoder from this site. The actual decoding still happens locally in your browser.</p>
+          <p>HEIC files generally take longer to process than JPEGs, so a large HEIC-heavy collection may scan more slowly. The progress counter shows what is happening rather than pretending everything is instant.</p>
         </details>
         <details>
           <summary>How do I actually delete the duplicates?</summary>
-          <p>This page cannot do it for you — a website cannot delete files from your device, and any site claiming otherwise is misleading you. Two honest routes: download the unique set as a ZIP and replace your folder with it, or copy the delete list and remove those files yourself in your file manager. The list gives each file's name and folder path (when you add a folder), dimensions, and size so nothing is ambiguous.</p>
+          <p>The page cannot delete files directly from your computer. Websites do not have that level of access to your file system, which is generally a good thing.</p>
+          <p>You have two practical options.</p>
+          <p>You can download the <strong>unique set</strong> ZIP and use that as the cleaned version of your collection.</p>
+          <p>Or you can copy or download the duplicate-file list and remove those files yourself in your normal file manager.</p>
+          <p>The list includes each file's name and, when you added a folder, its folder path. It also includes dimensions and file size so you can tell exactly which file is which.</p>
         </details>
         <details>
           <summary>Is there a limit on how many photos I can check?</summary>
-          <p>No hard limit. The practical limit is your device's memory: a few thousand photos are comfortable on a desktop, a few hundred on a phone. If the browser runs short, the tool reports which files it could not finish rather than failing silently.</p>
+          <p>There is no fixed limit built into the tool.</p>
+          <p>The real limit is your device and browser memory. A desktop can usually handle a few thousand photos comfortably, while phones are better suited to smaller batches.</p>
+          <p>If the browser cannot finish processing some files, the tool reports which ones were skipped rather than quietly pretending they never existed.</p>
         </details>
       </div>
 
       <h2>Related tools</h2>
-      <p><a href="/photo-editor/">Photo Editor</a> — crop, resize, redact, and batch-edit images. <a href="/remove-exif/">Remove EXIF Data</a> — strip location and camera metadata before sharing. <a href="/heic-to-jpg/">HEIC to JPG</a> — convert iPhone photos to JPG. <a href="/image-to-pdf/">Image to PDF</a> — combine photos into a single PDF.</p>
+      <ul class="related">
+        <li><a href="/photo-editor/">Photo Editor</a> | crop, resize, redact, and batch-edit images.</li>
+        <li><a href="/remove-exif/">Remove EXIF Data</a> | remove location, camera, and other embedded metadata before sharing.</li>
+        <li><a href="/heic-to-jpg/">HEIC to JPG</a> | convert iPhone HEIC photos to JPG.</li>
+        <li><a href="/image-to-pdf/">Image to PDF</a> | combine multiple photos into a single PDF.</li>
+      </ul>
     </section>
   </main>
 
