@@ -90,3 +90,25 @@ a.tool-card:hover {
   text-transform: uppercase;
   letter-spacing: 0.04em;
 }
+
+/* Crawlable category links under the grid. The pills are a JS filter and give
+   crawlers no URLs to follow, so these carry the internal linking. */
+.home-categories {
+  max-width: 62rem;
+  margin: var(--space-3xl) auto 0;
+  padding: 0 var(--space-lg);
+}
+.home-categories h2 {
+  font-size: var(--t-lg);
+  margin-bottom: var(--space-md);
+}
+.home-categories ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.home-categories li {
+  padding: var(--space-sm) 0;
+  color: var(--text-secondary);
+}
+.home-categories a { font-weight: 600; }

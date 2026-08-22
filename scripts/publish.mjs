@@ -43,6 +43,10 @@ const INCLUDE = [
   // Platform root (homepage + site files)
   'index.html',
   'privacy.html',
+  // Category landing pages (manifest-backed; see tests/browser/category-pages.spec.js)
+  'image-tools/',
+  'pdf-tools/',
+  'document-tools/',
   'home.css',
   'home.js',
   '404.html',

@@ -1,0 +1,40 @@
+/* shared/category.css — the category landing pages (/image-tools/,
+   /pdf-tools/, /document-tools/). Small on purpose: everything else comes from
+   shell.css's .prose rules, which these pages reuse. */
+
+.category-page .crumbs {
+  font-size: var(--t-sm);
+  color: var(--text-muted);
+  margin-bottom: var(--space-lg);
+}
+.category-page .crumbs span[aria-current] { color: var(--text-secondary); }
+
+/* The tool list is the point of the page, so give each entry room and lead
+   with the link rather than a bullet. */
+.category-page .tool-list {
+  list-style: none;
+  padding: 0;
+  margin: var(--space-lg) 0;
+}
+.category-page .tool-list li {
+  padding: var(--space-md) 0;
+  border-bottom: 1px solid var(--border);
+}
+.category-page .tool-list li:first-child { border-top: 1px solid var(--border); }
+.category-page .tool-list a {
+  font-weight: 600;
+  display: inline-block;
+  margin-bottom: var(--space-xs);
+}
+/* Description sits on its own line, quieter than the link. */
+.category-page .tool-list span {
+  display: block;
+  color: var(--text-secondary);
+  max-width: 62ch;
+}
+
+.category-page .sibling-cats {
+  list-style: none;
+  padding: 0;
+}
+.category-page .sibling-cats li { margin-bottom: var(--space-sm); }
