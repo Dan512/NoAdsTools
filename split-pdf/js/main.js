@@ -11,7 +11,6 @@ import { registerTranslations, initI18n } from '/shared/i18n.js';
 import { injectTopbar } from '/shared/topbar.js';
 import { injectFooter } from '/shared/footer.js';
 import { initSettings } from '/shared/settings.js';
-import { registerPrivacyRows, initPrivacy } from '/shared/privacy.js';
 import { isPdf } from './intake.js';
 import { parseRanges, everyN, burst } from './ranges.js';
 import { loadPdf, buildOutputs, buildExtract, zipOutputs, PdfEngineError } from './split.js';
@@ -20,23 +19,12 @@ registerTranslations({ en: {
   brandName: 'NoAdsTools', toolsMenu: 'Tools', allTools: 'All tools',
   themeToggle: 'Toggle theme', tip: 'Support this site', tipShort: 'Support',
   privacy: 'Privacy', source: 'Source', tipFooter: 'Support this site', close: 'Close',
-  spPrivacyTitle: 'Privacy',
-  spPrivacyLead: 'This tool splits your PDF into pieces entirely in your browser. Your PDF never leaves your device — no upload, no account, no tracking — and the metadata inside the source file is not carried into the split files.',
-  spPrivacyFetchHeading: 'What this page loads',
-  spPrivacyFetchList: '<li>HTML, CSS, and JavaScript from this site only — no third-party CDN.</li><li>The pdf-lib library (~511 KB, from this origin) — ONLY when you add a PDF. Used to read the page count and build the split files locally.</li><li>The JSZip library (~97 KB, from this origin) — ONLY when a split produces more than one file, to bundle them into a ZIP.</li>',
-  spPrivacyStorageHeading: 'Local storage',
-  spPrivacyStorageBody: 'Theme and chrome preferences only: <code>noadstools_lang</code>, <code>noadstools:settings:global</code>, and <code>noadstools:settings:split-pdf</code>. No PDF data is ever stored.',
 } });
 
 injectTopbar({ toolId: 'split-pdf', lang: false, settings: false });
 injectFooter({ toolId: 'split-pdf' });
 initI18n();
 initSettings({ toolId: 'split-pdf' });
-registerPrivacyRows([
-  { headingKey: 'spPrivacyFetchHeading', bodyKey: 'spPrivacyFetchList', kind: 'list' },
-  { headingKey: 'spPrivacyStorageHeading', bodyKey: 'spPrivacyStorageBody', kind: 'text' },
-]);
-initPrivacy({ titleKey: 'spPrivacyTitle', leadKey: 'spPrivacyLead' });
 
 // --- State -------------------------------------------------------------------
 // src: the loaded source descriptor { name, size, pageCount, status, bytes, ... }

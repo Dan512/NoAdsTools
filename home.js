@@ -1,15 +1,18 @@
 // home.js — homepage boot. English-first: registers its own EN chrome dict,
 // injects the shared chrome WITHOUT the language picker or settings gear, boots
-// theme + the in-app privacy panel, and wires client-side category-pill
-// filtering over the static tool cards. Imports shared modules only.
+// theme, and wires client-side category-pill filtering over the static tool
+// cards. Imports shared modules only.
+//
+// Privacy is a plain link to the single /privacy.html — no in-app panel. The
+// homepage passes no toolId to the chrome, so the link carries no #anchor and
+// lands the reader at the top of that page (there is no "home" row).
 import { registerTranslations, initI18n } from '/shared/i18n.js';
 import { injectTopbar } from '/shared/topbar.js';
 import { injectFooter } from '/shared/footer.js';
 import { initSettings } from '/shared/settings.js';
-import { registerPrivacyRows, initPrivacy } from '/shared/privacy.js';
 
 // EN dictionary for the chrome the homepage actually renders (no lang/settings
-// controls → no settings/language keys needed) + the homepage's privacy panel.
+// controls → no settings/language keys needed).
 registerTranslations({ en: {
   brandName: 'NoAdsTools',
   toolsMenu: 'Tools',
@@ -20,30 +23,16 @@ registerTranslations({ en: {
   privacy: 'Privacy',
   source: 'Source',
   tipFooter: 'Support this site',
-  close: 'Close',
-  homePrivacyTitle: 'Privacy',
-  homePrivacyLead: 'NoAdsTools runs entirely in your browser. This page loads only its own scripts and styles — nothing you do is uploaded, tracked, or stored off your device.',
-  homePrivacyFetchHeading: 'What this page loads',
-  homePrivacyFetchList: '<li>HTML, CSS, JavaScript, and self-hosted fonts — all from this site. No third-party CDN.</li>',
-  homePrivacyNotHeading: 'What it never does',
-  homePrivacyNotList: '<li>No analytics, no cookies, no tracking. No upload. No account.</li>',
 } });
 
 // Inject chrome with the language picker + settings gear omitted (English-first).
-injectTopbar({ toolId: 'home', lang: false, settings: false });
-injectFooter({ toolId: 'home' });
+injectTopbar({ lang: false, settings: false });
+injectFooter();
 initI18n();
 // Theme handling (applies stored theme + binds #theme-toggle). The absent gear
 // makes settings' bindGear a no-op; the absent #lang-toggle makes the
 // language-visibility appliers no-ops.
 initSettings({ toolId: 'home' });
-
-// The homepage's own privacy disclosure.
-registerPrivacyRows([
-  { headingKey: 'homePrivacyFetchHeading', bodyKey: 'homePrivacyFetchList', kind: 'list' },
-  { headingKey: 'homePrivacyNotHeading', bodyKey: 'homePrivacyNotList', kind: 'list' },
-]);
-initPrivacy({ titleKey: 'homePrivacyTitle', leadKey: 'homePrivacyLead' });
 
 // Category-pill filtering over the static cards (progressive enhancement — the
 // cards are real links in the HTML; this only shows/hides them).

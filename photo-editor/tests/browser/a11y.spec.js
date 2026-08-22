@@ -3,8 +3,11 @@
 // Runs axe against:
 //   1. The empty-state landing (intro + drop zone visible, no images loaded).
 //   2. The editor view with a test image loaded and the side panel open.
-//   3. The privacy modal opened.
-//   4. The settings popover opened.
+//   3. The settings popover opened.
+//
+// The privacy disclosure is no longer scanned here: it is not a dialog in this
+// page any more, just a link out to /privacy.html, which owns its own a11y
+// coverage.
 //
 // We fail the run on `serious` + `critical` violations. Moderate/minor issues
 // are logged via console.log so a future cleanup pass can pick them up but
@@ -96,30 +99,6 @@ test('a11y: editor view with image loaded has no critical or serious violations'
   }
   if (blockers.length) {
     console.error('[a11y editor] blocking violations:');
-    for (const v of blockers) {
-      console.error(`  ${v.id} (${v.impact}): ${v.help}`);
-      for (const n of v.nodes.slice(0, 3)) console.error(`    ${n.target.join(' ')}`);
-    }
-  }
-  expect(blockers).toEqual([]);
-});
-
-test('a11y: privacy modal has no critical or serious violations', async ({ page }) => {
-  await boot(page);
-  // Footer privacy button is hidden on desktop (header button shows instead);
-  // click whichever is visible — both open the same modal.
-  await page.locator('#privacy-toggle-header:visible, #privacy-toggle:visible').first().click();
-  await expect(page.locator('#privacy-panel')).toBeVisible();
-
-  const results = await new AxeBuilder({ page })
-    .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
-    .analyze();
-  const { blockers, lower } = summarize(results);
-  if (lower.length) {
-    console.log('[a11y privacy] non-blocking violations:', lower.map(v => `${v.id} (${v.impact})`));
-  }
-  if (blockers.length) {
-    console.error('[a11y privacy] blocking violations:');
     for (const v of blockers) {
       console.error(`  ${v.id} (${v.impact}): ${v.help}`);
       for (const n of v.nodes.slice(0, 3)) console.error(`    ${n.target.join(' ')}`);

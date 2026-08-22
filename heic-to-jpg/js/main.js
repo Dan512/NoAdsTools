@@ -7,7 +7,6 @@ import { registerTranslations, initI18n } from '/shared/i18n.js';
 import { injectTopbar } from '/shared/topbar.js';
 import { injectFooter } from '/shared/footer.js';
 import { initSettings } from '/shared/settings.js';
-import { registerPrivacyRows, initPrivacy } from '/shared/privacy.js';
 import { extractExifFromHeif, injectExifIntoJpeg } from '/shared/exif.js';
 import { escapeHtml } from '/shared/escape.js';
 import { loadHeicDecoder } from '/shared/heic-loader.js';
@@ -17,23 +16,12 @@ registerTranslations({ en: {
   brandName: 'NoAdsTools', toolsMenu: 'Tools', allTools: 'All tools',
   themeToggle: 'Toggle theme', tip: 'Support this site', tipShort: 'Support',
   privacy: 'Privacy', source: 'Source', tipFooter: 'Support this site', close: 'Close',
-  hjPrivacyTitle: 'Privacy',
-  hjPrivacyLead: 'This tool converts HEIC photos to JPG entirely in your browser. Your photos never leave your device — no upload, no account, no tracking.',
-  hjPrivacyFetchHeading: 'What this page loads',
-  hjPrivacyFetchList: '<li>HTML, CSS, and JavaScript from this site only — no third-party CDN.</li><li>The HEIC decoder (libheif, ~1.1 MB WebAssembly, from this origin) — ONLY when your first file lands. Nothing is fetched before that.</li><li>The JSZip library (~97 KB, from this origin) — ONLY if you click "Download ZIP". Used to package your converted files locally.</li>',
-  hjPrivacyStorageHeading: 'Local storage',
-  hjPrivacyStorageBody: 'Theme and chrome preferences only: <code>noadstools_lang</code>, <code>noadstools:settings:global</code>, and <code>noadstools:settings:heic-to-jpg</code>. No image data is ever stored.',
 } });
 
 injectTopbar({ toolId: 'heic-to-jpg', lang: false, settings: false });
 injectFooter({ toolId: 'heic-to-jpg' });
 initI18n();
 initSettings({ toolId: 'heic-to-jpg' });
-registerPrivacyRows([
-  { headingKey: 'hjPrivacyFetchHeading', bodyKey: 'hjPrivacyFetchList', kind: 'list' },
-  { headingKey: 'hjPrivacyStorageHeading', bodyKey: 'hjPrivacyStorageBody', kind: 'text' },
-]);
-initPrivacy({ titleKey: 'hjPrivacyTitle', leadKey: 'hjPrivacyLead' });
 
 const state = []; // { name, blob } per successfully converted row
 const dropzone = document.getElementById('dropzone');

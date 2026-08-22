@@ -2469,7 +2469,7 @@ function onDownload() {
 // and toasted the result. We removed it because the framing made the
 // site appear to retain export bytes after the user had downloaded them,
 // which read as a privacy contradiction. The privacy claim is now stated
-// in the privacy panel + verifiable in DevTools → Network rather than
+// on /privacy.html + verifiable in DevTools → Network rather than
 // surfaced as a one-click "verify what you just downloaded" affordance.)
 
 // v1.2 Feature 2: source-metadata audit modal. Opens a <dialog> listing

@@ -18,36 +18,31 @@
     import { injectTopbar } from '/shared/topbar.js';
     import { injectFooter } from '/shared/footer.js';
     import { initSettings } from '/shared/settings.js';
-    import { registerPrivacyRows, initPrivacy } from '/shared/privacy.js';
 
-    // A minimal EN dictionary covering the shared-chrome + global-settings +
-    // a demo privacy section. This mimics an EN-first new tool: the shared
-    // modules reference these keys, and a consumer supplies them. (The size of
-    // this dict — ~26 keys — is the signal that Plan C should do the i18n
-    // chrome-dict split so tools don't each re-declare chrome strings.)
+    // A minimal EN dictionary covering the shared-chrome + global-settings
+    // strings. This mimics an EN-first new tool: the shared modules reference
+    // these keys, and a consumer supplies them. (The size of this dict is the
+    // signal that Plan C should do the i18n chrome-dict split so tools don't
+    // each re-declare chrome strings.)
     registerTranslations({ en: {
       brandName: 'NoAdsTools', toolsMenu: 'Tools', allTools: 'All tools',
       language: 'Language', themeToggle: 'Toggle theme', settings: 'Settings',
       tip: 'Support this site', tipShort: 'Support', privacy: 'Privacy',
-      source: 'Source', tipFooter: 'Support this site', close: 'Close',
+      source: 'Source', tipFooter: 'Support this site',
       settingsTheme: 'Theme', settingsThemeAria: 'Theme',
       settingsThemeAuto: 'Auto', settingsThemeLight: 'Light', settingsThemeDark: 'Dark',
       settingsShowTheme: 'Show theme button', settingsShowThemeAria: 'Show theme button',
       settingsShowLanguage: 'Show language picker', settingsShowLanguageAria: 'Show language picker',
       settingsRestoreDefaults: 'Restore defaults', settingsRestoreDefaultsAria: 'Restore defaults',
-      harnessPrivacyTitle: 'Privacy', harnessPrivacyLead: 'This harness runs entirely in your browser.',
-      harnessFetchHeading: 'What this demo fetches', harnessFetchList: '<li>Only the shared shell scripts and styles.</li>',
     } });
 
-    // Inject the chrome (no editor). toolId is a placeholder not in the manifest.
+    // Inject the chrome (no editor). toolId is a placeholder not in the
+    // manifest — it still has to flow into the Privacy link's #anchor, which is
+    // what the harness spec pins.
     injectTopbar({ toolId: 'harness' });
     injectFooter({ toolId: 'harness' });
     initI18n();
     initSettings({ toolId: 'harness' });
-    registerPrivacyRows([
-      { headingKey: 'harnessFetchHeading', bodyKey: 'harnessFetchList', kind: 'list' },
-    ]);
-    initPrivacy({ titleKey: 'harnessPrivacyTitle', leadKey: 'harnessPrivacyLead' });
 
     document.documentElement.dataset.bootReady = '1';
   </script>

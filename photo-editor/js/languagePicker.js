@@ -1,7 +1,7 @@
 // js/languagePicker.js — language picker popover. Click the globe to open;
 // click a flag to switch languages; a reload applies the new language to
-// every dynamically rendered surface in the app (privacy panel, batch
-// panel, editor side panels, etc.) without having to walk every JS render
+// every dynamically rendered surface in the app (batch panel, editor side
+// panels, dialogs, etc.) without having to walk every JS render
 // path.
 //
 // Positioning: anchored to the lang-toggle button's bottom-right corner.

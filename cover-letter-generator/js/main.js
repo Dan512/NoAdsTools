@@ -10,7 +10,6 @@ import { registerTranslations, initI18n } from '/shared/i18n.js';
 import { injectTopbar } from '/shared/topbar.js';
 import { injectFooter } from '/shared/footer.js';
 import { initSettings } from '/shared/settings.js';
-import { registerPrivacyRows, initPrivacy } from '/shared/privacy.js';
 import { SCHEMA_VERSION, createLetter, migrate } from './model.js';
 import { render } from './template.js';
 import { loadIndex, loadLetter, saveLetter, clearAll } from './storage.js';
@@ -21,26 +20,12 @@ registerTranslations({ en: {
   brandName: 'NoAdsTools', toolsMenu: 'Tools', allTools: 'All tools',
   themeToggle: 'Toggle theme', tip: 'Support this site', tipShort: 'Support',
   privacy: 'Privacy', source: 'Source', tipFooter: 'Support this site', close: 'Close',
-  clPrivacyTitle: 'Privacy',
-  clPrivacyLead: 'This tool writes your cover letter entirely in your browser. Nothing you type — your name, address, phone, the company you are applying to, or anything you say about yourself — is ever uploaded. There is no server, no account, no tracking.',
-  clPrivacyFetchHeading: 'What this page loads',
-  clPrivacyFetchList: '<li>HTML, CSS, and JavaScript from this site only — no third-party requests at all, ever. This is the shortest list on the site.</li>',
-  clPrivacyStorageHeading: 'Local storage',
-  clPrivacyStorageBody: 'Your letter is saved in THIS browser’s local storage under <code>noadstools:letter:*</code> keys so a refresh never loses work — it stays on this device until you delete it or press “Clear my data”. Also stored: <code>noadstools_lang</code>, <code>noadstools:settings:global</code>, and <code>noadstools:settings:cover-letter-generator</code> (theme and chrome preferences). “Clear my data” removes only the <code>noadstools:letter:*</code> keys — any resume you saved in the resume builder is left alone.',
-  clPrivacyResumeHeading: 'Reading your saved resumes',
-  clPrivacyResumeBody: '“Use my details from a resume” reads the <code>noadstools:resume:*</code> keys that the resume builder saved in this same browser, so it can copy your contact details across. It only ever reads them — it never writes to or deletes a resume — and the control is hidden when no resume is saved. Nothing is sent anywhere either way.',
 } });
 
 injectTopbar({ toolId: 'cover-letter-generator', lang: false, settings: false });
 injectFooter({ toolId: 'cover-letter-generator' });
 initI18n();
 initSettings({ toolId: 'cover-letter-generator' });
-registerPrivacyRows([
-  { headingKey: 'clPrivacyFetchHeading', bodyKey: 'clPrivacyFetchList', kind: 'list' },
-  { headingKey: 'clPrivacyStorageHeading', bodyKey: 'clPrivacyStorageBody', kind: 'text' },
-  { headingKey: 'clPrivacyResumeHeading', bodyKey: 'clPrivacyResumeBody', kind: 'text' },
-]);
-initPrivacy({ titleKey: 'clPrivacyTitle', leadKey: 'clPrivacyLead' });
 
 // --- Storage (guarded access: private-browsing can throw on the getter) -----
 let store = null;

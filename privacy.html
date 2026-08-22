@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Privacy — How NoAdsTools Works Without Uploading Your Files · NoAdsTools</title>
+  <meta name="description" content="Every file you open in a NoAdsTools tool is processed in your browser. This page lists exactly what each of the 20 tools downloads, when it downloads it, what is kept in local storage, and how to verify all of it yourself.">
+  <link rel="canonical" href="https://noadstools.com/privacy.html">
+
+  <link rel="icon" type="image/png" sizes="32x32"   href="/photo-editor/img/favicon-light-32.png"  media="(prefers-color-scheme: light)">
+  <link rel="icon" type="image/png" sizes="192x192" href="/photo-editor/img/favicon-light-192.png" media="(prefers-color-scheme: light)">
+  <link rel="icon" type="image/png" sizes="32x32"   href="/photo-editor/img/favicon-dark-32.png"   media="(prefers-color-scheme: dark)">
+  <link rel="icon" type="image/png" sizes="192x192" href="/photo-editor/img/favicon-dark-192.png"  media="(prefers-color-scheme: dark)">
+  <link rel="icon" type="image/png" sizes="192x192" href="/photo-editor/img/favicon-light-192.png">
+  <link rel="apple-touch-icon" href="/photo-editor/img/apple-touch-icon.png" sizes="180x180">
+
+  <link rel="stylesheet" href="/shared/shell.css">
+
+  <!-- Open Graph -->
+  <meta property="og:title" content="Privacy — How NoAdsTools Works Without Uploading Your Files">
+  <meta property="og:description" content="A per-tool list of every file NoAdsTools downloads and when, what is stored locally, and how to check it yourself in DevTools.">
+  <meta property="og:url" content="https://noadstools.com/privacy.html">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="NoAdsTools">
+  <meta property="og:locale" content="en_US">
+
+  <!-- Twitter card -->
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="Privacy — How NoAdsTools Works Without Uploading Your Files">
+  <meta name="twitter:description" content="A per-tool list of every file NoAdsTools downloads and when, what is stored locally, and how to check it yourself in DevTools.">
+
+  <style>
+    /* Scoped to this page. The shared shell has no table styles, and this page
+       is the only one that needs them. */
+    .fetch-table-wrap { overflow-x: auto; margin: var(--space-md) 0; }
+    .fetch-table { border-collapse: collapse; width: 100%; min-width: 34rem; font-size: 0.95rem; }
+    .fetch-table th, .fetch-table td {
+      text-align: left; vertical-align: top;
+      padding: var(--space-sm) var(--space-md) var(--space-sm) 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .fetch-table th { font-weight: 600; }
+    .fetch-table tbody tr { scroll-margin-top: 5rem; }
+    /* Arriving from a tool's Privacy link highlights that tool's row. Marked
+       with a background shift AND a left bar, never hue alone. */
+    .fetch-table tbody tr:target td { background: var(--surface-2); }
+    .fetch-table tbody tr:target td:first-child {
+      box-shadow: inset 3px 0 0 0 var(--text);
+      padding-left: var(--space-sm);
+    }
+    .fetch-table td:first-child { white-space: nowrap; font-weight: 600; }
+    .fetch-table .nothing { font-weight: 400; }
+    .prose .verify-steps li { margin-bottom: var(--space-sm); }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <p class="wordmark"><a href="/">NoAdsTools</a> <span class="wordmark-tool">Privacy</span></p>
+    <div class="spacer"></div>
+    <div class="controls">
+      <a class="header-link header-only-desktop" href="/">All tools</a>
+      <span class="header-divider header-only-desktop" aria-hidden="true">·</span>
+      <a class="header-link header-only-desktop" href="https://github.com/Dan512/NoAdsTools" target="_blank" rel="noopener">Source</a>
+      <span class="header-divider header-only-desktop" aria-hidden="true">·</span>
+      <a class="btn-tip" href="https://ko-fi.com/noadsdude" target="_blank" rel="noopener">
+        <span class="tip-full">Support this site</span>
+        <span class="tip-short">Support</span>
+      </a>
+    </div>
+  </header>
+
+  <main>
+    <article class="prose">
+      <h1>Privacy</h1>
+
+      <p class="lead">Every NoAdsTools tool runs in your browser. The files you open, your photos, PDFs, resumes and everything else, are read from your device and processed there. So is anything you type into a tool, including the text and WiFi passwords you put into the QR generator. None of it is uploaded, queued on a server, or held anywhere for us to look at.</p>
+
+      <p>That claim is easy to make and rarely proved, so this page is the proof. It lists what each tool downloads, when it downloads it, what stays in your browser afterwards, and how to check all of it yourself.</p>
+
+      <h2>The short version</h2>
+      <ul>
+        <li>Your files never leave your device, and neither does anything you type.</li>
+        <li>There are no ads, no analytics, no telemetry, and no cookies.</li>
+        <li>There is no account, and nothing to sign up for.</li>
+        <li>Every file the site downloads comes from this domain. There is no third-party CDN.</li>
+        <li>The whole thing is open source under the AGPL, so you can read the code that makes these claims true.</li>
+      </ul>
+
+      <h2>What "nothing is uploaded" does and does not mean</h2>
+      <p>It means the contents of your files are never sent anywhere. No image, PDF, resume, or piece of text you put into a tool is transmitted off your device.</p>
+      <p>It does not mean your browser makes no requests at all. It has to make some, or you would not be reading this page.</p>
+      <p>When you load a page here, a web server sends you HTML, CSS, JavaScript and fonts, and that server sees the request, including your IP address, the way every web server on the internet does. Most tools also download a processing engine from this same domain, and only when you actually use the feature that needs it. Those downloads are listed tool by tool below.</p>
+      <p>The distinction that matters: code comes down to your device, and your data never goes up.</p>
+
+      <h2>What each tool downloads, and when</h2>
+      <p>Everything in this table is served from noadstools.com. Nothing here is fetched from a third party. "On first use" means your browser downloads it once, then caches it.</p>
+
+      <div class="fetch-table-wrap">
+        <table class="fetch-table">
+          <caption class="visually-hidden">Files each NoAdsTools tool downloads and the action that triggers each download</caption>
+          <thead>
+            <tr><th scope="col">Tool</th><th scope="col">What it downloads beyond the page</th><th scope="col">When</th></tr>
+          </thead>
+          <tbody>
+            <tr id="color-palette-from-image"><td><a href="/color-palette-from-image/">Color Palette</a></td><td class="nothing">Nothing at all.</td><td>Never. After the page loads it fetches nothing.</td></tr>
+            <tr id="resume-builder"><td><a href="/resume-builder/">Resume Builder</a></td><td class="nothing">Nothing at all.</td><td>Never. The PDF is made by your browser's own print engine.</td></tr>
+            <tr id="cover-letter-generator"><td><a href="/cover-letter-generator/">Cover Letter Generator</a></td><td class="nothing">Nothing at all.</td><td>Never. Same print-based PDF as the resume builder.</td></tr>
+            <tr id="qr-code-generator"><td><a href="/qr-code-generator/">QR Code Generator</a></td><td>The qrcodegen encoder, about 42&nbsp;KB.</td><td>With the page, so the tool works with the network off.</td></tr>
+            <tr id="remove-exif"><td><a href="/remove-exif/">Remove EXIF</a></td><td>JSZip, about 97&nbsp;KB.</td><td>Only if you click "Download ZIP".</td></tr>
+            <tr id="crop-image"><td><a href="/crop-image/">Crop Image</a></td><td>JSZip, about 97&nbsp;KB.</td><td>Only if you click "Download all (ZIP)".</td></tr>
+            <tr id="favicon-generator"><td><a href="/favicon-generator/">Favicon Generator</a></td><td>JSZip, about 97&nbsp;KB.</td><td>Only if you click "Download package".</td></tr>
+            <tr id="resize-image"><td><a href="/resize-image/">Resize Image</a></td><td>The pica resizing library, about 53&nbsp;KB. JSZip, about 97&nbsp;KB.</td><td>pica when you resize. JSZip only on "Download all (ZIP)".</td></tr>
+            <tr id="compress-images"><td><a href="/compress-images/">Compress Images</a></td><td>One encoder per format: mozjpeg about 246&nbsp;KB, WebP about 338&nbsp;KB, AVIF about 3.3&nbsp;MB, oxipng about 160&nbsp;KB. JSZip, about 97&nbsp;KB.</td><td>Each encoder only the first time you compress to that format. AVIF is by far the largest, which is worth knowing on mobile data.</td></tr>
+            <tr id="convert-image"><td><a href="/convert-image/">Convert Image</a></td><td>The same four encoders and JSZip as above.</td><td>Same pattern: only the encoder for the format you are converting to.</td></tr>
+            <tr id="heic-to-jpg"><td><a href="/heic-to-jpg/">HEIC to JPG</a></td><td>The libheif decoder, about 1.1&nbsp;MB. JSZip, about 97&nbsp;KB.</td><td>libheif when your first file lands. JSZip only on "Download ZIP".</td></tr>
+            <tr id="find-duplicate-photos"><td><a href="/find-duplicate-photos/">Find Duplicate Photos</a></td><td>The libheif decoder, about 1.1&nbsp;MB. JSZip, about 97&nbsp;KB.</td><td>libheif only if you add a HEIC photo. JSZip only on "Download unique set".</td></tr>
+            <tr id="image-to-pdf"><td><a href="/image-to-pdf/">Image to PDF</a></td><td>jsPDF, about 420&nbsp;KB.</td><td>Only when you click "Create PDF".</td></tr>
+            <tr id="merge-pdf"><td><a href="/merge-pdf/">Merge PDF</a></td><td>pdf-lib, about 511&nbsp;KB.</td><td>When you add a PDF.</td></tr>
+            <tr id="watermark-pdf"><td><a href="/watermark-pdf/">Watermark PDF</a></td><td>pdf-lib, about 511&nbsp;KB.</td><td>When you add a PDF.</td></tr>
+            <tr id="split-pdf"><td><a href="/split-pdf/">Split PDF</a></td><td>pdf-lib, about 511&nbsp;KB. JSZip, about 97&nbsp;KB.</td><td>pdf-lib when you add a PDF. JSZip only when a split produces more than one file.</td></tr>
+            <tr id="sign-pdf"><td><a href="/sign-pdf/">Sign PDF</a></td><td>pdf.js, about 1.73&nbsp;MB. pdf-lib, about 511&nbsp;KB.</td><td>pdf.js when you open a PDF. pdf-lib when you apply the signature.</td></tr>
+            <tr id="pdf-to-jpg"><td><a href="/pdf-to-jpg/">PDF to JPG</a></td><td>pdf.js, about 1.73&nbsp;MB. JSZip, about 97&nbsp;KB.</td><td>pdf.js when you open a PDF. JSZip only when you download more than one page together.</td></tr>
+            <tr id="pdf-to-text"><td><a href="/pdf-to-text/">PDF to Text</a></td><td>pdf.js, about 1.73&nbsp;MB. The Tesseract OCR engine, about 22&nbsp;MB, English data included.</td><td>pdf.js when you open a PDF. Tesseract only when a page has no text layer and needs OCR. A normal digital PDF never triggers it.</td></tr>
+            <tr id="photo-editor"><td><a href="/photo-editor/">Photo Editor</a></td><td>The largest surface on the site. See the detailed list below.</td><td>Each piece only on first use of that specific feature.</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>A note on the three PDF viewers</h3>
+      <p>Sign PDF, PDF to JPG and PDF to Text all use pdf.js to display pages. For documents that use unusual text encodings, pdf.js also fetches character maps and font data, again from this domain and only for the documents that need them. So even after the engine has arrived, opening an unusual PDF can cause another request. It is still only code, and still only from here.</p>
+
+      <h3>Photo Editor in detail</h3>
+      <p>The photo editor bundles several optional features, and some of them are large. Each downloads only when you first use that feature.</p>
+      <ul>
+        <li>Self-hosted Onest fonts, with the page.</li>
+        <li><a href="https://stuk.github.io/jszip/" target="_blank" rel="noopener">JSZip</a>, about 97&nbsp;KB, on your first "Export queue (ZIP)".</li>
+        <li><a href="https://github.com/parallax/jsPDF" target="_blank" rel="noopener">jsPDF</a>, about 420&nbsp;KB, on your first PDF export.</li>
+        <li>The <a href="https://github.com/catdad-experiments/libheif-js" target="_blank" rel="noopener">libheif</a> decoder (which packages <a href="https://github.com/strukturag/libheif" target="_blank" rel="noopener">strukturag/libheif</a>), about 1.1&nbsp;MB, on your first HEIC or HEIF import. It asks first.</li>
+        <li>Background removal: the <a href="https://github.com/imgly/background-removal-js" target="_blank" rel="noopener">@imgly/background-removal</a> ISNET model plus <a href="https://github.com/microsoft/onnxruntime" target="_blank" rel="noopener">ONNX Runtime Web</a> kernels, up to about 118&nbsp;MB in total, on your first "Remove background". It asks first. Your browser takes only the kernels it can actually run, so a CPU-only browser never downloads the GPU variant. These files ship with the site rather than coming from a third-party model host.</li>
+        <li>Face detection: a <a href="https://github.com/google/mediapipe" target="_blank" rel="noopener">MediaPipe BlazeFace</a> ONNX export redistributed by <a href="https://huggingface.co/qualcomm/MediaPipe-Face-Detection" target="_blank" rel="noopener">Qualcomm AI Hub Models</a> under Apache-2.0, about 78&nbsp;KB of graph plus about 517&nbsp;KB of weights, on your first "Auto-detect faces". It asks first. It reuses the ONNX runtime already vendored for background removal, so there is no second runtime download.</li>
+        <li>Text detection: <a href="https://github.com/naptha/tesseract.js" target="_blank" rel="noopener">Tesseract.js v7</a> (Apache-2.0), about 174&nbsp;KB of JavaScript plus roughly 20&nbsp;MB of WebAssembly variants, of which your browser downloads only the one matching its SIMD support, plus the gzipped English <code>eng.traineddata</code> model at about 1.9&nbsp;MB. On your first "Detect text". It asks first. Recognized text stays on your device.</li>
+      </ul>
+      <p>Four things in the editor ask before they download: HEIC decoding, background removal, face detection and text detection. Spending 20&nbsp;MB of someone's data plan without asking is not a decision a website should make on its own.</p>
+
+      <h2>What this site never does</h2>
+      <ul>
+        <li>No ads, and none are planned.</li>
+        <li>No analytics or telemetry. No Google Analytics, Plausible, Fathom, Mixpanel, gtag, or fbq.</li>
+        <li>No cookies, and no fingerprinting.</li>
+        <li>No third-party CDN. Not even Google Fonts, which logs the IP address of every visitor who loads a font from it. The fonts here are served from this domain.</li>
+        <li>No accounts, no email collection, no newsletter.</li>
+        <li>No upload of your files, and no "save to the cloud" feature to be tempted by later.</li>
+        <li>No selling or sharing of data, because there is no data to sell.</li>
+      </ul>
+
+      <h2>Metadata in the files you get back</h2>
+      <p>Photos from a phone or camera carry EXIF metadata, which often includes the GPS coordinates of where the shot was taken. PDFs carry document properties. Since that metadata is a privacy question in its own right, here is what the tools do with it.</p>
+      <p><a href="/remove-exif/">Remove EXIF</a> exists to strip it deliberately, and it does so by editing the file's bytes rather than re-encoding, so the pixels are untouched.</p>
+      <p>Several other tools remove it as a side effect, because re-encoding an image does not carry the old metadata across. That applies to <a href="/compress-images/">Compress Images</a>, <a href="/convert-image/">Convert Image</a>, <a href="/crop-image/">Crop Image</a>, and <a href="/resize-image/">Resize Image</a> whenever they actually re-encode.</p>
+      <p><strong>One exception is worth knowing, because it works against you.</strong> If you give Resize Image a photo that is already smaller than your target, it keeps the original file exactly as it is rather than running it through a pointless lossy re-encode. That is better for image quality, but it means the file keeps its EXIF and GPS data. Those images are labelled "kept native size" in the results. If stripping location data is the goal, use Remove EXIF rather than relying on a resize to do it for you.</p>
+      <p>On the PDF side, <a href="/merge-pdf/">Merge PDF</a>, <a href="/split-pdf/">Split PDF</a>, <a href="/watermark-pdf/">Watermark PDF</a> and <a href="/sign-pdf/">Sign PDF</a> all build a fresh document, so the source file's document properties are not carried into the output.</p>
+
+      <h2>What is stored in your browser</h2>
+      <p>The site uses localStorage, never cookies. Everything it stores stays on your device and is readable by you.</p>
+      <p><strong>Most tools store preferences only.</strong> Your language, theme, and per-tool settings live under <code>noadstools_lang</code>, <code>noadstools:settings:global</code>, and <code>noadstools:settings:&lt;tool&gt;</code>. No file content is ever written to any of them.</p>
+      <p><strong>The resume builder and cover letter generator store your documents.</strong> They have to, or a refresh would lose your work. Resumes live under <code>noadstools:resume:*</code> keys and letters under <code>noadstools:letter:*</code>. These stay in this browser on this device until you delete them or press "Clear my data" in the tool. They are never transmitted. Because they are tied to one browser, clearing your browsing data or switching browsers will lose them, which is why both tools offer an Export .json file you keep yourself.</p>
+      <p><strong>One tool can read another tool's saved documents, and exactly one does.</strong> The cover letter generator has a "Use my details from a resume" option that reads the <code>noadstools:resume:*</code> keys saved by the resume builder in this same browser, so it can copy across your name, email, phone and location instead of making you type them twice. It only reads them. It never writes to or deletes a resume, and the control is hidden entirely when you have no resume saved. Nothing is sent anywhere in either direction.</p>
+      <p>The "Clear my data" buttons are scoped to their own tool. Clearing your letters removes only the <code>noadstools:letter:*</code> keys and leaves any saved resume alone, and the reverse is also true.</p>
+      <p><strong>The photo editor also stores consent flags</strong> so it does not ask twice about the same large download: <code>noadstools_bgremove_consent</code>, <code>noadstools_heic_consent</code>, <code>noadstools_face_detect_consent</code>, and <code>noadstools_text_detect_consent_v1</code>. Alongside those it keeps a few editor preferences under <code>noadstools:settings:photo-editor</code>, <code>noadstools_target_size</code>, <code>noadstools_upload_ready</code>, and <code>noadstools_watermark</code>. None of them contain image data.</p>
+      <p>You can inspect or delete all of it through your browser's site-data controls, or in DevTools under Application, then Local Storage.</p>
+
+      <h2>Requests that only happen if you click</h2>
+      <ul>
+        <li>The source repository on GitHub, if you click a "Source" link.</li>
+        <li>The Ko-fi tip page, if you choose to support the site.</li>
+        <li>Nothing else.</li>
+      </ul>
+
+      <h2>How to verify this yourself</h2>
+      <p>You do not have to take any of this on trust, and you should not have to. Checking takes about a minute.</p>
+      <ol class="verify-steps">
+        <li>Open any tool on this site.</li>
+        <li>Open your browser's developer tools and select the Network tab. In Chrome, Edge and Firefox that is <kbd>F12</kbd>, or <kbd>Cmd</kbd> + <kbd>Option</kbd> + <kbd>I</kbd> on a Mac.</li>
+        <li>Use the tool normally. Add a file, run it, download the result.</li>
+        <li>Read the list of requests. You will see files coming from noadstools.com. You will not see a request carrying your file anywhere.</li>
+      </ol>
+      <p>Two things worth knowing while you look. Requests with the "Fetch/XHR" or "Script" type that arrive when you first use a feature are the engines listed above. And the useful column is the size and direction of the request: a tool that uploaded your photo would have to send a request as large as the photo, and there is not one.</p>
+      <p>If you want to go further, the entire site is open source and you can read the code that does the work.</p>
+
+      <h2>Translations</h2>
+      <p>The interface is translated into 15 languages with the help of AI tools. Some of those translations will be imperfect. If you find a bad one, the issue tracker in the source repository is the place to report it.</p>
+
+      <h2>Open source</h2>
+      <p>NoAdsTools is licensed under the <a href="https://www.gnu.org/licenses/agpl-3.0.html" target="_blank" rel="noopener">GNU AGPL v3.0</a>. The source is at <a href="https://github.com/Dan512/NoAdsTools" target="_blank" rel="noopener">github.com/Dan512/NoAdsTools</a>.</p>
+      <p>That license is the reason the privacy claims on this page are checkable rather than promotional. A site that processes your files on a server can tell you anything about what it does with them. A site whose code runs in your browser cannot, because you can read it and watch it run.</p>
+
+      <h2>Support this site</h2>
+      <p>There are no ads and nothing to buy. If the tools are useful, you can <a href="https://ko-fi.com/noadsdude" target="_blank" rel="noopener">leave a tip on Ko-fi</a>. That is entirely optional and nothing is withheld if you do not.</p>
+
+      <h2>Why this is one page</h2>
+      <p>Each tool used to carry its own privacy panel. Twenty separate copies of the same disclosure turned out to be twenty things that could quietly fall out of date, and some of them did: several pages once claimed you could disconnect from the internet and keep working, which was not true of any tool that downloads its engine on first use.</p>
+      <p>So there is now one page, and every tool links to it. The Privacy link on any tool brings you straight to that tool's row in the table above.</p>
+      <p>If you find something here that does not match what your Network tab shows, that is a bug worth reporting in the <a href="https://github.com/Dan512/NoAdsTools/issues" target="_blank" rel="noopener">issue tracker</a>.</p>
+    </article>
+  </main>
+
+  <!-- Mobile only: shared/shell.css hides body > footer above 768px, where the
+       same links live in the topbar as .header-only-desktop. Between the two,
+       Home and Source are reachable at every width. -->
+  <footer>
+    <a href="/">All tools</a>
+    <span aria-hidden="true">·</span>
+    <a href="https://github.com/Dan512/NoAdsTools" target="_blank" rel="noopener" title="Source code on GitHub">Source</a>
+    <span aria-hidden="true">·</span>
+    <a href="https://ko-fi.com/noadsdude" target="_blank" rel="noopener">Support this site</a>
+  </footer>
+</body>
+</html>

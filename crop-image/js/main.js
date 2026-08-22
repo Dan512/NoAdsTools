@@ -10,7 +10,6 @@ import { registerTranslations, initI18n } from '/shared/i18n.js';
 import { injectTopbar } from '/shared/topbar.js';
 import { injectFooter } from '/shared/footer.js';
 import { initSettings } from '/shared/settings.js';
-import { registerPrivacyRows, initPrivacy } from '/shared/privacy.js';
 import { escapeHtml } from '/shared/escape.js';
 import { isAcceptedImage, sourceFormat } from './intake.js';
 import { clampRect, moveRect, applyAspect, resizeByHandle, fitInitialRect, mapRect } from './crop-rect.js';
@@ -21,24 +20,12 @@ registerTranslations({ en: {
   brandName: 'NoAdsTools', toolsMenu: 'Tools', allTools: 'All tools',
   themeToggle: 'Toggle theme', tip: 'Support this site', tipShort: 'Support',
   privacy: 'Privacy', source: 'Source', tipFooter: 'Support this site', close: 'Close',
-  ciPrivacyTitle: 'Privacy',
-  ciPrivacyLead: 'This tool crops images entirely in your browser. Your images never leave your device — no upload, no account, no tracking. The crop is drawn at full source resolution; re-encoding it also removes the image’s EXIF/GPS metadata.',
-  ciPrivacyFetchHeading: 'What this page loads',
-  ciPrivacyFetchList: '<li>HTML, CSS, and JavaScript from this site only — no third-party CDN.</li>'
-    + '<li>The JSZip library (~97 KB, from this origin) — only if you click "Download all (ZIP)". Used to package your images locally.</li>',
-  ciPrivacyStorageHeading: 'Local storage',
-  ciPrivacyStorageBody: 'Theme and chrome preferences only: <code>noadstools_lang</code>, <code>noadstools:settings:global</code>, and <code>noadstools:settings:crop-image</code>. No image data is ever stored.',
 } });
 
 injectTopbar({ toolId: 'crop-image', lang: false, settings: false });
 injectFooter({ toolId: 'crop-image' });
 initI18n();
 initSettings({ toolId: 'crop-image' });
-registerPrivacyRows([
-  { headingKey: 'ciPrivacyFetchHeading', bodyKey: 'ciPrivacyFetchList', kind: 'list' },
-  { headingKey: 'ciPrivacyStorageHeading', bodyKey: 'ciPrivacyStorageBody', kind: 'text' },
-]);
-initPrivacy({ titleKey: 'ciPrivacyTitle', leadKey: 'ciPrivacyLead' });
 
 // --- Constants --------------------------------------------------------------
 

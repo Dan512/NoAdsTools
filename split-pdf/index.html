@@ -110,7 +110,7 @@
       <p>The page does fetch its own machinery, and it is worth being exact about it. Adding a PDF loads pdf-lib (about 511&nbsp;KB) from noadstools.com, to read the page count and build the outputs. A split that produces more than one file also loads JSZip (about 97&nbsp;KB) from the same place, to bundle them. Both come from this site rather than a third-party CDN, and neither carries any part of your document.</p>
       <p>Because JSZip only arrives the first time you need a ZIP, a session of single-file splits has not loaded it. Once a library is there, the work it does needs no network.</p>
       <p>All of it is visible in DevTools on the Network tab: the libraries come down, nothing of yours goes up.</p>
-      <p>The full source code is <a href="https://github.com/Dan512/NoAdsTools" target="_blank" rel="noopener">public on GitHub</a> under the AGPL-3.0 license, and the privacy panel on this page lists every request this page makes.</p>
+      <p>The full source code is <a href="https://github.com/Dan512/NoAdsTools" target="_blank" rel="noopener">public on GitHub</a> under the AGPL-3.0 license, and <a href="/privacy.html#split-pdf">the privacy page</a> holds the same two entries for this tool.</p>
 
       <h2>Questions</h2>
       <dl class="faq">

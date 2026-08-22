@@ -7,7 +7,6 @@ import { registerTranslations, initI18n } from '/shared/i18n.js';
 import { injectTopbar } from '/shared/topbar.js';
 import { injectFooter } from '/shared/footer.js';
 import { initSettings } from '/shared/settings.js';
-import { registerPrivacyRows, initPrivacy } from '/shared/privacy.js';
 import { escapeHtml } from '/shared/escape.js';
 import { createSession, addFiles, filesFromDataTransfer, scanPending, clearSession } from './scan.js';
 import { buildGroups } from './report.js';
@@ -19,22 +18,11 @@ registerTranslations({ en: {
   brandName: 'NoAdsTools', toolsMenu: 'Tools', allTools: 'All tools',
   themeToggle: 'Toggle theme', tip: 'Support this site', tipShort: 'Support',
   privacy: 'Privacy', source: 'Source', tipFooter: 'Support this site', close: 'Close',
-  fdPrivacyTitle: 'Privacy',
-  fdPrivacyLead: 'This tool finds duplicate photos entirely in your browser. Your photos never leave your device — no upload, no account, no tracking.',
-  fdPrivacyFetchHeading: 'What this page loads',
-  fdPrivacyFetchList: '<li>HTML, CSS, and JavaScript from this site only — no third-party CDN.</li><li>The libheif decoder (~1.1 MB, from this origin) — ONLY if you add a HEIC photo. Used to read iPhone photos locally.</li><li>The JSZip library (~97 KB, from this origin) — ONLY if you click "Download unique set". Used to package your photos locally.</li>',
-  fdPrivacyStorageHeading: 'Local storage',
-  fdPrivacyStorageBody: 'Theme and chrome preferences only: <code>noadstools_lang</code>, <code>noadstools:settings:global</code>, and <code>noadstools:settings:find-duplicate-photos</code>. No photo data is ever stored.',
 } });
 injectTopbar({ toolId: 'find-duplicate-photos', lang: false, settings: false });
 injectFooter({ toolId: 'find-duplicate-photos' });
 initI18n();
 initSettings({ toolId: 'find-duplicate-photos' });
-registerPrivacyRows([
-  { headingKey: 'fdPrivacyFetchHeading', bodyKey: 'fdPrivacyFetchList', kind: 'list' },
-  { headingKey: 'fdPrivacyStorageHeading', bodyKey: 'fdPrivacyStorageBody', kind: 'text' },
-]);
-initPrivacy({ titleKey: 'fdPrivacyTitle', leadKey: 'fdPrivacyLead' });
 
 // --- State -------------------------------------------------------------------
 

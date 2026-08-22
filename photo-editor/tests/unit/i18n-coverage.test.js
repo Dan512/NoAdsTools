@@ -89,11 +89,12 @@ const LABELKEY_PROP_RE = /\blabelKey\s*:\s*['"]([a-zA-Z][a-zA-Z0-9_-]*)['"]/g;
 // `ariaKey: 'settingsThemeAria'` — registerSetting() definitions (shared +
 // glue) carry an ariaKey the popover passes to t(). Same shape as labelKey.
 const ARIAKEY_PROP_RE = /\bariaKey\s*:\s*['"]([a-zA-Z][a-zA-Z0-9_-]*)['"]/g;
-// `headingKey: 'privacyFetchesHeading'` / `bodyKey:` / `titleKey:` / `leadKey:`
-// / `staticLinkKey:` — registerPrivacyRows()/initPrivacy() (shared privacy panel
-// + editor glue) pass i18n keys as props the renderer feeds to t(). Same shape
-// as labelKey/ariaKey.
-const PRIVACY_KEY_PROP_RE = /\b(?:headingKey|bodyKey|titleKey|leadKey|staticLinkKey)\s*:\s*['"]([a-zA-Z][a-zA-Z0-9_-]*)['"]/g;
+// `titleKey: 'editorToolPan'` and friends — descriptor objects that carry an
+// i18n key as a prop for a renderer to feed to t() later. setToolPanel's
+// titleKey is the live one; headingKey/bodyKey/leadKey/staticLinkKey date from
+// the retired in-app privacy panel and are kept so the pattern still matches if
+// a future catalog reuses those names. Same shape as labelKey/ariaKey.
+const KEY_PROP_RE = /\b(?:headingKey|bodyKey|titleKey|leadKey|staticLinkKey)\s*:\s*['"]([a-zA-Z][a-zA-Z0-9_-]*)['"]/g;
 
 function collectFiles() {
   const out = [];
@@ -140,7 +141,7 @@ function extractKeys(content) {
   for (const m of content.matchAll(TIPKEY_PROP_RE))  keys.add(m[1]);
   for (const m of content.matchAll(LABELKEY_PROP_RE)) keys.add(m[1]);
   for (const m of content.matchAll(ARIAKEY_PROP_RE)) keys.add(m[1]);
-  for (const m of content.matchAll(PRIVACY_KEY_PROP_RE)) keys.add(m[1]);
+  for (const m of content.matchAll(KEY_PROP_RE)) keys.add(m[1]);
   return keys;
 }
 

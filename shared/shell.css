@@ -153,9 +153,10 @@ footer {
 }
 
 /* Header Privacy link (desktop only) — pairs with the .header-divider span
-   and the #privacy-toggle-header button. The .header-only-desktop class on
-   each makes them visible only at the desktop breakpoint; mobile keeps the
-   footer with its full set of links. */
+   and the #privacy-toggle-header anchor, which navigates to /privacy.html
+   (it was a dialog-opening button until the per-tool panels were retired).
+   The .header-only-desktop class on each makes them visible only at the
+   desktop breakpoint; mobile keeps the footer with its full set of links. */
 .topbar .header-link {
   background: none;
   border: none;
@@ -411,62 +412,3 @@ footer button:hover {
   color: var(--accent-hover);
 }
 
-/* --- Privacy panel modal (Phase 12B) ------------------------------------ */
-.privacy-panel-dialog {
-  max-width: min(720px, 90vw);
-  max-height: 85vh;
-  padding: 0;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-card);
-  background: var(--surface);
-  color: var(--text);
-  /* The browser positions <dialog> via offsetTop/Left; we want a margin so
-     keyboard-focus on the close button doesn't run into the viewport edge. */
-  margin: auto;
-  /* Dialog itself never scrolls — only the inner .prose does. Otherwise both
-     the dialog and the prose end up with scrollbars when content overflows
-     (visible as two stacked tracks in the top-right corner). */
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-}
-.privacy-panel-dialog::backdrop {
-  background: rgba(0, 0, 0, 0.5);
-}
-.privacy-panel-dialog .prose {
-  padding: var(--space-2xl);
-  max-width: 65ch;
-  margin: 0 auto;
-  overflow-y: auto;
-  /* Flex inside the dialog handles height — no fixed max-height needed. */
-  flex: 1;
-  min-height: 0;
-  /* Make sure links inside list items inherit the prose anchor color. */
-  position: relative;
-}
-.privacy-panel-dialog .dialog-close {
-  position: absolute;
-  top: var(--space-md);
-  right: var(--space-md);
-  width: 32px;
-  height: 32px;
-  border: none;
-  background: transparent;
-  font-size: var(--t-xl);
-  line-height: 1;
-  color: var(--text-muted);
-  cursor: pointer;
-  /* Sit above the article content so it remains clickable when the prose
-     scrolls. */
-  z-index: 1;
-}
-.privacy-panel-dialog .dialog-close:hover {
-  color: var(--text);
-}
-.privacy-panel-dialog .privacy-static-link {
-  margin-top: var(--space-xl);
-  padding-top: var(--space-lg);
-  border-top: 1px solid var(--border);
-  font-size: var(--t-sm);
-  color: var(--text-muted);
-}

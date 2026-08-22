@@ -12,7 +12,6 @@ import { registerTranslations, initI18n } from '/shared/i18n.js';
 import { injectTopbar } from '/shared/topbar.js';
 import { injectFooter } from '/shared/footer.js';
 import { initSettings } from '/shared/settings.js';
-import { registerPrivacyRows, initPrivacy } from '/shared/privacy.js';
 import { isAcceptedImage } from './intake.js';
 import { quantize } from './quantize.js';
 import { rgbToHex, rgbToHsl, labelOn, hexList, cssVars, toJson } from './color.js';
@@ -21,24 +20,12 @@ registerTranslations({ en: {
   brandName: 'NoAdsTools', toolsMenu: 'Tools', allTools: 'All tools',
   themeToggle: 'Toggle theme', tip: 'Support this site', tipShort: 'Support',
   privacy: 'Privacy', source: 'Source', tipFooter: 'Support this site', close: 'Close',
-  cpPrivacyTitle: 'Privacy',
-  cpPrivacyLead: 'This tool extracts a color palette entirely in your browser. Your image never leaves your device — no upload, no account, no tracking. The palette math is hand-written and runs on your image locally.',
-  cpPrivacyFetchHeading: 'What this page loads',
-  cpPrivacyFetchList: '<li>HTML, CSS, and JavaScript from this site only — no third-party CDN.</li>'
-    + '<li>Nothing else. This page makes NO third-party requests and loads NO extra libraries — palette extraction is pure JavaScript running on your image in the browser. After the page loads, it fetches nothing at all.</li>',
-  cpPrivacyStorageHeading: 'Local storage',
-  cpPrivacyStorageBody: 'Theme and chrome preferences only: <code>noadstools_lang</code>, <code>noadstools:settings:global</code>, and <code>noadstools:settings:color-palette-from-image</code>. No image data is ever stored.',
 } });
 
 injectTopbar({ toolId: 'color-palette-from-image', lang: false, settings: false });
 injectFooter({ toolId: 'color-palette-from-image' });
 initI18n();
 initSettings({ toolId: 'color-palette-from-image' });
-registerPrivacyRows([
-  { headingKey: 'cpPrivacyFetchHeading', bodyKey: 'cpPrivacyFetchList', kind: 'list' },
-  { headingKey: 'cpPrivacyStorageHeading', bodyKey: 'cpPrivacyStorageBody', kind: 'text' },
-]);
-initPrivacy({ titleKey: 'cpPrivacyTitle', leadKey: 'cpPrivacyLead' });
 
 // --- Constants --------------------------------------------------------------
 

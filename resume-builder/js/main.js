@@ -7,7 +7,6 @@ import { registerTranslations, initI18n } from '/shared/i18n.js';
 import { injectTopbar } from '/shared/topbar.js';
 import { injectFooter } from '/shared/footer.js';
 import { initSettings } from '/shared/settings.js';
-import { registerPrivacyRows, initPrivacy } from '/shared/privacy.js';
 import { createResume, addItem, removeItem, addSection, removeSection,
   moveItem, moveSection, moveItemTo, moveSectionTo, genResumeId } from './model.js';
 import { toJson, fromJson } from './serialize.js';
@@ -19,23 +18,12 @@ registerTranslations({ en: {
   brandName: 'NoAdsTools', toolsMenu: 'Tools', allTools: 'All tools',
   themeToggle: 'Toggle theme', tip: 'Support this site', tipShort: 'Support',
   privacy: 'Privacy', source: 'Source', tipFooter: 'Support this site', close: 'Close',
-  rbPrivacyTitle: 'Privacy',
-  rbPrivacyLead: 'This tool builds your resume entirely in your browser. Nothing you type — name, address, phone, work history — is ever uploaded. There is no server, no account, no tracking.',
-  rbPrivacyFetchHeading: 'What this page loads',
-  rbPrivacyFetchList: '<li>HTML, CSS, and JavaScript from this site only — no third-party requests at all, ever. This is the shortest list on the site.</li>',
-  rbPrivacyStorageHeading: 'Local storage',
-  rbPrivacyStorageBody: 'Every resume you create is saved in THIS browser’s local storage under <code>noadstools:resume:*</code> keys so a refresh never loses work — they stay on this device until you delete them or press “Clear my data”. Also stored: <code>noadstools_lang</code>, <code>noadstools:settings:global</code>, and <code>noadstools:settings:resume-builder</code> (theme and chrome preferences). On a shared computer, export a .json copy and clear your data when done.',
 } });
 
 injectTopbar({ toolId: 'resume-builder', lang: false, settings: false });
 injectFooter({ toolId: 'resume-builder' });
 initI18n();
 initSettings({ toolId: 'resume-builder' });
-registerPrivacyRows([
-  { headingKey: 'rbPrivacyFetchHeading', bodyKey: 'rbPrivacyFetchList', kind: 'list' },
-  { headingKey: 'rbPrivacyStorageHeading', bodyKey: 'rbPrivacyStorageBody', kind: 'text' },
-]);
-initPrivacy({ titleKey: 'rbPrivacyTitle', leadKey: 'rbPrivacyLead' });
 
 // --- Storage (guarded access: private-browsing can throw on the getter) -----
 let store = null;

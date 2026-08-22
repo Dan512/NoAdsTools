@@ -20,7 +20,7 @@
 //   loadHeicDecoder()         → returns the resolved `{ decode }` decoder
 //                               after consent is granted; throws on cancel
 //                               or load failure.
-//   ensureHeicConsent()       → exposed for tests + the privacy panel UI.
+//   ensureHeicConsent()       → exposed for tests.
 //   hasStoredConsent()        → read-only consent check.
 //   _setHeicDecoderForTest()  → test escape hatch.
 //   _resetForTest()           → wipes the cached promise + consent.

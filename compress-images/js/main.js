@@ -8,7 +8,6 @@ import { registerTranslations, initI18n } from '/shared/i18n.js';
 import { injectTopbar } from '/shared/topbar.js';
 import { injectFooter } from '/shared/footer.js';
 import { initSettings } from '/shared/settings.js';
-import { registerPrivacyRows, initPrivacy } from '/shared/privacy.js';
 import { escapeHtml } from '/shared/escape.js';
 import { CODEC_META } from '/shared/jsquash-loader.js';
 import {
@@ -21,28 +20,12 @@ registerTranslations({ en: {
   brandName: 'NoAdsTools', toolsMenu: 'Tools', allTools: 'All tools',
   themeToggle: 'Toggle theme', tip: 'Support this site', tipShort: 'Support',
   privacy: 'Privacy', source: 'Source', tipFooter: 'Support this site', close: 'Close',
-  cmPrivacyTitle: 'Privacy',
-  cmPrivacyLead: 'This tool compresses images entirely in your browser. Your images never leave your device — no upload, no account, no tracking. Compressing also strips EXIF/GPS metadata.',
-  cmPrivacyFetchHeading: 'What this page loads',
-  cmPrivacyFetchList: '<li>HTML, CSS, and JavaScript from this site only — no third-party CDN.</li>'
-    + '<li>The JPEG encoder (mozjpeg, ~246 KB WebAssembly, from this origin) — only when you compress to JPEG.</li>'
-    + '<li>The WebP encoder (~338 KB, from this origin) — only when you compress to WebP.</li>'
-    + '<li>The AVIF encoder (~3.3 MB, from this origin) — only when you compress to AVIF. It is the largest download and the slowest to run.</li>'
-    + '<li>The PNG optimizer (oxipng, ~160 KB, from this origin) — only when you compress a PNG.</li>'
-    + '<li>The JSZip library (~97 KB, from this origin) — only if you click "Download all (ZIP)". Used to package your images locally.</li>',
-  cmPrivacyStorageHeading: 'Local storage',
-  cmPrivacyStorageBody: 'Theme and chrome preferences only: <code>noadstools_lang</code>, <code>noadstools:settings:global</code>, and <code>noadstools:settings:compress-images</code>. No image data is ever stored.',
 } });
 
 injectTopbar({ toolId: 'compress-images', lang: false, settings: false });
 injectFooter({ toolId: 'compress-images' });
 initI18n();
 initSettings({ toolId: 'compress-images' });
-registerPrivacyRows([
-  { headingKey: 'cmPrivacyFetchHeading', bodyKey: 'cmPrivacyFetchList', kind: 'list' },
-  { headingKey: 'cmPrivacyStorageHeading', bodyKey: 'cmPrivacyStorageBody', kind: 'text' },
-]);
-initPrivacy({ titleKey: 'cmPrivacyTitle', leadKey: 'cmPrivacyLead' });
 
 // --- State + DOM -----------------------------------------------------------
 

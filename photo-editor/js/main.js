@@ -30,14 +30,14 @@ import { initLanguagePicker } from './languagePicker.js';
 import {
   registerEditorSettings, initSettings, initSettingsReactivity, seedExportDefaults,
 } from './settings.js';
-import { initPrivacy } from './privacy.js';
 import { initTargetSizeFromStorage, initUploadReadyFromStorage, initWatermarkFromStorage } from './state.js';
 
 async function boot() {
   // Inject the shared chrome FIRST — the topbar/footer carry the control IDs
   // (#theme-toggle, #settings-toggle, #lang-toggle, #privacy-toggle*) that
-  // settings/privacy/languagePicker bind to, and the data-i18n nodes initI18n()
-  // translates. Both must exist before any of those run.
+  // settings/languagePicker bind to, and the data-i18n nodes initI18n()
+  // translates. Both must exist before any of those run. Privacy is a plain
+  // link to /privacy.html#photo-editor — no JS wiring needed.
   injectTopbar({ toolId: 'photo-editor' });
   injectFooter({ toolId: 'photo-editor' });
 
@@ -57,8 +57,6 @@ async function boot() {
   initSettings({ toolId: 'photo-editor' });
   initSettingsReactivity();
   seedExportDefaults();
-  // Privacy modal also only needs the static footer button.
-  initPrivacy();
   // Restore the target-size slice (Feature 11). Safe to call before the
   // editor / queue panels build — they read state.ui.targetSize during
   // their first sync pass, after this restore has applied.

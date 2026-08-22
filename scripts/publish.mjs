@@ -42,6 +42,7 @@ const TOOL_DIRS = new Set(TOOLS.filter(t => t.status === 'live').map(t => `${t.s
 const INCLUDE = [
   // Platform root (homepage + site files)
   'index.html',
+  'privacy.html',
   'home.css',
   'home.js',
   '404.html',

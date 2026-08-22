@@ -6,7 +6,6 @@ import { registerTranslations, initI18n } from '/shared/i18n.js';
 import { injectTopbar } from '/shared/topbar.js';
 import { injectFooter } from '/shared/footer.js';
 import { initSettings } from '/shared/settings.js';
-import { registerPrivacyRows, initPrivacy } from '/shared/privacy.js';
 import { hasMetadata } from '/shared/exif.js';
 import { stripImage } from './strip.js';
 import { buildReport } from './report.js';
@@ -17,23 +16,12 @@ registerTranslations({ en: {
   brandName: 'NoAdsTools', toolsMenu: 'Tools', allTools: 'All tools',
   themeToggle: 'Toggle theme', tip: 'Support this site', tipShort: 'Support',
   privacy: 'Privacy', source: 'Source', tipFooter: 'Support this site', close: 'Close',
-  rxPrivacyTitle: 'Privacy',
-  rxPrivacyLead: 'This tool removes photo metadata entirely in your browser. Your images never leave your device — no upload, no account, no tracking.',
-  rxPrivacyFetchHeading: 'What this page loads',
-  rxPrivacyFetchList: '<li>HTML, CSS, and JavaScript from this site only — no third-party CDN.</li><li>The JSZip library (~97 KB, from this origin) — ONLY if you click "Download ZIP". Used to package your cleaned files locally.</li>',
-  rxPrivacyStorageHeading: 'Local storage',
-  rxPrivacyStorageBody: 'Theme and chrome preferences only: <code>noadstools_lang</code>, <code>noadstools:settings:global</code>, and <code>noadstools:settings:remove-exif</code>. No image data is ever stored.',
 } });
 
 injectTopbar({ toolId: 'remove-exif', lang: false, settings: false });
 injectFooter({ toolId: 'remove-exif' });
 initI18n();
 initSettings({ toolId: 'remove-exif' });
-registerPrivacyRows([
-  { headingKey: 'rxPrivacyFetchHeading', bodyKey: 'rxPrivacyFetchList', kind: 'list' },
-  { headingKey: 'rxPrivacyStorageHeading', bodyKey: 'rxPrivacyStorageBody', kind: 'text' },
-]);
-initPrivacy({ titleKey: 'rxPrivacyTitle', leadKey: 'rxPrivacyLead' });
 
 const state = []; // { name, mime, bytes } per successful row
 const dropzone = document.getElementById('dropzone');

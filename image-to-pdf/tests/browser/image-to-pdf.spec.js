@@ -10,6 +10,14 @@ async function boot(page) {
   await expect(page.locator('html')).toHaveAttribute('data-boot-ready', '1', { timeout: 5000 });
 }
 
+// shell.css hides body > footer at ≥768px and hides .header-only-desktop
+// below it, so exactly ONE of the two Privacy links is on screen per viewport.
+// Pick the one this project's device actually shows.
+function shownPrivacyLink(page) {
+  const wide = (page.viewportSize()?.width ?? 0) >= 768;
+  return page.locator(wide ? '#privacy-toggle-header' : 'footer #privacy-toggle');
+}
+
 // specs: [{ name, type, w, h, color }]
 async function addImages(page, specs) {
   await page.evaluate(async (specList) => {
@@ -183,12 +191,12 @@ test('HEIC is refused with a row linking the converter', async ({ page }) => {
   await expect(row.getByRole('button', { name: 'Remove photo.heic' })).toBeVisible();
 });
 
-test('privacy panel opens with the tool rows', async ({ page }) => {
+// Privacy is one static page now, not an in-app dialog per tool.
+test('privacy is a link to /privacy.html, anchored at its own row', async ({ page }) => {
   await boot(page);
-  await page.locator('#privacy-toggle-header').click();
-  const dialog = page.locator('#privacy-panel');
-  await expect(dialog).toBeVisible();
-  await expect(dialog.locator('h2').first()).toContainText('What this page loads');
-  await expect(dialog).toContainText('jsPDF');
-  await expect(dialog).toContainText('noadstools:settings:image-to-pdf');
+  const href = '/privacy.html#image-to-pdf';
+  await expect(page.locator('#privacy-toggle-header')).toHaveAttribute('href', href);
+  await expect(page.locator('footer #privacy-toggle')).toHaveAttribute('href', href);
+  await expect(shownPrivacyLink(page)).toBeVisible();
+  await expect(page.locator('#privacy-panel')).toHaveCount(0);
 });

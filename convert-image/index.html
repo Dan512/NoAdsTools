@@ -65,7 +65,7 @@
         <p class="control-hint">Higher keeps more detail; lower makes smaller files. PNG is lossless, so quality does not apply to it.</p>
       </div>
 
-      <p class="avif-caution" id="avif-caution" hidden><strong>Note</strong> — AVIF gives small files but downloads a 3.3&nbsp;MB encoder the first time and encodes more slowly. See the privacy panel on this page.</p>
+      <p class="avif-caution" id="avif-caution" hidden><strong>Note</strong>: AVIF gives small files but downloads a 3.3&nbsp;MB encoder the first time and encodes more slowly. That download is listed on <a href="/privacy.html#convert-image">the privacy page</a>.</p>
     </section>
 
     <p id="status-line" class="status-line" role="status" aria-live="polite" hidden></p>
@@ -109,7 +109,7 @@
       <p>Only the encoder for the format you actually chose gets fetched: mozjpeg for JPEG, oxipng to losslessly shrink PNG output, and the WebP and AVIF encoders for those two, at the sizes listed above. JSZip, roughly 97&nbsp;KB, is fetched only if you click "Download all (ZIP)". Nothing else is loaded, and no third-party CDN is involved.</p>
       <p>Your images are not part of any of that traffic. They are decoded, re-encoded, and handed back as downloads without being sent anywhere. Open the Network tab in DevTools while a batch converts and you can watch the codec arrive and nothing leave.</p>
       <p>Decoding also discards the file's EXIF and GPS metadata, so a converted copy says less about where you were than the original did.</p>
-      <p>There is no account, no tracking, and no upload step to opt out of. The full source is <a href="https://github.com/Dan512/NoAdsTools" target="_blank" rel="noopener">public on GitHub</a> under the AGPL-3.0 license, and the privacy panel on this page names every file this page can load and when.</p>
+      <p>There is no account, no tracking, and no upload step to opt out of. The full source is <a href="https://github.com/Dan512/NoAdsTools" target="_blank" rel="noopener">public on GitHub</a> under the AGPL-3.0 license, and <a href="/privacy.html#convert-image">the privacy page</a> gives this tool a row for each encoder and the choice that calls for it.</p>
 
       <h2>Questions</h2>
       <div class="faq">

@@ -16,7 +16,6 @@ import { registerTranslations, initI18n } from '/shared/i18n.js';
 import { injectTopbar } from '/shared/topbar.js';
 import { injectFooter } from '/shared/footer.js';
 import { initSettings } from '/shared/settings.js';
-import { registerPrivacyRows, initPrivacy } from '/shared/privacy.js';
 import { isPdf } from './intake.js';
 import { parseRanges } from './ranges.js';
 import { estPx, clampScaleForCanvas } from './render-opts.js';
@@ -26,25 +25,12 @@ registerTranslations({ en: {
   brandName: 'NoAdsTools', toolsMenu: 'Tools', allTools: 'All tools',
   themeToggle: 'Toggle theme', tip: 'Support this site', tipShort: 'Support',
   privacy: 'Privacy', source: 'Source', tipFooter: 'Support this site', close: 'Close',
-  pjPrivacyTitle: 'Privacy',
-  pjPrivacyLead: 'This tool converts your PDF to images entirely in your browser. Your PDF never leaves your device — no upload, no account, no tracking.',
-  pjPrivacyFetchHeading: 'What this page loads',
-  pjPrivacyFetchList: '<li>HTML, CSS, and JavaScript from this site only — no third-party CDN.</li>'
-    + '<li>The pdf.js library (~1.73 MB main + worker, from this origin) — ONLY when you open a PDF. Used to render the pages locally; its character maps and fonts are fetched from this origin only for PDFs that need them.</li>'
-    + '<li>The JSZip library (~97 KB, from this origin) — ONLY when you download more than one page together, to bundle the images into a ZIP locally.</li>',
-  pjPrivacyStorageHeading: 'Local storage',
-  pjPrivacyStorageBody: 'Theme and chrome preferences only: <code>noadstools_lang</code>, <code>noadstools:settings:global</code>, and <code>noadstools:settings:pdf-to-jpg</code>. No PDF or image data is ever stored.',
 } });
 
 injectTopbar({ toolId: 'pdf-to-jpg', lang: false, settings: false });
 injectFooter({ toolId: 'pdf-to-jpg' });
 initI18n();
 initSettings({ toolId: 'pdf-to-jpg' });
-registerPrivacyRows([
-  { headingKey: 'pjPrivacyFetchHeading', bodyKey: 'pjPrivacyFetchList', kind: 'list' },
-  { headingKey: 'pjPrivacyStorageHeading', bodyKey: 'pjPrivacyStorageBody', kind: 'text' },
-]);
-initPrivacy({ titleKey: 'pjPrivacyTitle', leadKey: 'pjPrivacyLead' });
 
 // --- Constants ---------------------------------------------------------------
 const THUMB_PX = 300;   // target backing-store width of a preview thumbnail (low memory)

@@ -12,7 +12,6 @@ import { registerTranslations, initI18n } from '/shared/i18n.js';
 import { injectTopbar } from '/shared/topbar.js';
 import { injectFooter } from '/shared/footer.js';
 import { initSettings } from '/shared/settings.js';
-import { registerPrivacyRows, initPrivacy } from '/shared/privacy.js';
 import { isPdf } from './intake.js';
 import { clampBox } from './place-rect.js';
 import { drawSignatureToPng, typeSignatureToPng } from './signature.js';
@@ -22,25 +21,12 @@ registerTranslations({ en: {
   brandName: 'NoAdsTools', toolsMenu: 'Tools', allTools: 'All tools',
   themeToggle: 'Toggle theme', tip: 'Support this site', tipShort: 'Support',
   privacy: 'Privacy', source: 'Source', tipFooter: 'Support this site', close: 'Close',
-  spPrivacyTitle: 'Privacy',
-  spPrivacyLead: 'This tool signs PDFs in your browser. Your PDF and your signature never leave your device — no upload, no account, no tracking — and the source file’s document properties are not carried into the signed copy.',
-  spPrivacyFetchHeading: 'What this page loads',
-  spPrivacyFetchList: '<li>HTML, CSS, and JavaScript from this site only — no third-party CDN.</li>'
-    + '<li>The pdf.js library (~1.73 MB main + worker, from this origin) — ONLY when you open a PDF. Used to render the page previews locally; its character maps and fonts are fetched from this origin only for PDFs that need them.</li>'
-    + '<li>The pdf-lib library (~511 KB, from this origin) — ONLY when you apply the signature. Used to embed and stamp the signature locally.</li>',
-  spPrivacyStorageHeading: 'Local storage',
-  spPrivacyStorageBody: 'Theme and chrome preferences only: <code>noadstools_lang</code>, <code>noadstools:settings:global</code>, and <code>noadstools:settings:sign-pdf</code>. No PDF or signature data is ever stored.',
 } });
 
 injectTopbar({ toolId: 'sign-pdf', lang: false, settings: false });
 injectFooter({ toolId: 'sign-pdf' });
 initI18n();
 initSettings({ toolId: 'sign-pdf' });
-registerPrivacyRows([
-  { headingKey: 'spPrivacyFetchHeading', bodyKey: 'spPrivacyFetchList', kind: 'list' },
-  { headingKey: 'spPrivacyStorageHeading', bodyKey: 'spPrivacyStorageBody', kind: 'text' },
-]);
-initPrivacy({ titleKey: 'spPrivacyTitle', leadKey: 'spPrivacyLead' });
 
 // --- Constants ---------------------------------------------------------------
 const DRAW_INK = '#12305c';      // dark blue-black ink for the draw pad

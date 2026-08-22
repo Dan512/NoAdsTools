@@ -10,7 +10,6 @@ import { registerTranslations, initI18n } from '/shared/i18n.js';
 import { injectTopbar } from '/shared/topbar.js';
 import { injectFooter } from '/shared/footer.js';
 import { initSettings } from '/shared/settings.js';
-import { registerPrivacyRows, initPrivacy } from '/shared/privacy.js';
 import { escapeHtml } from '/shared/escape.js';
 import { isPdf } from './intake.js';
 import { moveUp, moveDown, moveTo, removeAt } from './reorder.js';
@@ -20,23 +19,12 @@ registerTranslations({ en: {
   brandName: 'NoAdsTools', toolsMenu: 'Tools', allTools: 'All tools',
   themeToggle: 'Toggle theme', tip: 'Support this site', tipShort: 'Support',
   privacy: 'Privacy', source: 'Source', tipFooter: 'Support this site', close: 'Close',
-  mpPrivacyTitle: 'Privacy',
-  mpPrivacyLead: 'This tool merges your PDFs into one entirely in your browser. Your PDFs never leave your device — no upload, no account, no tracking — and the metadata inside the source files is not carried into the merged file.',
-  mpPrivacyFetchHeading: 'What this page loads',
-  mpPrivacyFetchList: '<li>HTML, CSS, and JavaScript from this site only — no third-party CDN.</li><li>The pdf-lib library (~511 KB, from this origin) — ONLY when you add a PDF. Used to read page counts and combine the PDFs locally.</li>',
-  mpPrivacyStorageHeading: 'Local storage',
-  mpPrivacyStorageBody: 'Theme and chrome preferences only: <code>noadstools_lang</code>, <code>noadstools:settings:global</code>, and <code>noadstools:settings:merge-pdf</code>. No PDF data is ever stored.',
 } });
 
 injectTopbar({ toolId: 'merge-pdf', lang: false, settings: false });
 injectFooter({ toolId: 'merge-pdf' });
 initI18n();
 initSettings({ toolId: 'merge-pdf' });
-registerPrivacyRows([
-  { headingKey: 'mpPrivacyFetchHeading', bodyKey: 'mpPrivacyFetchList', kind: 'list' },
-  { headingKey: 'mpPrivacyStorageHeading', bodyKey: 'mpPrivacyStorageBody', kind: 'text' },
-]);
-initPrivacy({ titleKey: 'mpPrivacyTitle', leadKey: 'mpPrivacyLead' });
 
 // --- State -------------------------------------------------------------------
 // items: ordered list of { id, file, name, size, pageCount, status, error, bytes }.

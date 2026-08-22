@@ -15,7 +15,6 @@ import { registerTranslations, initI18n } from '/shared/i18n.js';
 import { injectTopbar } from '/shared/topbar.js';
 import { injectFooter } from '/shared/footer.js';
 import { initSettings } from '/shared/settings.js';
-import { registerPrivacyRows, initPrivacy } from '/shared/privacy.js';
 import { isPdf } from './intake.js';
 import { parseRanges } from './ranges.js';
 import { assembleText, outName } from './extract-opts.js';
@@ -25,25 +24,12 @@ registerTranslations({ en: {
   brandName: 'NoAdsTools', toolsMenu: 'Tools', allTools: 'All tools',
   themeToggle: 'Toggle theme', tip: 'Support this site', tipShort: 'Support',
   privacy: 'Privacy', source: 'Source', tipFooter: 'Support this site', close: 'Close',
-  ptPrivacyTitle: 'Privacy',
-  ptPrivacyLead: 'This tool extracts and OCRs text from your PDF entirely in your browser. Your PDF never leaves your device — no upload, no account, no tracking.',
-  ptPrivacyFetchHeading: 'What this page loads',
-  ptPrivacyFetchList: '<li>HTML, CSS, and JavaScript from this site only — no third-party CDN.</li>'
-    + '<li>The pdf.js library (~1.73 MB main + worker, from this origin) — ONLY when you open a PDF. Used to read and render the pages locally; its character maps and fonts are fetched from this origin only for PDFs that need them.</li>'
-    + '<li>The Tesseract OCR engine (~22 MB, from this origin) — ONLY when a page needs OCR (a scanned or image-only page, or OCR-all mode). A normal digital PDF never fetches it. The English language data is part of that download.</li>',
-  ptPrivacyStorageHeading: 'Local storage',
-  ptPrivacyStorageBody: 'Theme and chrome preferences only: <code>noadstools_lang</code>, <code>noadstools:settings:global</code>, and <code>noadstools:settings:pdf-to-text</code>. No PDF or text data is ever stored.',
 } });
 
 injectTopbar({ toolId: 'pdf-to-text', lang: false, settings: false });
 injectFooter({ toolId: 'pdf-to-text' });
 initI18n();
 initSettings({ toolId: 'pdf-to-text' });
-registerPrivacyRows([
-  { headingKey: 'ptPrivacyFetchHeading', bodyKey: 'ptPrivacyFetchList', kind: 'list' },
-  { headingKey: 'ptPrivacyStorageHeading', bodyKey: 'ptPrivacyStorageBody', kind: 'text' },
-]);
-initPrivacy({ titleKey: 'ptPrivacyTitle', leadKey: 'ptPrivacyLead' });
 
 // --- State -------------------------------------------------------------------
 const state = {

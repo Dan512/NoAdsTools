@@ -22,6 +22,14 @@ async function boot(page) {
   await expect(page.locator('html')).toHaveAttribute('data-boot-ready', '1', { timeout: 5000 });
 }
 
+// shell.css hides body > footer at ≥768px and hides .header-only-desktop
+// below it, so exactly ONE of the two Privacy links is on screen per viewport.
+// Pick the one this project's device actually shows.
+function shownPrivacyLink(page) {
+  const wide = (page.viewportSize()?.width ?? 0) >= 768;
+  return page.locator(wide ? '#privacy-toggle-header' : 'footer #privacy-toggle');
+}
+
 // Fake 16x16 solid-color decoder — keeps the wasm out of the fast tests. The
 // loader module URL matches main.js's import of /shared/heic-loader.js, so
 // it's the SAME module instance and main.js picks the fake up.
@@ -169,14 +177,12 @@ test('JSZip loads lazily; ZIP downloads as noadstools-converted.zip', async ({ p
   expect(zipRequests.length).toBeGreaterThan(0);
 });
 
-test('privacy panel opens with the tool rows', async ({ page }) => {
+// Privacy is one static page now, not an in-app dialog per tool.
+test('privacy is a link to /privacy.html, anchored at its own row', async ({ page }) => {
   await boot(page);
-  await page.locator('#privacy-toggle-header').click();
-  const dialog = page.locator('#privacy-panel');
-  await expect(dialog).toBeVisible();
-  await expect(dialog.locator('h2').first()).toContainText('What this page loads');
-  await expect(dialog).toContainText('libheif');
-  await expect(dialog).toContainText('1.1 MB');
-  await expect(dialog).toContainText('JSZip');
-  await expect(dialog).toContainText('noadstools:settings:heic-to-jpg');
+  const href = '/privacy.html#heic-to-jpg';
+  await expect(page.locator('#privacy-toggle-header')).toHaveAttribute('href', href);
+  await expect(page.locator('footer #privacy-toggle')).toHaveAttribute('href', href);
+  await expect(shownPrivacyLink(page)).toBeVisible();
+  await expect(page.locator('#privacy-panel')).toHaveCount(0);
 });

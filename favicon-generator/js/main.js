@@ -14,7 +14,6 @@ import { registerTranslations, initI18n } from '/shared/i18n.js';
 import { injectTopbar } from '/shared/topbar.js';
 import { injectFooter } from '/shared/footer.js';
 import { initSettings } from '/shared/settings.js';
-import { registerPrivacyRows, initPrivacy } from '/shared/privacy.js';
 import { isAcceptedImage } from './intake.js';
 import { renderSquareCanvas, squareAndResize } from './render.js';
 import { icoEncode } from './ico-encode.js';
@@ -25,24 +24,12 @@ registerTranslations({ en: {
   brandName: 'NoAdsTools', toolsMenu: 'Tools', allTools: 'All tools',
   themeToggle: 'Toggle theme', tip: 'Support this site', tipShort: 'Support',
   privacy: 'Privacy', source: 'Source', tipFooter: 'Support this site', close: 'Close',
-  fgPrivacyTitle: 'Privacy',
-  fgPrivacyLead: 'This tool builds a favicon package entirely in your browser. Your image never leaves your device — no upload, no account, no tracking. The icons are drawn from your image on a canvas, and the ZIP is assembled locally.',
-  fgPrivacyFetchHeading: 'What this page loads',
-  fgPrivacyFetchList: '<li>HTML, CSS, and JavaScript from this site only — no third-party CDN.</li>'
-    + '<li>The JSZip library (~97 KB, from this origin) — only if you click "Download package". Used to pack the favicon files locally.</li>',
-  fgPrivacyStorageHeading: 'Local storage',
-  fgPrivacyStorageBody: 'Theme and chrome preferences only: <code>noadstools_lang</code>, <code>noadstools:settings:global</code>, and <code>noadstools:settings:favicon-generator</code>. No image data is ever stored.',
 } });
 
 injectTopbar({ toolId: 'favicon-generator', lang: false, settings: false });
 injectFooter({ toolId: 'favicon-generator' });
 initI18n();
 initSettings({ toolId: 'favicon-generator' });
-registerPrivacyRows([
-  { headingKey: 'fgPrivacyFetchHeading', bodyKey: 'fgPrivacyFetchList', kind: 'list' },
-  { headingKey: 'fgPrivacyStorageHeading', bodyKey: 'fgPrivacyStorageBody', kind: 'text' },
-]);
-initPrivacy({ titleKey: 'fgPrivacyTitle', leadKey: 'fgPrivacyLead' });
 
 // --- State ------------------------------------------------------------------
 

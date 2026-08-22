@@ -70,7 +70,7 @@
       <p>Then it re-scans its own output and reports whether the second scan came back clean. If verification fails, it tells you not to trust that file.</p>
       <p>Nothing is uploaded. Your photo is read from disk into the tab and goes no further. The byte editing runs on code this page already loaded from its own address, so once the page is open there is nothing left to fetch: you can disconnect from the internet and keep cleaning photos. The one exception is the "Download ZIP" button, which pulls a packer of about 97&nbsp;KB, also from this site, the first time you press it.</p>
       <p>You do not have to take that on faith. Open your browser's DevTools Network tab and clean a file. Nothing goes out.</p>
-      <p>The full source is <a href="https://github.com/Dan512/NoAdsTools" target="_blank" rel="noopener">public on GitHub</a> under the AGPL-3.0 license, and the privacy panel on this page names every file this page can load and when.</p>
+      <p>The full source is <a href="https://github.com/Dan512/NoAdsTools" target="_blank" rel="noopener">public on GitHub</a> under the AGPL-3.0 license, and <a href="/privacy.html#remove-exif">the privacy page</a> records that packer as the only thing fetched after load.</p>
 
       <h2>What comes out, and what stays in</h2>
       <p>Removed: EXIF, including GPS. XMP. IPTC and Photoshop blocks. Text comments. PNG timestamps. And anything appended after the image officially ends, which on Samsung and Google phones is often a short video clip with its own location track.</p>

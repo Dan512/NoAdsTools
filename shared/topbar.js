@@ -11,6 +11,7 @@
 import { escapeHtml } from './escape.js';
 import { liveTools, toolBySlug } from './tools.js';
 import { KOFI_URL } from './links.js';
+import { privacyHref } from './footer.js';
 
 export function buildTopbarHtml({ toolId, lang = true, settings = true } = {}) {
   const current = toolBySlug(toolId);
@@ -54,7 +55,7 @@ export function buildTopbarHtml({ toolId, lang = true, settings = true } = {}) {
         <span class="tip-short" data-i18n="tipShort">Support</span>
       </a>
       <span class="header-divider header-only-desktop" aria-hidden="true">·</span>
-      <button id="privacy-toggle-header" class="header-link header-only-desktop" type="button" data-i18n="privacy">Privacy</button>
+      <a id="privacy-toggle-header" class="header-link header-only-desktop" href="${privacyHref(toolId)}" data-i18n="privacy">Privacy</a>
     </div>`;
 }
 

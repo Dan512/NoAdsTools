@@ -8,7 +8,6 @@ import { registerTranslations, initI18n } from '/shared/i18n.js';
 import { injectTopbar } from '/shared/topbar.js';
 import { injectFooter } from '/shared/footer.js';
 import { initSettings } from '/shared/settings.js';
-import { registerPrivacyRows, initPrivacy } from '/shared/privacy.js';
 import { escapeHtml } from '/shared/escape.js';
 import { CODEC_META } from '/shared/jsquash-loader.js';
 import {
@@ -21,28 +20,12 @@ registerTranslations({ en: {
   brandName: 'NoAdsTools', toolsMenu: 'Tools', allTools: 'All tools',
   themeToggle: 'Toggle theme', tip: 'Support this site', tipShort: 'Support',
   privacy: 'Privacy', source: 'Source', tipFooter: 'Support this site', close: 'Close',
-  ciPrivacyTitle: 'Privacy',
-  ciPrivacyLead: 'This tool converts images entirely in your browser. Your images never leave your device — no upload, no account, no tracking. Converting also strips EXIF/GPS metadata.',
-  ciPrivacyFetchHeading: 'What this page loads',
-  ciPrivacyFetchList: '<li>HTML, CSS, and JavaScript from this site only — no third-party CDN.</li>'
-    + '<li>The JPEG encoder (mozjpeg, ~246 KB WebAssembly, from this origin) — only when you convert to JPEG.</li>'
-    + '<li>The WebP encoder (~338 KB, from this origin) — only when you convert to WebP.</li>'
-    + '<li>The AVIF encoder (~3.3 MB, from this origin) — only when you convert to AVIF. It is the largest download and the slowest to run.</li>'
-    + '<li>The PNG optimizer (oxipng, ~160 KB, from this origin) — only when you convert to PNG.</li>'
-    + '<li>The JSZip library (~97 KB, from this origin) — only if you click "Download all (ZIP)". Used to package your images locally.</li>',
-  ciPrivacyStorageHeading: 'Local storage',
-  ciPrivacyStorageBody: 'Theme and chrome preferences only: <code>noadstools_lang</code>, <code>noadstools:settings:global</code>, and <code>noadstools:settings:convert-image</code>. No image data is ever stored.',
 } });
 
 injectTopbar({ toolId: 'convert-image', lang: false, settings: false });
 injectFooter({ toolId: 'convert-image' });
 initI18n();
 initSettings({ toolId: 'convert-image' });
-registerPrivacyRows([
-  { headingKey: 'ciPrivacyFetchHeading', bodyKey: 'ciPrivacyFetchList', kind: 'list' },
-  { headingKey: 'ciPrivacyStorageHeading', bodyKey: 'ciPrivacyStorageBody', kind: 'text' },
-]);
-initPrivacy({ titleKey: 'ciPrivacyTitle', leadKey: 'ciPrivacyLead' });
 
 // --- State + DOM -----------------------------------------------------------
 

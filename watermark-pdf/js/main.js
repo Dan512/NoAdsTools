@@ -10,7 +10,6 @@ import { registerTranslations, initI18n } from '/shared/i18n.js';
 import { injectTopbar } from '/shared/topbar.js';
 import { injectFooter } from '/shared/footer.js';
 import { initSettings } from '/shared/settings.js';
-import { registerPrivacyRows, initPrivacy } from '/shared/privacy.js';
 import { isPdf, isRasterLogo } from './intake.js';
 import { parseRanges } from './ranges.js';
 import { loadPdf, applyWatermark, PdfEngineError } from './watermark.js';
@@ -19,23 +18,12 @@ registerTranslations({ en: {
   brandName: 'NoAdsTools', toolsMenu: 'Tools', allTools: 'All tools',
   themeToggle: 'Toggle theme', tip: 'Support this site', tipShort: 'Support',
   privacy: 'Privacy', source: 'Source', tipFooter: 'Support this site', close: 'Close',
-  wmPrivacyTitle: 'Privacy',
-  wmPrivacyLead: 'This tool adds watermarks in your browser. Your PDF and any logo image never leave your device — no upload, no account, no tracking — and the document properties inside the source file are not carried into the watermarked copy.',
-  wmPrivacyFetchHeading: 'What this page loads',
-  wmPrivacyFetchList: '<li>HTML, CSS, and JavaScript from this site only — no third-party CDN.</li><li>The pdf-lib library (~511 KB, from this origin) — ONLY when you add a PDF. Used to read the page count and stamp the watermark locally.</li>',
-  wmPrivacyStorageHeading: 'Local storage',
-  wmPrivacyStorageBody: 'Theme and chrome preferences only: <code>noadstools_lang</code>, <code>noadstools:settings:global</code>, and <code>noadstools:settings:watermark-pdf</code>. No PDF or logo data is ever stored.',
 } });
 
 injectTopbar({ toolId: 'watermark-pdf', lang: false, settings: false });
 injectFooter({ toolId: 'watermark-pdf' });
 initI18n();
 initSettings({ toolId: 'watermark-pdf' });
-registerPrivacyRows([
-  { headingKey: 'wmPrivacyFetchHeading', bodyKey: 'wmPrivacyFetchList', kind: 'list' },
-  { headingKey: 'wmPrivacyStorageHeading', bodyKey: 'wmPrivacyStorageBody', kind: 'text' },
-]);
-initPrivacy({ titleKey: 'wmPrivacyTitle', leadKey: 'wmPrivacyLead' });
 
 // --- State -------------------------------------------------------------------
 let src = null;                 // loaded source descriptor or null

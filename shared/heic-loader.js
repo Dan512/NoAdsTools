@@ -4,8 +4,8 @@
 // lands — 0 bytes at page boot.
 //
 // No-modal variant: decoding HEIC is the consuming tool's stated purpose,
-// so the disclosure is an inline note under the dropzone + a privacy-panel
-// row instead of a modal (spec §3.1). Consumers: heic-to-jpg,
+// so the disclosure is an inline note under the dropzone + a row on
+// /privacy.html instead of a modal (spec §3.1). Consumers: heic-to-jpg,
 // find-duplicate-photos. The photo editor keeps its OWN consent-modal
 // variant at photo-editor/js/vendor/heic-loader.js — that one is
 // intentionally separate and out of scope here. Same split-WASM strategy —

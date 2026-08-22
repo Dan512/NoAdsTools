@@ -10,7 +10,6 @@ import { registerTranslations, initI18n } from '/shared/i18n.js';
 import { injectTopbar } from '/shared/topbar.js';
 import { injectFooter } from '/shared/footer.js';
 import { initSettings } from '/shared/settings.js';
-import { registerPrivacyRows, initPrivacy } from '/shared/privacy.js';
 import qrcodegen from '/vendor/qrcodegen/qrcodegen.js';
 import { buildWifiPayload, renderToSvg } from './qr.js';
 
@@ -18,23 +17,12 @@ registerTranslations({ en: {
   brandName: 'NoAdsTools', toolsMenu: 'Tools', allTools: 'All tools',
   themeToggle: 'Toggle theme', tip: 'Support this site', tipShort: 'Support',
   privacy: 'Privacy', source: 'Source', tipFooter: 'Support this site', close: 'Close',
-  qrPrivacyTitle: 'Privacy',
-  qrPrivacyLead: 'This tool generates QR codes entirely in your browser. Nothing you type — URLs, WiFi passwords — leaves your device. No upload, no account, no tracking.',
-  qrPrivacyFetchHeading: 'What this page loads',
-  qrPrivacyFetchList: '<li>HTML, CSS, and JavaScript from this site only — no third-party CDN.</li><li>The QR encoder (Project Nayuki’s qrcodegen library, ~42 KB, from this origin) — loads with the page and runs locally.</li>',
-  qrPrivacyStorageHeading: 'Local storage',
-  qrPrivacyStorageBody: 'Theme and chrome preferences only: <code>noadstools_lang</code>, <code>noadstools:settings:global</code>, and <code>noadstools:settings:qr-code-generator</code>. Nothing you type is ever stored or sent.',
 } });
 
 injectTopbar({ toolId: 'qr-code-generator', lang: false, settings: false });
 injectFooter({ toolId: 'qr-code-generator' });
 initI18n();
 initSettings({ toolId: 'qr-code-generator' });
-registerPrivacyRows([
-  { headingKey: 'qrPrivacyFetchHeading', bodyKey: 'qrPrivacyFetchList', kind: 'list' },
-  { headingKey: 'qrPrivacyStorageHeading', bodyKey: 'qrPrivacyStorageBody', kind: 'text' },
-]);
-initPrivacy({ titleKey: 'qrPrivacyTitle', leadKey: 'qrPrivacyLead' });
 
 const { QrCode } = qrcodegen;
 const ECC = { L: QrCode.Ecc.LOW, M: QrCode.Ecc.MEDIUM, Q: QrCode.Ecc.QUARTILE, H: QrCode.Ecc.HIGH };

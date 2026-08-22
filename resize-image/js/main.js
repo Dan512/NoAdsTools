@@ -9,7 +9,6 @@ import { registerTranslations, initI18n } from '/shared/i18n.js';
 import { injectTopbar } from '/shared/topbar.js';
 import { injectFooter } from '/shared/footer.js';
 import { initSettings } from '/shared/settings.js';
-import { registerPrivacyRows, initPrivacy } from '/shared/privacy.js';
 import { escapeHtml } from '/shared/escape.js';
 import {
   createSession, addFiles, resizeAll, resizePending, clearSession,
@@ -20,25 +19,12 @@ registerTranslations({ en: {
   brandName: 'NoAdsTools', toolsMenu: 'Tools', allTools: 'All tools',
   themeToggle: 'Toggle theme', tip: 'Support this site', tipShort: 'Support',
   privacy: 'Privacy', source: 'Source', tipFooter: 'Support this site', close: 'Close',
-  riPrivacyTitle: 'Privacy',
-  riPrivacyLead: 'This tool resizes images entirely in your browser. Your images never leave your device — no upload, no account, no tracking. Re-encoding a resized image also removes its EXIF/GPS metadata; an image already smaller than your target is passed through unchanged and keeps its metadata.',
-  riPrivacyFetchHeading: 'What this page loads',
-  riPrivacyFetchList: '<li>HTML, CSS, and JavaScript from this site only — no third-party CDN.</li>'
-    + '<li>The pica image-resizing library (~53 KB, from this origin) — only when you resize an image. It runs entirely on your device; nothing is sent anywhere.</li>'
-    + '<li>The JSZip library (~97 KB, from this origin) — only if you click "Download all (ZIP)". Used to package your images locally.</li>',
-  riPrivacyStorageHeading: 'Local storage',
-  riPrivacyStorageBody: 'Theme and chrome preferences only: <code>noadstools_lang</code>, <code>noadstools:settings:global</code>, and <code>noadstools:settings:resize-image</code>. No image data is ever stored.',
 } });
 
 injectTopbar({ toolId: 'resize-image', lang: false, settings: false });
 injectFooter({ toolId: 'resize-image' });
 initI18n();
 initSettings({ toolId: 'resize-image' });
-registerPrivacyRows([
-  { headingKey: 'riPrivacyFetchHeading', bodyKey: 'riPrivacyFetchList', kind: 'list' },
-  { headingKey: 'riPrivacyStorageHeading', bodyKey: 'riPrivacyStorageBody', kind: 'text' },
-]);
-initPrivacy({ titleKey: 'riPrivacyTitle', leadKey: 'riPrivacyLead' });
 
 // --- State + DOM -----------------------------------------------------------
 

@@ -8,6 +8,14 @@ async function boot(page) {
   await expect(page.locator('html')).toHaveAttribute('data-boot-ready', '1', { timeout: 5000 });
 }
 
+// shell.css hides body > footer at ≥768px and hides .header-only-desktop
+// below it, so exactly ONE of the two Privacy links is on screen per viewport.
+// Pick the one this project's device actually shows.
+function shownPrivacyLink(page) {
+  const wide = (page.viewportSize()?.width ?? 0) >= 768;
+  return page.locator(wide ? '#privacy-toggle-header' : 'footer #privacy-toggle');
+}
+
 test('shell.css is self-sufficient: tokens resolve + topbar is styled', async ({ page }) => {
   await boot(page);
   const accent = await page.evaluate(() =>
@@ -27,7 +35,7 @@ test('topbar injects with the wordmark + all chrome controls', async ({ page }) 
 
 test('footer injects with privacy, source, and tip', async ({ page }) => {
   await boot(page);
-  await expect(page.locator('#privacy-toggle')).toHaveCount(1);
+  await expect(page.locator('footer #privacy-toggle')).toHaveCount(1);
   await expect(page.locator('footer a[data-i18n="source"]')).toHaveCount(1);
   await expect(page.locator('footer a[data-i18n="tipFooter"]')).toHaveCount(1);
 });
@@ -48,14 +56,15 @@ test('settings popover opens with the 3 global settings rows', async ({ page }) 
   await expect(popover.locator('[data-setting]')).toHaveCount(3);
 });
 
-test('privacy panel opens with the registered demo section (no editor)', async ({ page }) => {
+// Privacy is a link to the one static page, not an in-app dialog. The harness
+// passes a placeholder toolId, so the #anchor proves the toolId flows all the
+// way through the shared chrome into the href.
+test('privacy is a link to /privacy.html, anchored at this tool row', async ({ page }) => {
   await boot(page);
-  // Use the header privacy button (#privacy-toggle-header) — the footer's
-  // #privacy-toggle is hidden at desktop width by shell.css's ≥768px rule
-  // (same rule that existed in style.css; both buttons wire to the same handler).
-  await page.locator('#privacy-toggle-header').click();
-  const dialog = page.locator('#privacy-panel');
-  await expect(dialog).toBeVisible();
-  await expect(dialog.locator('h1')).toHaveText('Privacy');
-  await expect(dialog.locator('h2')).toHaveText('What this demo fetches');
+  const href = '/privacy.html#harness';
+  await expect(page.locator('#privacy-toggle-header')).toHaveAttribute('href', href);
+  await expect(page.locator('footer #privacy-toggle')).toHaveAttribute('href', href);
+  await expect(shownPrivacyLink(page)).toBeVisible();
+  // No dialog is created, and nothing is left wired to open one.
+  await expect(page.locator('#privacy-panel')).toHaveCount(0);
 });

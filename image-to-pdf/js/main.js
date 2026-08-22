@@ -11,7 +11,6 @@ import { registerTranslations, initI18n } from '/shared/i18n.js';
 import { injectTopbar } from '/shared/topbar.js';
 import { injectFooter } from '/shared/footer.js';
 import { initSettings } from '/shared/settings.js';
-import { registerPrivacyRows, initPrivacy } from '/shared/privacy.js';
 import { escapeHtml } from '/shared/escape.js';
 import { loadJsPdf } from './pdf-loader.js';
 import { jpegOrientation } from './jpeg-orientation.js';
@@ -20,23 +19,12 @@ registerTranslations({ en: {
   brandName: 'NoAdsTools', toolsMenu: 'Tools', allTools: 'All tools',
   themeToggle: 'Toggle theme', tip: 'Support this site', tipShort: 'Support',
   privacy: 'Privacy', source: 'Source', tipFooter: 'Support this site', close: 'Close',
-  ipPrivacyTitle: 'Privacy',
-  ipPrivacyLead: 'This tool combines your images into a PDF entirely in your browser. Your images never leave your device — no upload, no account, no tracking.',
-  ipPrivacyFetchHeading: 'What this page loads',
-  ipPrivacyFetchList: '<li>HTML, CSS, and JavaScript from this site only — no third-party CDN.</li><li>The jsPDF library (~420 KB, from this origin) — ONLY when you click "Create PDF". Used to assemble the PDF locally.</li>',
-  ipPrivacyStorageHeading: 'Local storage',
-  ipPrivacyStorageBody: 'Theme and chrome preferences only: <code>noadstools_lang</code>, <code>noadstools:settings:global</code>, and <code>noadstools:settings:image-to-pdf</code>. No image data is ever stored.',
 } });
 
 injectTopbar({ toolId: 'image-to-pdf', lang: false, settings: false });
 injectFooter({ toolId: 'image-to-pdf' });
 initI18n();
 initSettings({ toolId: 'image-to-pdf' });
-registerPrivacyRows([
-  { headingKey: 'ipPrivacyFetchHeading', bodyKey: 'ipPrivacyFetchList', kind: 'list' },
-  { headingKey: 'ipPrivacyStorageHeading', bodyKey: 'ipPrivacyStorageBody', kind: 'text' },
-]);
-initPrivacy({ titleKey: 'ipPrivacyTitle', leadKey: 'ipPrivacyLead' });
 
 // Named page sizes in PDF points (1 pt = 1/72 in). Fit-to-image is handled in
 // code (px-unit page at the image's own dimensions).
