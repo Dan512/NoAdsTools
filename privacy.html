@@ -16,26 +16,10 @@
   <link rel="apple-touch-icon" href="/photo-editor/img/apple-touch-icon.png" sizes="180x180">
 
   <link rel="stylesheet" href="/shared/shell.css">
+  <link rel="stylesheet" href="/shared/privacy-page.css">
 
-  <script>
-    /* Theme, applied BEFORE first paint so there is no flash of the wrong one.
-       shell.css themes via CSS light-dark(), so "auto" needs no JS and follows
-       the OS. An explicit choice is stored by shared/settings.js and applied as
-       <html data-theme>. This page loads no modules, so without this it would
-       ignore the user's site-wide choice and silently follow the OS instead.
-       Kept in sync with applyThemeFromState() in shared/settings.js. */
-    (function () {
-      try {
-        var raw = localStorage.getItem('noadstools:settings:global');
-        if (!raw) return;
-        var theme = JSON.parse(raw).theme;
-        // Allowlist: never write an arbitrary stored string into the DOM.
-        if (theme === 'light' || theme === 'dark') {
-          document.documentElement.setAttribute('data-theme', theme);
-        }
-      } catch (e) { /* corrupt or unavailable storage: fall back to auto */ }
-    })();
-  </script>
+  <script src="/shared/theme-boot.js"></script>
+
 
   <!-- Open Graph -->
   <meta property="og:title" content="Privacy — How NoAdsTools Works Without Uploading Your Files">
@@ -50,29 +34,6 @@
   <meta name="twitter:title" content="Privacy — How NoAdsTools Works Without Uploading Your Files">
   <meta name="twitter:description" content="A per-tool list of every file NoAdsTools downloads and when, what is stored locally, and how to check it yourself in DevTools.">
 
-  <style>
-    /* Scoped to this page. The shared shell has no table styles, and this page
-       is the only one that needs them. */
-    .fetch-table-wrap { overflow-x: auto; margin: var(--space-md) 0; }
-    .fetch-table { border-collapse: collapse; width: 100%; min-width: 34rem; font-size: 0.95rem; }
-    .fetch-table th, .fetch-table td {
-      text-align: left; vertical-align: top;
-      padding: var(--space-sm) var(--space-md) var(--space-sm) 0;
-      border-bottom: 1px solid var(--border);
-    }
-    .fetch-table th { font-weight: 600; }
-    .fetch-table tbody tr { scroll-margin-top: 5rem; }
-    /* Arriving from a tool's Privacy link highlights that tool's row. Marked
-       with a background shift AND a left bar, never hue alone. */
-    .fetch-table tbody tr:target td { background: var(--surface-2); }
-    .fetch-table tbody tr:target td:first-child {
-      box-shadow: inset 3px 0 0 0 var(--text);
-      padding-left: var(--space-sm);
-    }
-    .fetch-table td:first-child { white-space: nowrap; font-weight: 600; }
-    .fetch-table .nothing { font-weight: 400; }
-    .prose .verify-steps li { margin-bottom: var(--space-sm); }
-  </style>
 </head>
 <body>
   <header class="topbar">
@@ -235,56 +196,6 @@
     <a href="https://ko-fi.com/noadsdude" target="_blank" rel="noopener">Support this site</a>
   </footer>
 
-  <script>
-    /* Theme toggle. Mirrors bindThemeToggle() + applyThemeButtonIcon() in
-       shared/settings.js, writing the same GLOBAL_KEY so the choice round-trips
-       with the rest of the site. Inline rather than importing settings.js
-       because that module also mounts a settings popover this page has no
-       controls for. Read-modify-write: never clobber the other global keys. */
-    (function () {
-      var KEY = 'noadstools:settings:global';
-      var btn = document.getElementById('theme-toggle');
-      if (!btn) return;
-
-      function readGlobal() {
-        try {
-          var o = JSON.parse(localStorage.getItem(KEY) || '{}');
-          return (o && typeof o === 'object' && !Array.isArray(o)) ? o : {};
-        } catch (e) { return {}; }
-      }
-
-      // The user can hide the theme button site-wide in settings.
-      if (readGlobal().showThemeButton === false) { btn.hidden = true; return; }
-
-      function displayed() {
-        var attr = document.documentElement.getAttribute('data-theme');
-        if (attr === 'light' || attr === 'dark') return attr;
-        try {
-          if (window.matchMedia
-              && window.matchMedia('(prefers-color-scheme: dark)').matches) return 'dark';
-        } catch (e) { /* ignore */ }
-        return 'light';
-      }
-
-      function paintIcon() { btn.textContent = displayed() === 'dark' ? '🌙' : '☀️'; }
-      paintIcon();
-
-      btn.addEventListener('click', function () {
-        var next = displayed() === 'dark' ? 'light' : 'dark';
-        var g = readGlobal();
-        g.theme = next;
-        try { localStorage.setItem(KEY, JSON.stringify(g)); } catch (e) { /* ignore */ }
-        document.documentElement.setAttribute('data-theme', next);
-        paintIcon();
-      });
-
-      // Keep the icon honest while the stored choice is "auto".
-      try {
-        var mql = window.matchMedia('(prefers-color-scheme: dark)');
-        if (mql.addEventListener) mql.addEventListener('change', paintIcon);
-        else if (mql.addListener) mql.addListener(paintIcon);
-      } catch (e) { /* older browsers */ }
-    })();
-  </script>
+  <script type="module" src="/shared/privacy-page.js"></script>
 </body>
 </html>

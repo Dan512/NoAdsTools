@@ -1,0 +1,23 @@
+/* shared/privacy-page.css — table + target-row styles for /privacy.
+   Lifted out of an inline <style> so the CSP needs no style hash. */
+/* Scoped to this page. The shared shell has no table styles, and this page
+   is the only one that needs them. */
+.fetch-table-wrap { overflow-x: auto; margin: var(--space-md) 0; }
+.fetch-table { border-collapse: collapse; width: 100%; min-width: 34rem; font-size: 0.95rem; }
+.fetch-table th, .fetch-table td {
+  text-align: left; vertical-align: top;
+  padding: var(--space-sm) var(--space-md) var(--space-sm) 0;
+  border-bottom: 1px solid var(--border);
+}
+.fetch-table th { font-weight: 600; }
+.fetch-table tbody tr { scroll-margin-top: 5rem; }
+/* Arriving from a tool's Privacy link highlights that tool's row. Marked
+   with a background shift AND a left bar, never hue alone. */
+.fetch-table tbody tr:target td { background: var(--surface-2); }
+.fetch-table tbody tr:target td:first-child {
+  box-shadow: inset 3px 0 0 0 var(--text);
+  padding-left: var(--space-sm);
+}
+.fetch-table td:first-child { white-space: nowrap; font-weight: 600; }
+.fetch-table .nothing { font-weight: 400; }
+.prose .verify-steps li { margin-bottom: var(--space-sm); }

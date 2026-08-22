@@ -33,11 +33,8 @@
        Versioning convention: v{MAJOR}.{MINOR}.{PATCH} where PATCH is
        zero-padded two digits — bump PATCH for every shipped change, no
        matter how small. Reset PATCH when bumping MINOR. -->
-  <script>
-    window.__NOADSTOOLS_VERSION__ = 'v1.2.10';
-    window.__NOADSTOOLS_BUILD__ = window.__NOADSTOOLS_VERSION__ + ' — 2026-07-01';
-    console.log('%c[NoAdsTools build] ' + window.__NOADSTOOLS_BUILD__, 'color:#4a9; font-weight:600;');
-  </script>
+  <script src="./js/version-banner.js"></script>
+
 
   <!-- Open Graph (Facebook, LinkedIn, Discord, Slack previews) -->
   <meta property="og:title" content="NoAdsTools Photo Editor — Batch image editing in your browser">
@@ -75,8 +72,11 @@
     ]
   }
   </script>
+  <script src="/shared/theme-boot.js"></script>
+
 </head>
 <body>
+  <header class="topbar" aria-hidden="true"></header>
   <main id="workspace">
     <section id="queue-view" class="view"></section>
     <section id="editor-view" class="view" hidden></section>
@@ -127,14 +127,6 @@
        `import("onnxruntime-web")` / `import("onnxruntime-web/webgpu")` calls
        would fail in a vanilla browser.  All vendored libs are served from
        this origin — no third-party CDN. -->
-  <script type="importmap">
-  {
-    "imports": {
-      "onnxruntime-web":        "/photo-editor/js/vendor/onnxruntime-web/ort.bundle.min.mjs",
-      "onnxruntime-web/webgpu": "/photo-editor/js/vendor/onnxruntime-web/ort.webgpu.bundle.min.mjs"
-    }
-  }
-  </script>
   <script type="module" src="js/main.js"></script>
 </body>
 </html>

@@ -11,16 +11,33 @@
 import { test, expect } from '@playwright/test';
 
 test.describe('bg-remove vendored assets', () => {
-  test('index.html exposes an importmap that resolves both onnxruntime-web variants', async ({ page }) => {
+  // There used to be an inline <script type="importmap"> here mapping the bare
+  // specifier "onnxruntime-web". A strict CSP blocks inline scripts, and import
+  // maps cannot be external, so the vendored bundle now imports both execution
+  // providers by absolute path instead. This test guards the replacement: the
+  // paths must resolve, and the import map must NOT come back, because it would
+  // be silently blocked in production.
+  test('both onnxruntime-web bundles resolve by path, with no importmap', async ({ page }) => {
     await page.goto('/photo-editor/');
     await expect(page.locator('html')).toHaveAttribute('data-boot-ready', '1', { timeout: 5000 });
-    // The importmap must be present and reference our vendored bundle paths
-    // for both the CPU and WebGPU execution providers.
-    const importmap = await page.locator('script[type="importmap"]').textContent();
-    expect(importmap).toBeTruthy();
-    const parsed = JSON.parse(importmap);
-    expect(parsed.imports['onnxruntime-web']).toBe('/photo-editor/js/vendor/onnxruntime-web/ort.bundle.min.mjs');
-    expect(parsed.imports['onnxruntime-web/webgpu']).toBe('/photo-editor/js/vendor/onnxruntime-web/ort.webgpu.bundle.min.mjs');
+
+    await expect(page.locator('script[type="importmap"]')).toHaveCount(0);
+
+    for (const path of [
+      '/photo-editor/js/vendor/onnxruntime-web/ort.bundle.min.mjs',
+      '/photo-editor/js/vendor/onnxruntime-web/ort.webgpu.bundle.min.mjs',
+    ]) {
+      const res = await page.request.get(path);
+      expect(res.status(), `${path} should be served`).toBe(200);
+      expect(res.headers()['content-type']).toMatch(/javascript/);
+    }
+
+    // And the vendored bundle must actually reference those paths, not the old
+    // bare specifier that only worked via the map.
+    const src = await (await page.request.get('/photo-editor/js/vendor/bgremove/index.mjs')).text();
+    expect(src).toContain('/photo-editor/js/vendor/onnxruntime-web/ort.bundle.min.mjs');
+    expect(src).toContain('/photo-editor/js/vendor/onnxruntime-web/ort.webgpu.bundle.min.mjs');
+    expect(src).not.toMatch(/import\("onnxruntime-web"\)/);
   });
 
   test('resources.json is reachable and lists the keys we vendored (CPU + WebGPU)', async ({ page }) => {
@@ -49,7 +66,7 @@ test.describe('bg-remove vendored assets', () => {
 
     const result = await page.evaluate(async () => {
       try {
-        const mod = await import('onnxruntime-web/webgpu');
+        const mod = await import('/photo-editor/js/vendor/onnxruntime-web/ort.webgpu.bundle.min.mjs');
         const candidate = mod.default || mod;
         return {
           ok: true,
@@ -85,7 +102,7 @@ test.describe('bg-remove vendored assets', () => {
 
     const result = await page.evaluate(async () => {
       try {
-        const mod = await import('onnxruntime-web');
+        const mod = await import('/photo-editor/js/vendor/onnxruntime-web/ort.bundle.min.mjs');
         // The bundle exports `InferenceSession`, `Tensor`, `env`, etc. either
         // as `default` or as named exports. Either is fine — we just need to
         // confirm the bare-specifier import resolves and the module shape

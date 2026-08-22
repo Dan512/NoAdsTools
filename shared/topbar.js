@@ -59,12 +59,20 @@ export function buildTopbarHtml({ toolId, lang = true, settings = true } = {}) {
     </div>`;
 }
 
+// Module scripts are deferred, so this runs AFTER first paint. Inserting a
+// 56px-tall header at that point shoves the whole page down by 56px, which is
+// a visible jump on a cold load and a real CLS hit. Pages therefore ship an
+// empty <header class="topbar"> in their static HTML to reserve the space, and
+// we fill that in place instead of inserting. The insert path stays for any
+// page that has no placeholder.
 export function injectTopbar(opts = {}) {
   if (typeof document === 'undefined') return;
-  const header = document.createElement('header');
+  const placeholder = document.querySelector('body > header.topbar');
+  const header = placeholder || document.createElement('header');
   header.className = 'topbar';
+  header.removeAttribute('aria-hidden');   // reserved-space markup is inert until filled
   header.innerHTML = buildTopbarHtml(opts);
-  document.body.insertBefore(header, document.body.firstChild);
+  if (!placeholder) document.body.insertBefore(header, document.body.firstChild);
   bindToolsMenu();
 }
 

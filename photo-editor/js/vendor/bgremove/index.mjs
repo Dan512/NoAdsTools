@@ -997,9 +997,9 @@ var getOrt = async (useWebGPU) => {
     return ort;
   }
   if (useWebGPU) {
-    ort = (await import("onnxruntime-web/webgpu")).default;
+    ort = (await import("/photo-editor/js/vendor/onnxruntime-web/ort.webgpu.bundle.min.mjs")).default; /* NoAdsTools: was "onnxruntime-web/webgpu" (import map removed for CSP) */
   } else {
-    ort = (await import("onnxruntime-web")).default;
+    ort = (await import("/photo-editor/js/vendor/onnxruntime-web/ort.bundle.min.mjs")).default; /* NoAdsTools: was "onnxruntime-web" (import map removed for CSP) */
   }
   return ort;
 };
