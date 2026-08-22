@@ -92,6 +92,6 @@ test('SEO head has the title, canonical, and WebSite JSON-LD', async ({ page }) 
   await page.goto('/');
   await expect(page).toHaveTitle(/NoAdsTools/);
   await expect(page.locator('link[rel="canonical"]')).toHaveAttribute('href', 'https://noadstools.com/');
-  const ld = await page.locator('script[type="application/ld+json"]').textContent();
+  const ld = (await page.locator('script[type="application/ld+json"]').allTextContents()).join('\n');
   expect(ld).toContain('"WebSite"');
 });

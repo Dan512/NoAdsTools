@@ -163,7 +163,7 @@ test('SEO head + minimal chrome (no lang picker, no settings gear)', async ({ pa
   await page.goto('/split-pdf/');
   await expect(page).toHaveTitle('Split PDF Online — Free, No Upload · NoAdsTools');
   await expect(page.locator('link[rel="canonical"]')).toHaveAttribute('href', 'https://noadstools.com/split-pdf/');
-  const ld = await page.locator('script[type="application/ld+json"]').textContent();
+  const ld = (await page.locator('script[type="application/ld+json"]').allTextContents()).join('\n');
   expect(ld).toContain('"SoftwareApplication"');
   await expect(page.locator('h1')).toHaveCount(1);
   await expect(page.locator('#lang-toggle')).toHaveCount(0);

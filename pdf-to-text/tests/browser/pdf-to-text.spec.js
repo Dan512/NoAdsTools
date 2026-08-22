@@ -121,7 +121,7 @@ test('SEO head + minimal chrome (single h1, no lang/settings, JSON-LD)', async (
   await page.goto('/pdf-to-text/');
   await expect(page).toHaveTitle('PDF to Text Online — Free, No Upload · NoAdsTools');
   await expect(page.locator('link[rel="canonical"]')).toHaveAttribute('href', 'https://noadstools.com/pdf-to-text/');
-  const ld = await page.locator('script[type="application/ld+json"]').textContent();
+  const ld = (await page.locator('script[type="application/ld+json"]').allTextContents()).join('\n');
   expect(ld).toContain('"SoftwareApplication"');
   expect(ld).toContain('"UtilitiesApplication"');
   expect(ld).toContain('"price": "0"');

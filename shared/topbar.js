@@ -13,6 +13,52 @@ import { liveTools, toolBySlug } from './tools.js';
 import { KOFI_URL } from './links.js';
 import { privacyHref } from './footer.js';
 
+// The dropdown lists every live tool, which is 20 and climbing, so it is
+// grouped rather than one flat column. Categories not named here fall into
+// "Other tools" — today that is just the QR generator, and 'dev' has no live
+// tools at all. Empty groups are omitted.
+// `href` points at the category landing page where one exists. Linking the
+// caption gives those pages an inbound link from every page on the site
+// instead of the single one on the homepage, which is most of what gets a
+// category page crawled at all. "Other tools" has no page, so it stays a
+// plain caption.
+const MENU_GROUPS = Object.freeze([
+  { id: 'image', label: 'Image tools', href: '/image-tools/' },
+  { id: 'pdf', label: 'PDF tools', href: '/pdf-tools/' },
+  { id: 'documents', label: 'Document tools', href: '/document-tools/' },
+]);
+const OTHER_LABEL = 'Other tools';
+
+// ARIA: role="group" is a valid child of role="menu"; a bare heading element
+// would violate aria-required-children. The group carries the name via
+// aria-label, and the visible caption is aria-hidden so it is not announced
+// twice.
+export function buildToolsMenuGroups(toolId) {
+  const tools = liveTools();
+  const named = new Set(MENU_GROUPS.map(g => g.id));
+  const groups = [
+    ...MENU_GROUPS.map(g => ({
+      label: g.label, href: g.href, items: tools.filter(t => t.category === g.id),
+    })),
+    { label: OTHER_LABEL, href: null, items: tools.filter(t => !named.has(t.category)) },
+  ].filter(g => g.items.length > 0);
+
+  return groups.map(g => {
+    const items = g.items.map(tl => {
+      const here = tl.slug === toolId ? ' aria-current="page"' : '';
+      return `<a role="menuitem" class="tools-menu-item" href="/${escapeHtml(tl.slug)}/"${here}>${escapeHtml(tl.title)}</a>`;
+    }).join('');
+    // A linked caption is a real menuitem, so it must NOT be aria-hidden or
+    // keyboard users could not reach it. An unlinked caption stays hidden from
+    // AT because the group's aria-label already announces the same words.
+    const caption = g.href
+      ? `<a role="menuitem" class="tools-menu-heading tools-menu-heading-link" href="${escapeHtml(g.href)}">${escapeHtml(g.label)}</a>`
+      : `<span class="tools-menu-heading" aria-hidden="true">${escapeHtml(g.label)}</span>`;
+    return `<div role="group" class="tools-menu-group" aria-label="${escapeHtml(g.label)}">`
+      + `${caption}${items}</div>`;
+  }).join('');
+}
+
 export function buildTopbarHtml({ toolId, lang = true, settings = true } = {}) {
   const current = toolBySlug(toolId);
   const toolName = current ? current.title : '';
@@ -20,10 +66,7 @@ export function buildTopbarHtml({ toolId, lang = true, settings = true } = {}) {
     ? ` <span class="wordmark-tool">${escapeHtml(toolName)}</span>`
     : '';
 
-  const menuItems = liveTools().map(tl => {
-    const here = tl.slug === toolId ? ' aria-current="page"' : '';
-    return `<a role="menuitem" class="tools-menu-item" href="/${escapeHtml(tl.slug)}/"${here}>${escapeHtml(tl.title)}</a>`;
-  }).join('');
+  const menuItems = buildToolsMenuGroups(toolId);
 
   const langBtn = lang
     ? `

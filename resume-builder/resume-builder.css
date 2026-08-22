@@ -78,3 +78,15 @@
 #tool .rb-resumes { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; margin: 1rem 0 .25rem; }
 #tool .rb-resumes #resume-name { flex: 1 1 12rem; min-width: 0; }
 #tool .rb-resumes button { transition: none; }
+
+/* Cross-link to the cover letter tool. Quiet by design: it sits above the
+   form, so it must not compete with the controls. Marked with a left rule
+   rather than a background tint so it reads as an aside at any contrast. */
+#tool .rb-crosslink {
+  margin: 0 0 var(--space-xl);
+  padding-left: var(--space-md);
+  border-left: 3px solid var(--border);
+  color: var(--text-secondary);
+  font-size: var(--t-sm);
+  max-width: 70ch;
+}

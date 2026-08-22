@@ -5,6 +5,7 @@
 // read better than the manifest's. The cost of hand-writing is drift, so this
 // file is the guard — each page's links must match liveTools() exactly.
 import { test, expect } from '@playwright/test';
+import AxeBuilder from '@axe-core/playwright';
 import { liveTools, CATEGORIES } from '../../shared/tools.js';
 
 // Category id -> the page that covers it. Categories deliberately WITHOUT a
@@ -36,8 +37,12 @@ for (const [category, url] of Object.entries(PAGES)) {
     await expect(page.locator('link[rel="canonical"]'))
       .toHaveAttribute('href', `https://noadstools.com${url}`);
 
-    const ld = JSON.parse(await page.locator('script[type="application/ld+json"]').textContent());
-    expect(ld['@type']).toBe('CollectionPage');
+    // These pages carry two JSON-LD blocks now (CollectionPage + BreadcrumbList),
+    // so pick the one under test rather than assuming there is only one.
+    const blocks = await page.locator('script[type="application/ld+json"]')
+      .evaluateAll((els) => els.map((e) => JSON.parse(e.textContent)));
+    const ld = blocks.find((b) => b['@type'] === 'CollectionPage');
+    expect(ld, 'CollectionPage JSON-LD missing').toBeTruthy();
     // The structured data must not disagree with the visible links.
     const ldUrls = ld.mainEntity.itemListElement.map((i) => new URL(i.url).pathname);
     const expected = liveTools()
@@ -104,4 +109,36 @@ test('any category big enough to deserve a page has one', async ({ page }) => {
 
   expect(missing, `these categories now warrant a landing page: ${missing.join(', ')}`)
     .toEqual([]);
+});
+
+// The Tools dropdown is grouped by category. Grouping inside role="menu" is
+// the part that can go wrong: role="menu" permits only certain children, so a
+// heading element or a stray wrapper would be an aria-required-children
+// violation. This opens the menu and runs axe against it.
+test('the grouped Tools menu is accessible with the dropdown open', async ({ page }) => {
+  await page.goto('/merge-pdf/');
+  await expect(page.locator('html')).toHaveAttribute('data-boot-ready', '1', { timeout: 5000 });
+
+  await page.locator('#tools-menu-toggle').click();
+  await expect(page.locator('#tools-menu-list')).toBeVisible();
+
+  const headings = await page.locator('#tools-menu-list .tools-menu-heading').allTextContents();
+  expect(headings).toEqual(['Image tools', 'PDF tools', 'Document tools', 'Other tools']);
+
+  // Every live tool is reachable from the menu, exactly once.
+  // :not(.tools-menu-all) — the trailing "All tools" link shares the item class.
+  const hrefs = await page.locator('#tools-menu-list .tools-menu-item:not(.tools-menu-all)')
+    .evaluateAll((as) => as.map((a) => a.getAttribute('href')));
+  expect(hrefs.slice().sort()).toEqual(liveTools().map((t) => `/${t.slug}/`).sort());
+
+  // AxeBuilder, not addScriptTag: the CSP blocks injected inline scripts, which
+  // is itself a nice confirmation the policy is live in the test run.
+  const results = await new AxeBuilder({ page })
+    .include('#tools-menu-list')
+    .withTags(['wcag2a', 'wcag2aa'])
+    .analyze();
+  const blockers = results.violations
+    .filter((v) => v.impact === 'serious' || v.impact === 'critical')
+    .map((v) => `${v.id}: ${v.help}`);
+  expect(blockers).toEqual([]);
 });

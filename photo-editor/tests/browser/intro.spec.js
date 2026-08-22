@@ -102,12 +102,17 @@ test('canonical link tag points to the production URL', async ({ page }) => {
 
 test('JSON-LD WebApplication block is present and parses as valid JSON', async ({ page }) => {
   await page.goto('/photo-editor/');
-  const text = await page.locator('script[type="application/ld+json"]').textContent();
-  expect(text).not.toBeNull();
-  // Parse — would throw on malformed JSON.
-  const parsed = JSON.parse(text);
+  // The page carries more than one JSON-LD block now (the app description plus
+  // a BreadcrumbList), so parse them all and pick this one. Parsing every block
+  // also keeps the "malformed JSON throws" guarantee for both.
+  const blocks = await page.locator('script[type="application/ld+json"]')
+    .evaluateAll((els) => els.map((e) => e.textContent));
+  expect(blocks.length).toBeGreaterThan(0);
+  const parsedAll = blocks.map((t) => JSON.parse(t));
+
+  const parsed = parsedAll.find((b) => b['@type'] === 'WebApplication');
+  expect(parsed, 'WebApplication block missing').toBeTruthy();
   expect(parsed['@context']).toBe('https://schema.org');
-  expect(parsed['@type']).toBe('WebApplication');
   expect(parsed.name).toBe('NoAdsTools Photo Editor');
 });
 

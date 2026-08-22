@@ -18,7 +18,18 @@
 /* Everything scoped under #tool (playbook: bare class names leak onto the
    injected topbar). #paper is a REAL-UNIT page; on screen it is scaled with
    transform, in print the scale is stripped and the browser paginates it. */
-#tool { width: 100%; box-sizing: border-box; }
+/* Full width (the two-pane layout needs it) but never flush to the viewport
+   edge. The other tools set this in their own stylesheet; the paper tools
+   cannot, because this file owns #tool. box-sizing keeps the total at 100%,
+   and the @media print block below resets padding to 0. */
+#tool {
+  width: 100%;
+  box-sizing: border-box;
+  padding: var(--space-xl) var(--space-xl) var(--space-4xl);
+}
+@media screen and (max-width: 700px) {
+  #tool { padding: var(--space-lg) var(--space-md) var(--space-3xl); }
+}
 
 #tool .rb-viewtoggle { display: none; margin: .5rem 0; }
 /* minmax(0, 1fr) matters: a plain 1fr track has an `auto` minimum, so it can

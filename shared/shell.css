@@ -329,6 +329,9 @@ footer button:hover {
   border: 1px solid var(--border);
   border-radius: var(--radius-card);
   box-shadow: 0 6px 24px light-dark(oklch(0 0 0 / 0.12), oklch(0 0 0 / 0.4));
+  /* Every live tool is listed, so the menu can outgrow a short viewport. */
+  max-height: min(70vh, 32rem);
+  overflow-y: auto;
 }
 .topbar .tools-menu-list[hidden] { display: none; }
 /* RTL (e.g. ar): mirror the dropdown to the right edge of its anchor. */
@@ -348,6 +351,33 @@ footer button:hover {
   border-top: 1px solid var(--border);
   border-radius: 0;
   color: var(--text-muted);
+}
+
+/* Grouped dropdown. The caption is a plain span (a heading element would be an
+   invalid child of role="menu"); the group's accessible name comes from its
+   aria-label instead. */
+.topbar .tools-menu-group { display: contents; }
+.topbar .tools-menu-heading {
+  display: block;
+  padding: var(--space-sm) var(--space-md) var(--space-xs);
+  font-size: var(--t-xs);
+  font-weight: 600;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  text-decoration: none;
+}
+/* Captions for categories that have a landing page are real links. Underline
+   on hover/focus so the affordance is not carried by color alone. */
+.topbar .tools-menu-heading-link:hover,
+.topbar .tools-menu-heading-link:focus-visible {
+  color: var(--text);
+  text-decoration: underline;
+}
+/* Separate groups after the first without drawing a line for every one. */
+.topbar .tools-menu-group + .tools-menu-group .tools-menu-heading {
+  margin-top: var(--space-xs);
+  border-top: 1px solid var(--border);
 }
 
 @media (pointer: coarse) {

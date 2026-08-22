@@ -32,7 +32,7 @@ test('SEO head + single h1 + JSON-LD', async ({ page }) => {
   await page.goto('/resume-builder/');
   await expect(page).toHaveTitle('Resume Builder Online — Free, No Sign-Up · NoAdsTools');
   await expect(page.locator('link[rel="canonical"]')).toHaveAttribute('href', 'https://noadstools.com/resume-builder/');
-  const ld = await page.locator('script[type="application/ld+json"]').textContent();
+  const ld = (await page.locator('script[type="application/ld+json"]').allTextContents()).join('\n');
   expect(ld).toContain('"SoftwareApplication"');
   expect(ld).toContain('"price": "0"');
   expect(ld).toContain('agpl-3.0');

@@ -86,7 +86,7 @@ test('SEO head: title, canonical, SoftwareApplication JSON-LD, single h1', async
   await page.goto('/resize-image/');
   await expect(page).toHaveTitle('Resize Image Online — Free, No Upload · NoAdsTools');
   await expect(page.locator('link[rel="canonical"]')).toHaveAttribute('href', 'https://noadstools.com/resize-image/');
-  const ld = await page.locator('script[type="application/ld+json"]').textContent();
+  const ld = (await page.locator('script[type="application/ld+json"]').allTextContents()).join('\n');
   expect(ld).toContain('"SoftwareApplication"');
   await expect(page.locator('h1')).toHaveCount(1);
 });

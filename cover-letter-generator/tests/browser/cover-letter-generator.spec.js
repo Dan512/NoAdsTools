@@ -56,7 +56,7 @@ test('1. SEO head: title, canonical, JSON-LD, single h1', async ({ page }) => {
   await expect(page).toHaveTitle('Cover Letter Generator Online — Free, No Sign-Up · NoAdsTools');
   await expect(page.locator('link[rel="canonical"]'))
     .toHaveAttribute('href', 'https://noadstools.com/cover-letter-generator/');
-  const ld = await page.locator('script[type="application/ld+json"]').textContent();
+  const ld = (await page.locator('script[type="application/ld+json"]').allTextContents()).join('\n');
   expect(ld).toContain('"SoftwareApplication"');
   expect(ld).toContain('"price": "0"');
   expect(ld).toContain('agpl-3.0');

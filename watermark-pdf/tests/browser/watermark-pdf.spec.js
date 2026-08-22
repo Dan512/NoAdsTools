@@ -154,7 +154,7 @@ test('SEO head + minimal chrome (no lang picker, no settings gear)', async ({ pa
   await page.goto('/watermark-pdf/');
   await expect(page).toHaveTitle('Watermark PDF Online — Free, No Upload · NoAdsTools');
   await expect(page.locator('link[rel="canonical"]')).toHaveAttribute('href', 'https://noadstools.com/watermark-pdf/');
-  const ld = await page.locator('script[type="application/ld+json"]').textContent();
+  const ld = (await page.locator('script[type="application/ld+json"]').allTextContents()).join('\n');
   expect(ld).toContain('"SoftwareApplication"');
   await expect(page.locator('h1')).toHaveCount(1);
   await expect(page.locator('#lang-toggle')).toHaveCount(0);

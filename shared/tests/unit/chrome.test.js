@@ -4,8 +4,9 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
-const { buildTopbarHtml } = await import('../../topbar.js');
+const { buildTopbarHtml, buildToolsMenuGroups } = await import('../../topbar.js');
 const { buildFooterHtml, privacyHref } = await import('../../footer.js');
+const { liveTools } = await import('../../tools.js');
 
 test('topbar reproduces every control ID the editor binds to', () => {
   const html = buildTopbarHtml({ toolId: 'photo-editor' });
@@ -99,4 +100,50 @@ test('topbar defaults include both language and settings controls', () => {
   const html = buildTopbarHtml({ toolId: 'photo-editor' });
   assert.ok(html.includes('id="lang-toggle"'), 'default includes lang toggle');
   assert.ok(html.includes('id="settings-toggle"'), 'default includes settings gear');
+});
+
+test('tools menu is grouped by category, and every live tool appears once', () => {
+  const html = buildToolsMenuGroups('merge-pdf');
+
+  // Four groups in a fixed order; "Other tools" is the catch-all for any
+  // category without a named group (today: the QR generator).
+  const groups = [...html.matchAll(/role="group"[^>]*aria-label="([^"]+)"/g)].map((m) => m[1]);
+  assert.deepEqual(groups, ['Image tools', 'PDF tools', 'Document tools', 'Other tools']);
+
+  // No tool may be dropped or duplicated by the grouping.
+  const hrefs = [...html.matchAll(/class="tools-menu-item" href="\/([a-z0-9-]+)\//g)].map((m) => m[1]);
+  assert.deepEqual(hrefs.slice().sort(), liveTools().map((t) => t.slug).sort());
+  assert.equal(new Set(hrefs).size, hrefs.length, 'a tool is listed twice');
+
+  // The current tool is still marked.
+  assert.equal((html.match(/aria-current="page"/g) || []).length, 1);
+
+  // ARIA: role="menu" only permits certain children, so a caption is never a
+  // heading element. Captions for categories with a landing page are real
+  // menuitem links; the rest are aria-hidden spans (the group's aria-label
+  // already announces the same words).
+  assert.ok(!/<h[1-6]/.test(html), 'no heading elements inside the menu');
+  assert.ok(html.includes('<span class="tools-menu-heading" aria-hidden="true">Other tools</span>'),
+    'an unlinked caption must be an aria-hidden span');
+  assert.ok(!/tools-menu-heading-link[^>]*aria-hidden/.test(html),
+    'a linked caption must NOT be aria-hidden or keyboard users cannot reach it');
+});
+
+test('captions link to the category landing pages that exist', () => {
+  const html = buildToolsMenuGroups(null);
+  const linked = [...html.matchAll(/tools-menu-heading-link" href="([^"]+)"/g)].map((m) => m[1]);
+  assert.deepEqual(linked, ['/image-tools/', '/pdf-tools/', '/document-tools/']);
+  // "Other tools" has no landing page, so it must stay unlinked.
+  assert.ok(!html.includes('href="/other-tools/"'));
+});
+
+test('a category with no live tools produces no empty group', () => {
+  const html = buildToolsMenuGroups(null);
+  // 'dev' exists in CATEGORIES but ships nothing, so it must not appear.
+  assert.ok(!html.includes('aria-label="Developer"'));
+  const groupCount = (html.match(/role="group"/g) || []).length;
+  // Count caption ELEMENTS, not class occurrences: "tools-menu-heading-link"
+  // also contains "tools-menu-heading".
+  const labelCount = (html.match(/class="tools-menu-heading[ "]/g) || []).length;
+  assert.equal(groupCount, labelCount, 'every group needs exactly one caption');
 });
