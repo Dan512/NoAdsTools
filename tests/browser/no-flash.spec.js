@@ -73,6 +73,39 @@ for (const url of PAGES) {
   });
 }
 
+test('photo-editor ships its landing content, not an empty shell', async ({ request }) => {
+  // #queue-view used to be an empty <section> that JS filled after first paint,
+  // so the headline and drop zone (the entire above-the-fold area of the
+  // busiest page) arrived late and pushed the page around. They are static now
+  // and queueView.js adopts them. This also gives the page an <h1> in the
+  // served markup, which it previously had nowhere.
+  const html = await (await request.get('/photo-editor/')).text();
+
+  expect(html, 'the intro must be in the served HTML').toContain('class="queue-intro"');
+  expect(html, 'the drop zone must be in the served HTML').toContain('class="queue-empty"');
+  expect(html).toMatch(/<h1[^>]*class="intro-title"/);
+  expect(html, 'static copy needs data-i18n or it cannot be translated')
+    .toContain('data-i18n="introTitle"');
+});
+
+test('photo-editor renders exactly one intro and one drop zone after boot', async ({ page }) => {
+  // The failure mode of shipping static markup is a duplicate once JS runs.
+  await page.goto('/photo-editor/');
+  await expect(page.locator('html')).toHaveAttribute('data-boot-ready', '1', { timeout: 5000 });
+
+  await expect(page.locator('#queue-view .queue-intro')).toHaveCount(1);
+  await expect(page.locator('#queue-view .queue-empty')).toHaveCount(1);
+
+  // ...and that the adopted browse button is wired exactly once.
+  const fired = await page.evaluate(async () => {
+    let n = 0;
+    document.addEventListener('noadstools:openFileBrowser', () => { n++; });
+    document.querySelector('.queue-browse').click();
+    return n;
+  });
+  expect(fired, 'browse button should fire once, not zero or twice').toBe(1);
+});
+
 test('the injector fills the reserved header instead of adding a second one', async ({ page }) => {
   await page.goto('/image-tools/');
   await expect(page.locator('html')).toHaveAttribute('data-boot-ready', '1', { timeout: 5000 });

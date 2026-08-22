@@ -338,17 +338,34 @@ function render(state) {
 
 function ensureEmptyState(root) {
   if (emptyEl && emptyEl.isConnected) return;
+  // Same as ensureIntro: adopt the server-sent drop zone when it is still
+  // there, and wire its browse button.
+  const existing = root.querySelector(':scope > .queue-empty');
+  if (existing) {
+    emptyEl = existing;
+    bindBrowse(emptyEl);
+    return;
+  }
   emptyEl = document.createElement('div');
   emptyEl.className = 'queue-empty';
   emptyEl.innerHTML = `
     <div>
-      <p>${escapeHtml(t('queueEmptyDragHint'))} <button type="button" class="text-link queue-browse">${escapeHtml(t('queueEmptyClickToBrowse'))}</button>.</p>
+      <p><span data-i18n="queueEmptyDragHint">${escapeHtml(t('queueEmptyDragHint'))}</span> <button type="button" class="text-link queue-browse" data-i18n="queueEmptyClickToBrowse">${escapeHtml(t('queueEmptyClickToBrowse'))}</button>.</p>
     </div>
   `;
-  emptyEl.querySelector('.queue-browse').addEventListener('click', () => {
+  bindBrowse(emptyEl);
+  root.appendChild(emptyEl);
+}
+
+// Bound once per drop-zone element, whether it came from the HTML or from the
+// template above. Guarded so adopting twice cannot double-fire the browser.
+function bindBrowse(el) {
+  const btn = el.querySelector('.queue-browse');
+  if (!btn || btn.dataset.browseBound === '1') return;
+  btn.dataset.browseBound = '1';
+  btn.addEventListener('click', () => {
     document.dispatchEvent(new CustomEvent('noadstools:openFileBrowser'));
   });
-  root.appendChild(emptyEl);
 }
 
 // Intro landing copy, rendered ABOVE the drop zone when the queue is empty.
@@ -356,6 +373,11 @@ function ensureEmptyState(root) {
 // wordmark is a <p> so the document has exactly one h1.
 function ensureIntro(root) {
   if (introEl && introEl.isConnected) return;
+  // index.html ships this markup so it is painted immediately; adopt it rather
+  // than rendering a duplicate. Only build it when it is genuinely absent,
+  // which happens after the queue was populated and then emptied again.
+  const existing = root.querySelector(':scope > .queue-intro');
+  if (existing) { introEl = existing; return; }
   introEl = document.createElement('section');
   introEl.className = 'queue-intro';
   // No user-derived content here; t() output is HTML-escaped for variable

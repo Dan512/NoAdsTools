@@ -78,7 +78,30 @@
 <body>
   <header class="topbar" aria-hidden="true"></header>
   <main id="workspace">
-    <section id="queue-view" class="view"></section>
+    <section id="queue-view" class="view">
+      <!-- Rendered here rather than by JS so it is present at first paint.
+           queueView.js ADOPTS these nodes (see ensureIntro/ensureEmptyState)
+           instead of creating duplicates, and still removes them once the
+           queue has images. -->
+      <section class="queue-intro">
+        <h1 class="intro-title" data-i18n="introTitle">Batch image editing in your browser.</h1>
+        <p class="intro-lead" data-i18n="introLead">Resize, crop, adjust, redact, remove backgrounds, and export PNG, JPG, WebP, or PDF. Import JPEG, PNG, WebP, GIF, or HEIC. Image files never leave your device.</p>
+        <p class="intro-tags" data-i18n="introTags">Free · No signup · Open source</p>
+        <ul class="intro-features">
+          <li data-i18n="introFeatureBatch">Batch resize and export — save images as a ZIP</li>
+          <li data-i18n="introFeatureBgRemove">Remove backgrounds — no upload required</li>
+          <li data-i18n="introFeatureRedact">Redact details — blur or pixelate selected areas</li>
+          <li data-i18n="introFeatureChromakey">Make colors transparent — eyedropper with tolerance</li>
+          <li data-i18n="introFeatureExport">Export PNG, JPG, WebP, or PDF — control quality per image</li>
+          <li data-i18n="introFeatureHeic">Import HEIC from iPhone — decoded locally, never uploaded</li>
+        </ul>
+      </section>
+      <div class="queue-empty">
+        <div>
+          <p><span data-i18n="queueEmptyDragHint">Drag images here, or paste, or</span> <button type="button" class="text-link queue-browse" data-i18n="queueEmptyClickToBrowse">click to browse</button>.</p>
+        </div>
+      </div>
+    </section>
     <section id="editor-view" class="view" hidden></section>
   </main>
 
