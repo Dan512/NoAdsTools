@@ -79,9 +79,9 @@ test('theme toggle flips html[data-theme]', async ({ page }) => {
 });
 
 // Privacy is one static page now, not an in-app dialog per tool.
-test('privacy is a link to /privacy.html, with no anchor (the homepage has no row)', async ({ page }) => {
+test('privacy is a link to /privacy, with no anchor (the homepage has no row)', async ({ page }) => {
   await boot(page);
-  const href = '/privacy.html';
+  const href = '/privacy';
   await expect(page.locator('#privacy-toggle-header')).toHaveAttribute('href', href);
   await expect(page.locator('footer #privacy-toggle')).toHaveAttribute('href', href);
   await expect(shownPrivacyLink(page)).toBeVisible();

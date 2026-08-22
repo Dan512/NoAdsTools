@@ -6,7 +6,7 @@
 
   <title>Privacy — How NoAdsTools Works Without Uploading Your Files · NoAdsTools</title>
   <meta name="description" content="Every file you open in a NoAdsTools tool is processed in your browser. This page lists exactly what each of the 20 tools downloads, when it downloads it, what is kept in local storage, and how to verify all of it yourself.">
-  <link rel="canonical" href="https://noadstools.com/privacy.html">
+  <link rel="canonical" href="https://noadstools.com/privacy">
 
   <link rel="icon" type="image/png" sizes="32x32"   href="/photo-editor/img/favicon-light-32.png"  media="(prefers-color-scheme: light)">
   <link rel="icon" type="image/png" sizes="192x192" href="/photo-editor/img/favicon-light-192.png" media="(prefers-color-scheme: light)">
@@ -17,10 +17,30 @@
 
   <link rel="stylesheet" href="/shared/shell.css">
 
+  <script>
+    /* Theme, applied BEFORE first paint so there is no flash of the wrong one.
+       shell.css themes via CSS light-dark(), so "auto" needs no JS and follows
+       the OS. An explicit choice is stored by shared/settings.js and applied as
+       <html data-theme>. This page loads no modules, so without this it would
+       ignore the user's site-wide choice and silently follow the OS instead.
+       Kept in sync with applyThemeFromState() in shared/settings.js. */
+    (function () {
+      try {
+        var raw = localStorage.getItem('noadstools:settings:global');
+        if (!raw) return;
+        var theme = JSON.parse(raw).theme;
+        // Allowlist: never write an arbitrary stored string into the DOM.
+        if (theme === 'light' || theme === 'dark') {
+          document.documentElement.setAttribute('data-theme', theme);
+        }
+      } catch (e) { /* corrupt or unavailable storage: fall back to auto */ }
+    })();
+  </script>
+
   <!-- Open Graph -->
   <meta property="og:title" content="Privacy — How NoAdsTools Works Without Uploading Your Files">
   <meta property="og:description" content="A per-tool list of every file NoAdsTools downloads and when, what is stored locally, and how to check it yourself in DevTools.">
-  <meta property="og:url" content="https://noadstools.com/privacy.html">
+  <meta property="og:url" content="https://noadstools.com/privacy">
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="NoAdsTools">
   <meta property="og:locale" content="en_US">
@@ -63,6 +83,7 @@
       <span class="header-divider header-only-desktop" aria-hidden="true">·</span>
       <a class="header-link header-only-desktop" href="https://github.com/Dan512/NoAdsTools" target="_blank" rel="noopener">Source</a>
       <span class="header-divider header-only-desktop" aria-hidden="true">·</span>
+      <button id="theme-toggle" type="button" aria-label="Toggle theme">☀️</button>
       <a class="btn-tip" href="https://ko-fi.com/noadsdude" target="_blank" rel="noopener">
         <span class="tip-full">Support this site</span>
         <span class="tip-short">Support</span>
@@ -188,6 +209,8 @@
       <p>Two things worth knowing while you look. Requests with the "Fetch/XHR" or "Script" type that arrive when you first use a feature are the engines listed above. And the useful column is the size and direction of the request: a tool that uploaded your photo would have to send a request as large as the photo, and there is not one.</p>
       <p>If you want to go further, the entire site is open source and you can read the code that does the work.</p>
 
+      <p>If you find something here that does not match what your Network tab shows, that is a bug worth reporting in the <a href="https://github.com/Dan512/NoAdsTools/issues" target="_blank" rel="noopener">issue tracker</a>.</p>
+
       <h2>Translations</h2>
       <p>The interface is translated into 15 languages with the help of AI tools. Some of those translations will be imperfect. If you find a bad one, the issue tracker in the source repository is the place to report it.</p>
 
@@ -198,10 +221,6 @@
       <h2>Support this site</h2>
       <p>There are no ads and nothing to buy. If the tools are useful, you can <a href="https://ko-fi.com/noadsdude" target="_blank" rel="noopener">leave a tip on Ko-fi</a>. That is entirely optional and nothing is withheld if you do not.</p>
 
-      <h2>Why this is one page</h2>
-      <p>Each tool used to carry its own privacy panel. Twenty separate copies of the same disclosure turned out to be twenty things that could quietly fall out of date, and some of them did: several pages once claimed you could disconnect from the internet and keep working, which was not true of any tool that downloads its engine on first use.</p>
-      <p>So there is now one page, and every tool links to it. The Privacy link on any tool brings you straight to that tool's row in the table above.</p>
-      <p>If you find something here that does not match what your Network tab shows, that is a bug worth reporting in the <a href="https://github.com/Dan512/NoAdsTools/issues" target="_blank" rel="noopener">issue tracker</a>.</p>
     </article>
   </main>
 
@@ -215,5 +234,57 @@
     <span aria-hidden="true">·</span>
     <a href="https://ko-fi.com/noadsdude" target="_blank" rel="noopener">Support this site</a>
   </footer>
+
+  <script>
+    /* Theme toggle. Mirrors bindThemeToggle() + applyThemeButtonIcon() in
+       shared/settings.js, writing the same GLOBAL_KEY so the choice round-trips
+       with the rest of the site. Inline rather than importing settings.js
+       because that module also mounts a settings popover this page has no
+       controls for. Read-modify-write: never clobber the other global keys. */
+    (function () {
+      var KEY = 'noadstools:settings:global';
+      var btn = document.getElementById('theme-toggle');
+      if (!btn) return;
+
+      function readGlobal() {
+        try {
+          var o = JSON.parse(localStorage.getItem(KEY) || '{}');
+          return (o && typeof o === 'object' && !Array.isArray(o)) ? o : {};
+        } catch (e) { return {}; }
+      }
+
+      // The user can hide the theme button site-wide in settings.
+      if (readGlobal().showThemeButton === false) { btn.hidden = true; return; }
+
+      function displayed() {
+        var attr = document.documentElement.getAttribute('data-theme');
+        if (attr === 'light' || attr === 'dark') return attr;
+        try {
+          if (window.matchMedia
+              && window.matchMedia('(prefers-color-scheme: dark)').matches) return 'dark';
+        } catch (e) { /* ignore */ }
+        return 'light';
+      }
+
+      function paintIcon() { btn.textContent = displayed() === 'dark' ? '🌙' : '☀️'; }
+      paintIcon();
+
+      btn.addEventListener('click', function () {
+        var next = displayed() === 'dark' ? 'light' : 'dark';
+        var g = readGlobal();
+        g.theme = next;
+        try { localStorage.setItem(KEY, JSON.stringify(g)); } catch (e) { /* ignore */ }
+        document.documentElement.setAttribute('data-theme', next);
+        paintIcon();
+      });
+
+      // Keep the icon honest while the stored choice is "auto".
+      try {
+        var mql = window.matchMedia('(prefers-color-scheme: dark)');
+        if (mql.addEventListener) mql.addEventListener('change', paintIcon);
+        else if (mql.addListener) mql.addListener(paintIcon);
+      } catch (e) { /* older browsers */ }
+    })();
+  </script>
 </body>
 </html>

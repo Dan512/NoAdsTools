@@ -3,7 +3,7 @@
 // theme, and wires client-side category-pill filtering over the static tool
 // cards. Imports shared modules only.
 //
-// Privacy is a plain link to the single /privacy.html — no in-app panel. The
+// Privacy is a plain link to the single /privacy — no in-app panel. The
 // homepage passes no toolId to the chrome, so the link carries no #anchor and
 // lands the reader at the top of that page (there is no "home" row).
 import { registerTranslations, initI18n } from '/shared/i18n.js';

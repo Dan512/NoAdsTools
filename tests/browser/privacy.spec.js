@@ -3,7 +3,7 @@
 // This spec exists to replace coverage that was LOST when the 20 per-tool
 // in-app privacy panels were retired. Each tool's spec used to assert its own
 // disclosure text ("libheif", "1.1 MB", the localStorage keys). Those panels
-// are gone, so without this file nothing would notice if /privacy.html quietly
+// are gone, so without this file nothing would notice if /privacy quietly
 // stopped listing a tool, or if a tool linked to an anchor that does not exist.
 //
 // The drift guard is the first test: it walks liveTools() against the table.
@@ -12,7 +12,7 @@ import { test, expect } from '@playwright/test';
 import { liveTools } from '../../shared/tools.js';
 
 test('every live tool has its own row on the privacy page', async ({ page }) => {
-  await page.goto('/privacy.html');
+  await page.goto('/privacy');
 
   const rowIds = await page.locator('.fetch-table tbody tr[id]').evaluateAll(
     (rows) => rows.map((r) => r.id),
@@ -24,7 +24,7 @@ test('every live tool has its own row on the privacy page', async ({ page }) => 
 });
 
 test('each row links to the tool it describes', async ({ page }) => {
-  await page.goto('/privacy.html');
+  await page.goto('/privacy');
 
   for (const slug of liveTools().map((t) => t.slug)) {
     const link = page.locator(`.fetch-table tr#${slug} td:first-child a`);
@@ -37,7 +37,7 @@ test('each row links to the tool it describes', async ({ page }) => {
 // numbers a reader can check in DevTools, so a silent edit that drops one
 // should break the build.
 test('the page still states the load-bearing disclosure facts', async ({ page }) => {
-  await page.goto('/privacy.html');
+  await page.goto('/privacy');
   const text = await page.locator('article.prose').innerText();
 
   for (const fact of [
@@ -59,7 +59,7 @@ test('the page still states the load-bearing disclosure facts', async ({ page })
 });
 
 test('the in-app privacy dialog is gone site-wide', async ({ page }) => {
-  await page.goto('/privacy.html');
+  await page.goto('/privacy');
   await expect(page.locator('#privacy-panel')).toHaveCount(0);
 });
 
@@ -71,9 +71,9 @@ test('the retired photo-editor privacy page redirects to the canonical one', asy
   expect(res.status()).toBe(200);
   const html = await res.text();
 
-  expect(html).toContain('<link rel="canonical" href="https://noadstools.com/privacy.html">');
+  expect(html).toContain('<link rel="canonical" href="https://noadstools.com/privacy">');
   expect(html).toContain('name="robots" content="noindex, follow"');
-  expect(html).toMatch(/http-equiv="refresh"[^>]*url=\/privacy\.html#photo-editor/);
+  expect(html).toMatch(/http-equiv="refresh"[^>]*url=\/privacy#photo-editor/);
 });
 
 // One representative tool per engine family, proving the link a real page
@@ -88,9 +88,9 @@ for (const slug of ['remove-exif', 'merge-pdf', 'pdf-to-text', 'resume-builder']
     const wide = (page.viewportSize()?.width ?? 0) >= 768;
     const shown = page.locator(wide ? '#privacy-toggle-header' : 'footer #privacy-toggle');
     await expect(shown).toBeVisible();
-    await expect(shown).toHaveAttribute('href', `/privacy.html#${slug}`);
+    await expect(shown).toHaveAttribute('href', `/privacy#${slug}`);
 
-    await page.goto(`/privacy.html#${slug}`);
+    await page.goto(`/privacy#${slug}`);
     await expect(page.locator(`tr#${slug}`)).toHaveCount(1);
   });
 }

@@ -145,7 +145,7 @@
       <p>The page does fetch code, from noadstools.com and nowhere else. Opening a PDF pulls in pdf.js, about 1.73 MB, which renders the previews you place the signature on. Pressing Apply pulls in pdf-lib, about 511 KB, which writes the signature into the file. A document built on an unusual text encoding, or on one of the standard PDF typefaces, also makes pdf.js request the matching character maps or font data, from this same origin and only for the documents that need them.</p>
       <p>Those arrival times matter if you were counting on working offline. Opening a document does not fetch the library that signs it, so a connection that drops between opening and applying stops you at the last step.</p>
       <p>None of this needs taking on faith. Open the DevTools Network tab, sign something, and watch: those two libraries come down, and nothing carrying your PDF or your signature goes up.</p>
-      <p>The full source is <a href="https://github.com/Dan512/NoAdsTools" target="_blank" rel="noopener">public on GitHub</a> under the AGPL-3.0 license, and <a href="/privacy.html#sign-pdf">the privacy page</a> keeps a written record of each library and the step that needs it.</p>
+      <p>The full source is <a href="https://github.com/Dan512/NoAdsTools" target="_blank" rel="noopener">public on GitHub</a> under the AGPL-3.0 license, and <a href="/privacy#sign-pdf">the privacy page</a> keeps a written record of each library and the step that needs it.</p>
 
       <h2>Questions</h2>
       <dl class="faq">

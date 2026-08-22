@@ -59,9 +59,9 @@ test('settings popover opens with the 3 global settings rows', async ({ page }) 
 // Privacy is a link to the one static page, not an in-app dialog. The harness
 // passes a placeholder toolId, so the #anchor proves the toolId flows all the
 // way through the shared chrome into the href.
-test('privacy is a link to /privacy.html, anchored at this tool row', async ({ page }) => {
+test('privacy is a link to /privacy, anchored at this tool row', async ({ page }) => {
   await boot(page);
-  const href = '/privacy.html#harness';
+  const href = '/privacy#harness';
   await expect(page.locator('#privacy-toggle-header')).toHaveAttribute('href', href);
   await expect(page.locator('footer #privacy-toggle')).toHaveAttribute('href', href);
   await expect(shownPrivacyLink(page)).toBeVisible();

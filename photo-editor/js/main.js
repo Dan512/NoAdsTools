@@ -37,7 +37,7 @@ async function boot() {
   // (#theme-toggle, #settings-toggle, #lang-toggle, #privacy-toggle*) that
   // settings/languagePicker bind to, and the data-i18n nodes initI18n()
   // translates. Both must exist before any of those run. Privacy is a plain
-  // link to /privacy.html#photo-editor — no JS wiring needed.
+  // link to /privacy#photo-editor — no JS wiring needed.
   injectTopbar({ toolId: 'photo-editor' });
   injectFooter({ toolId: 'photo-editor' });
 

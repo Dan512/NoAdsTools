@@ -6,7 +6,7 @@
 //   3. The settings popover opened.
 //
 // The privacy disclosure is no longer scanned here: it is not a dialog in this
-// page any more, just a link out to /privacy.html, which owns its own a11y
+// page any more, just a link out to /privacy, which owns its own a11y
 // coverage.
 //
 // We fail the run on `serious` + `critical` violations. Moderate/minor issues

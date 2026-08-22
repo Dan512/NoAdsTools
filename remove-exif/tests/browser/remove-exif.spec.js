@@ -74,9 +74,9 @@ test('HEIC is refused with the friendly pointer', async ({ page }) => {
 });
 
 // Privacy is one static page now, not an in-app dialog per tool.
-test('privacy is a link to /privacy.html, anchored at its own row', async ({ page }) => {
+test('privacy is a link to /privacy, anchored at its own row', async ({ page }) => {
   await boot(page);
-  const href = '/privacy.html#remove-exif';
+  const href = '/privacy#remove-exif';
   await expect(page.locator('#privacy-toggle-header')).toHaveAttribute('href', href);
   await expect(page.locator('footer #privacy-toggle')).toHaveAttribute('href', href);
   await expect(shownPrivacyLink(page)).toBeVisible();

@@ -55,23 +55,23 @@ test('footer has privacy, source, and tip links', () => {
 // (deleted) is being resurrected, and a bare href means the reader lands at the
 // top of the table instead of on their tool's row.
 test('privacyHref anchors a tool on its own row and stays bare without one', () => {
-  assert.equal(privacyHref('merge-pdf'), '/privacy.html#merge-pdf');
-  assert.equal(privacyHref(), '/privacy.html', 'no toolId (the homepage) gets no anchor');
-  assert.equal(privacyHref(undefined), '/privacy.html');
+  assert.equal(privacyHref('merge-pdf'), '/privacy#merge-pdf');
+  assert.equal(privacyHref(), '/privacy', 'no toolId (the homepage) gets no anchor');
+  assert.equal(privacyHref(undefined), '/privacy');
 });
 
-test('footer privacy control is an anchor to /privacy.html, not a dialog button', () => {
+test('footer privacy control is an anchor to /privacy, not a dialog button', () => {
   const html = buildFooterHtml({ toolId: 'merge-pdf' });
   assert.ok(
-    html.includes('<a id="privacy-toggle" href="/privacy.html#merge-pdf" data-i18n="privacy">'),
+    html.includes('<a id="privacy-toggle" href="/privacy#merge-pdf" data-i18n="privacy">'),
     "footer privacy must be an <a> to that tool row");
   assert.ok(!/<button[^>]*id="privacy-toggle"/.test(html), 'privacy must no longer be a button');
 });
 
-test('topbar privacy control is a desktop-only anchor to /privacy.html', () => {
+test('topbar privacy control is a desktop-only anchor to /privacy', () => {
   const html = buildTopbarHtml({ toolId: 'merge-pdf' });
   assert.ok(
-    /<a id="privacy-toggle-header" class="header-link header-only-desktop" href="\/privacy\.html#merge-pdf"/.test(html),
+    /<a id="privacy-toggle-header" class="header-link header-only-desktop" href="\/privacy#merge-pdf"/.test(html),
     "header privacy must be a desktop-only <a> to that tool row");
   assert.ok(!/<button[^>]*id="privacy-toggle-header"/.test(html), 'privacy must no longer be a button');
 });

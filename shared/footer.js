@@ -2,7 +2,7 @@
 // tool's static <footer>). Carries the Privacy link, Source, tip, and "other
 // NoAds tools" crosslinks from the live manifest.
 //
-// Privacy is a LINK to the single /privacy.html, not an in-app dialog. The
+// Privacy is a LINK to the single /privacy, not an in-app dialog. The
 // per-tool panels were retired in favour of one page: 19 of the 20 panels were
 // English-only anyway, and keeping 20 copies of the disclosure in sync is what
 // let nine pages ship a false offline claim. The link carries a #<slug> anchor
@@ -12,7 +12,7 @@ import { liveTools } from './tools.js';
 import { KOFI_URL, REPO_URL } from './links.js';
 
 export function privacyHref(toolId) {
-  return toolId ? `/privacy.html#${encodeURIComponent(toolId)}` : '/privacy.html';
+  return toolId ? `/privacy#${encodeURIComponent(toolId)}` : '/privacy';
 }
 
 export function buildFooterHtml({ toolId } = {}) {

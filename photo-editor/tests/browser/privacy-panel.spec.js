@@ -1,8 +1,8 @@
 // tests/browser/privacy-panel.spec.js — the Privacy control is a link now.
 //
 // The in-app privacy dialog is gone. All 20 tools share one page at
-// /privacy.html, and each tool's control deep-links to its own row — for this
-// tool, /privacy.html#photo-editor. Three things can break silently, so each
+// /privacy, and each tool's control deep-links to its own row — for this
+// tool, /privacy#photo-editor. Three things can break silently, so each
 // gets a test: the control stops being an anchor or loses its href; the
 // breakpoint swap hides both copies at some width (the shell hides
 // `body > footer` at 768px and shows the `.header-only-desktop` topbar links
@@ -10,7 +10,7 @@
 // /photo-editor/privacy.html URL stops pointing people at the new page.
 import { test, expect } from '@playwright/test';
 
-const HREF = '/privacy.html#photo-editor';
+const HREF = '/privacy#photo-editor';
 
 async function boot(page) {
   await page.goto('/photo-editor/');
@@ -33,7 +33,7 @@ test.describe('mobile width — the footer link is the visible one', () => {
   test('following the footer link reaches the privacy page', async ({ page }) => {
     await boot(page);
     await page.locator('#privacy-toggle').click();
-    await expect(page).toHaveURL(/\/privacy\.html#photo-editor$/);
+    await expect(page).toHaveURL(/\/privacy#photo-editor$/);
     await expect(page.locator('h1')).toHaveText('Privacy');
   });
 });
@@ -54,7 +54,7 @@ test.describe('desktop width — the topbar link is the visible one', () => {
   test('following the topbar link reaches the privacy page', async ({ page }) => {
     await boot(page);
     await page.locator('#privacy-toggle-header').click();
-    await expect(page).toHaveURL(/\/privacy\.html#photo-editor$/);
+    await expect(page).toHaveURL(/\/privacy#photo-editor$/);
     await expect(page.locator('h1')).toHaveText('Privacy');
   });
 });
@@ -75,8 +75,8 @@ test('the old /photo-editor/privacy.html URL still serves the redirect stub', as
   const res = await request.get('/photo-editor/privacy.html');
   expect(res.status()).toBe(200);
   const html = await res.text();
-  expect(html).toContain('<link rel="canonical" href="https://noadstools.com/privacy.html">');
-  expect(html).toMatch(/http-equiv="refresh"[^>]*url=\/privacy\.html#photo-editor/);
+  expect(html).toContain('<link rel="canonical" href="https://noadstools.com/privacy">');
+  expect(html).toMatch(/http-equiv="refresh"[^>]*url=\/privacy#photo-editor/);
   // Belt and braces for anyone whose browser ignores the refresh.
-  expect(html).toContain('href="/privacy.html#photo-editor"');
+  expect(html).toContain('href="/privacy#photo-editor"');
 });
