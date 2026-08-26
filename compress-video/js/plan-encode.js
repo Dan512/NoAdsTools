@@ -64,10 +64,12 @@ export function scaleToHeight(width, height, outHeight) {
 /**
  * @param {{targetBytes:number, durationSec:number, width:number,
  *   height:number, fps:number, audioBytes:number}} src probed source facts
- * @param {{outHeight?:number|null, outFps?:number|null}} [opts] chosen
- *   output height (null/absent = keep source resolution) and output fps
- *   (null/absent, or a value >= source fps, = keep source fps; never
- *   upsamples)
+ * @param {{outHeight?:number|null, outFps?:number|null, floorBpp?:number}}
+ *   [opts] chosen output height (null/absent = keep source resolution),
+ *   output fps (null/absent, or a value >= source fps, = keep source fps;
+ *   never upsamples), and floorBpp — a calibration-probe-measured floor
+ *   that REPLACES FLOOR_BPP everywhere it applies (falls back to FLOOR_BPP
+ *   when absent, <= 0, or non-finite)
  * @returns {{unreachable:true, minTargetBytes:number,
  *   out:{width:number,height:number}, outFps:number|null,
  *   suggestion:{height:number,band:object}|null} | {unreachable:false,
@@ -88,7 +90,10 @@ export function planEncode(src, opts = {}) {
   const out = scaleToHeight(width, height, opts.outHeight ?? height);
   const outFps = (opts.outFps && opts.outFps < fps) ? opts.outFps : null;
   const effFps = outFps ?? fps;
-  const minVideoBps = Math.max(FLOOR_VIDEO_BPS, Math.ceil(FLOOR_BPP * out.width * out.height * effFps));
+  // A measured floor (from a calibration probe) overrides the guessed
+  // FLOOR_BPP constant everywhere the floor is computed below.
+  const floorBpp = (Number.isFinite(opts.floorBpp) && opts.floorBpp > 0) ? opts.floorBpp : FLOOR_BPP;
+  const minVideoBps = Math.max(FLOOR_VIDEO_BPS, Math.ceil(floorBpp * out.width * out.height * effFps));
   const minVideoBytes = Math.ceil(minVideoBps * durationSec / 8);
   const minTargetBytes = Math.ceil((audioBytes + overhead + minVideoBytes) / SAFETY);
 
@@ -101,7 +106,7 @@ export function planEncode(src, opts = {}) {
     for (const h of STANDARD_HEIGHTS) {
       if (h >= out.height) continue;
       const alt = scaleToHeight(width, height, h);
-      const altMinVideoBps = Math.max(FLOOR_VIDEO_BPS, Math.ceil(FLOOR_BPP * alt.width * alt.height * effFps));
+      const altMinVideoBps = Math.max(FLOOR_VIDEO_BPS, Math.ceil(floorBpp * alt.width * alt.height * effFps));
       if (candidateBitrate >= altMinVideoBps) {
         suggestion = { height: h, band: bandForBpp(candidateBitrate / (alt.width * alt.height * effFps)) };
         break;
@@ -143,9 +148,12 @@ export function planEncode(src, opts = {}) {
  * @param {{targetBytes:number, durationSec:number, width:number,
  *   height:number, fps:number, audioBytes:number}} src probed source facts
  *   (targetBytes included, exactly like planEncode)
- * @param {{outHeight?:number, outFps?:number|null}} [opts] pins: outHeight
- *   restricts the height search to that one value; outFps (present, even
- *   as null) restricts the fps search to that one value
+ * @param {{outHeight?:number, outFps?:number|null, floorBpp?:number}} [opts]
+ *   pins: outHeight restricts the height search to that one value; outFps
+ *   (present, even as null) restricts the fps search to that one value.
+ *   floorBpp (a calibration-probe measurement) is threaded through to every
+ *   planEncode call so every candidate is evaluated against the SAME
+ *   measured floor instead of the guessed FLOOR_BPP.
  * @returns {{height:number, fps:number|null}} fps null = keep source fps
  */
 export function chooseAuto(src, opts = {}) {
@@ -165,7 +173,7 @@ export function chooseAuto(src, opts = {}) {
   const pairs = [];
   for (const h of heights) {
     for (const f of fpsCands) {
-      const plan = planEncode(src, { outHeight: h, outFps: f });
+      const plan = planEncode(src, { outHeight: h, outFps: f, floorBpp: opts.floorBpp });
       pairs.push({ height: h, fps: plan.outFps, plan });
     }
   }
@@ -189,6 +197,35 @@ export function chooseAuto(src, opts = {}) {
     if (c.plan.minTargetBytes < best.plan.minTargetBytes) best = c;
   }
   return { height: best.height, fps: best.fps };
+}
+
+/**
+ * Turn a calibration probe's measured bytes into a prediction for the full
+ * encode, plus the bits-per-pixel the encoder actually delivered.
+ *
+ * The probe encodes short segments of the real clip at the planned settings
+ * (video only, audio discarded), so `probeBytes` is video payload plus a
+ * little container overhead. Extrapolating linearly over-predicts slightly
+ * (measured 0 to 13% high, always high), which is the safe direction for a
+ * promise that the output lands UNDER the target.
+ *
+ * @param {{probeBytes:number, probeSecs:number, durationSec:number,
+ *   audioBytes:number, out:{width:number,height:number}, fps:number}} p
+ *   `fps` is the EFFECTIVE output fps (plan.outFps ?? source fps).
+ * @returns {{predictedBytes:number, achievedVideoBps:number, achievedBpp:number}}
+ * @throws {Error} 'probe_invalid_input' on non-positive probeSecs/durationSec/
+ *   fps/dimensions or negative probeBytes.
+ */
+export function predictFromProbe(p) {
+  const { probeBytes, probeSecs, durationSec, audioBytes, out, fps } = p;
+  if (!(probeSecs > 0) || !(durationSec > 0) || !(fps > 0)
+      || !out || !(out.width > 0) || !(out.height > 0) || !(probeBytes >= 0)) {
+    throw new Error('probe_invalid_input');
+  }
+  const achievedVideoBps = Math.round(probeBytes * 8 / probeSecs);
+  const achievedBpp = achievedVideoBps / (out.width * out.height * fps);
+  const predictedBytes = Math.ceil(probeBytes * (durationSec / probeSecs)) + Math.ceil(audioBytes || 0);
+  return { predictedBytes, achievedVideoBps, achievedBpp };
 }
 
 /**

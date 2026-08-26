@@ -7,10 +7,11 @@ import { injectTopbar } from '/shared/topbar.js';
 import { injectFooter } from '/shared/footer.js';
 import { initSettings } from '/shared/settings.js';
 import { escapeHtml } from '/shared/escape.js';
-import { planEncode, correctedBitrate, chooseAuto } from './plan-encode.js';
+import { planEncode, correctedBitrate, chooseAuto, predictFromProbe } from './plan-encode.js';
 import { hasWebCodecs, startCompress, EngineLoadError } from './engine.js';
 import { probeFile } from './probe.js';
 import { encodeSample, SAMPLE_POINTS } from './preview.js';
+import { shouldProbe, startProbe } from './calibrate.js';
 
 registerTranslations({ en: {
   brandName: 'NoAdsTools', toolsMenu: 'Tools', allTools: 'All tools',
@@ -42,6 +43,7 @@ const previewBtn = el('preview-btn');
 const previewArea = el('preview-area');
 const encodeBtn = el('encode-btn');
 const progress = el('progress');
+const progressLine = el('progress-line');
 const progressTrack = el('progress-track');
 const progressFill = el('progress-fill');
 const progressPct = el('progress-pct');
@@ -189,6 +191,28 @@ function currentOutHeight() {
   return resolution.value === 'source' ? null : parseInt(resolution.value, 10);
 }
 
+// Resolve the current control selections into a plan. `floorBpp` (optional)
+// replaces the guessed encoder floor with one measured from this clip.
+function derivePlan(targetBytes, floorBpp) {
+  const autoRes = resolution.value === 'auto';
+  const fpsSel = framerateLabel.hidden ? 'source' : framerate.value; // low-fps sources: no fps choice
+  const autoFps = fpsSel === 'auto';
+  let outHeight; let outFps;
+  if (autoRes || autoFps) {
+    const pins = { floorBpp };
+    if (!autoRes) pins.outHeight = currentOutHeight() ?? src.height;
+    if (!autoFps) pins.outFps = fpsSel === '30' ? 30 : null;
+    const pick = chooseAuto({ ...src, targetBytes }, pins);
+    outHeight = pick.height;
+    outFps = pick.fps;
+  } else {
+    outHeight = currentOutHeight();
+    outFps = fpsSel === '30' ? 30 : null;
+  }
+  const plan = planEncode({ ...src, targetBytes }, { outHeight, outFps, floorBpp });
+  return { plan, autoRes, autoFps };
+}
+
 function recompute() {
   if (!src) return;
   const targetBytes = currentTargetBytes();
@@ -208,22 +232,9 @@ function recompute() {
     previewBtn.disabled = true;
     return;
   }
-  const autoRes = resolution.value === 'auto';
-  const fpsSel = framerateLabel.hidden ? 'source' : framerate.value; // low-fps sources: no fps choice
-  const autoFps = fpsSel === 'auto';
-  let outHeight; let outFps;
-  if (autoRes || autoFps) {
-    const pins = {};
-    if (!autoRes) pins.outHeight = currentOutHeight() ?? src.height;
-    if (!autoFps) pins.outFps = fpsSel === '30' ? 30 : null;
-    const pick = chooseAuto({ ...src, targetBytes }, pins);
-    outHeight = pick.height;
-    outFps = pick.fps;
-  } else {
-    outHeight = currentOutHeight();
-    outFps = fpsSel === '30' ? 30 : null;
-  }
-  plan = planEncode({ ...src, targetBytes }, { outHeight, outFps });
+  const derived = derivePlan(targetBytes);
+  const { autoRes, autoFps } = derived;
+  plan = derived.plan;
 
   if (plan.unreachable) {
     bandLabel.textContent = 'Target too small for this video';
@@ -357,6 +368,20 @@ previewBtn.addEventListener('click', async () => {
 
 // ---------- encode -----------------------------------------------------------
 
+// Shared cleanup for a cancel that lands outside the full-encode try/finally
+// below (during the probe, or in the gap right after it) — one copy so the
+// two call sites can't drift apart.
+function cancelBackToConfigure() {
+  progress.hidden = true;
+  configure.hidden = false;
+  handle = null;
+  setIntakeDisabled(false);
+  // A probe-driven re-plan can have left `plan` holding adjusted values
+  // that the visible band never showed (the panel was hidden throughout
+  // the probe/encode) — resync it to what's actually on screen.
+  recompute();
+}
+
 encodeBtn.addEventListener('click', async () => {
   if (!file || !plan || plan.unreachable) return;
   setIntakeDisabled(true);
@@ -367,14 +392,112 @@ encodeBtn.addEventListener('click', async () => {
   progress.hidden = false;
   setProgress(0);
 
+  // Calibration probe: encode a couple of short real segments first, on
+  // clips long enough that this pays for itself, so a content-dependent
+  // encoder floor gets caught BEFORE a full encode is spent on a plan that
+  // was never going to hit the target. Optimization only — a probe that
+  // fails or gets cancelled must not be treated as an encode failure.
+  const target = currentTargetBytes();
+  const planBefore = { w: plan.out.width, h: plan.out.height, fps: plan.outFps };
+  let probeNote = '';
+  // Set when the two probes together already proved a lower bitrate alone
+  // won't land the target and there's no smaller resolution/fps left to
+  // move to — skips the post-encode second pass, which would otherwise
+  // re-encode just to re-discover what the probes already measured.
+  let probeProvedFloorBound = false;
+  if (shouldProbe(src.durationSec)) {
+    progressLine.textContent = 'Checking a sample of your video so the size comes out right.';
+    try {
+      handle = startProbe(file, plan, src.durationSec, { onProgress: setProgress });
+      const { probeBytes, probeSecs } = await handle.done;
+      const effFps = plan.outFps ?? src.fps;
+      const p1 = predictFromProbe({
+        probeBytes, probeSecs, durationSec: src.durationSec,
+        audioBytes: src.audioBytes, out: plan.out, fps: effFps,
+      });
+      if (p1.predictedBytes > target) {
+        const b2 = correctedBitrate({
+          videoBitrate: plan.videoBitrate, actualBytes: p1.predictedBytes,
+          targetBytes: target, audioBytes: src.audioBytes, durationSec: src.durationSec,
+        });
+        let measuredBpp = p1.achievedBpp;
+        let settled = false;
+        if (b2) {
+          if (userCancelled) { cancelBackToConfigure(); return; }
+          // Does asking for less actually produce less? Only the encoder
+          // can answer that, and one short segment is enough to ask.
+          progressLine.textContent = 'Checking whether a lower bitrate is enough.';
+          // `trial` (and `plan` below, if this doesn't pan out) only get
+          // videoBitrate overridden — bpp, band, minTargetBytes, and
+          // suggestion are still the ones computed at the OLD bitrate and
+          // go stale here. Nothing reads them downstream today; only
+          // videoBitrate, out, and outFps are.
+          const trial = { ...plan, videoBitrate: b2 };
+          handle = startProbe(file, trial, src.durationSec, { onProgress: setProgress, segments: 1 });
+          const r2 = await handle.done;
+          if (userCancelled) { cancelBackToConfigure(); return; }
+          const p2 = predictFromProbe({
+            probeBytes: r2.probeBytes, probeSecs: r2.probeSecs,
+            durationSec: src.durationSec, audioBytes: src.audioBytes,
+            out: trial.out, fps: trial.outFps ?? src.fps,
+          });
+          if (p2.predictedBytes <= target) { plan = trial; settled = true; }
+          else { measuredBpp = p2.achievedBpp; }
+        }
+        if (!settled) {
+          // The encoder is at its floor for this footage: fewer pixels or
+          // frames is the only lever left.
+          const candidate = derivePlan(target, measuredBpp).plan;
+          const moved = candidate && !candidate.unreachable
+            && (candidate.out.width !== plan.out.width
+              || candidate.out.height !== plan.out.height
+              || candidate.outFps !== plan.outFps);
+          if (moved) {
+            plan = candidate;
+          } else {
+            // No smaller setting left to try, and the confirmation probe
+            // (if it ran) already showed a lower bitrate doesn't land it
+            // either — this clip is floor-bound, full stop.
+            probeProvedFloorBound = true;
+            if (b2) plan = { ...plan, videoBitrate: b2 };
+          }
+        }
+      }
+    } catch {
+      // A cancel during either probe must land exactly like a cancel during
+      // the full encode: this early return skips the encode try/finally
+      // below entirely, so it repeats that path's cleanup by hand.
+      if (userCancelled) { cancelBackToConfigure(); return; }
+      // Any other probe failure is not a failed encode — it was only an
+      // optimization attempt. Fall through and encode with the original plan.
+    }
+    if (plan.out.width !== planBefore.w || plan.out.height !== planBefore.h || plan.outFps !== planBefore.fps) {
+      probeNote = ` The sample check moved this to ${plan.out.width}×${plan.out.height}`
+        + `${plan.outFps ? ` at ${plan.outFps} fps` : ''} to fit.`;
+    }
+    setProgress(0);
+  }
+  progressLine.textContent = 'Encoding happens on your device. Closing this tab will stop it.';
+
+  // The probe's own done-promise can resolve (rather than reject) on a
+  // cancel that lands after its last segment already finished executing —
+  // without this check that gap would silently start a full encode on a
+  // job the user just cancelled.
+  if (userCancelled) { cancelBackToConfigure(); return; }
+
   handle = startCompress(file, plan, { onProgress: setProgress });
   try {
     outBlob = await handle.done;
     progress.hidden = true;
     result.hidden = false;
-    const target = currentTargetBytes();
     if (outBlob.size <= target) {
-      resultLine.textContent = `${prettyBytes(outBlob.size)}, under your ${prettyBytes(target)} target.`;
+      resultLine.textContent = `${prettyBytes(outBlob.size)}, under your ${prettyBytes(target)} target.${probeNote}`;
+    } else if (probeProvedFloorBound) {
+      // The probe(s) already established that a lower bitrate doesn't land
+      // it and there's nowhere smaller to move: the automatic second pass
+      // would just re-encode to re-discover that same answer.
+      resultLine.textContent =
+        `${prettyBytes(outBlob.size)}, over your ${prettyBytes(target)} target. ${overAdvice()}.`;
     } else {
       const b2 = correctedBitrate({
         videoBitrate: plan.videoBitrate,
@@ -399,7 +522,7 @@ encodeBtn.addEventListener('click', async () => {
           const second = await handle.done;
           if (second.size < outBlob.size) outBlob = second;
           resultLine.textContent = outBlob.size <= target
-            ? `${prettyBytes(outBlob.size)}, under your ${prettyBytes(target)} target.`
+            ? `${prettyBytes(outBlob.size)}, under your ${prettyBytes(target)} target.${probeNote}`
             : `${prettyBytes(outBlob.size)}, still over your ${prettyBytes(target)} target after a `
               + `second pass. This clip is not going smaller with these settings; `
               + `${overAdvice()}.`;

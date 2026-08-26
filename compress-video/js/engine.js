@@ -10,6 +10,7 @@
 // cache-busts the specifier so the browser's per-specifier module map
 // (which caches a failed import() for the life of the document) can't
 // replay the old rejection without a real re-fetch.
+import { KEY_FRAME_INTERVAL_SEC } from './calibrate.js';
 
 let cached = null;        // Promise<module>
 let attempt = 0;          // bumped on every attempt; arms the next call as a retry
@@ -65,10 +66,19 @@ export function startCompress(file, plan, cb = {}) {
     conversion = await mb.Conversion.init({
       input, output,
       video: {
-        quality: new mb.Quality({ bitrate: plan.videoBitrate }),
+        // 'constant' bitrate mode, not the mediabunny default ('variable'):
+        // the encoder treats a variable-mode bitrate as a soft average and
+        // overshoots by ~6%, which is more than the planner's safety
+        // margin. Constant mode lands within 1% of the requested bitrate.
+        quality: new mb.Quality({ bitrate: plan.videoBitrate, bitrateMode: 'constant' }),
         width: plan.out.width,
         height: plan.out.height,
         fit: 'contain',
+        // Pinned to the same value the calibration probe uses (calibrate.js)
+        // so the probe's short segments have the same keyframe density as
+        // this full encode — that match is what makes the probe's
+        // predicted size accurate.
+        keyFrameInterval: KEY_FRAME_INTERVAL_SEC,
         ...(plan.outFps ? { frameRate: plan.outFps } : {}),
       },
     });

@@ -52,6 +52,72 @@ async function resolvePass(page, index, bytes) {
   }, { index, bytes });
 }
 
+// A calibration-probe fake (calibrate.js's startProbe), same house style as
+// installTwoPassFake: done-promises are resolved/rejected from the test
+// side via window.__probePending, and window.__probeCalls records each
+// call's plan so tests can assert what the encoder was asked to try before
+// any probe-driven re-plan.
+async function installCalibrateFake(page) {
+  await page.evaluate(async () => {
+    const { _setProbeEncodeForTest } = await import('/compress-video/js/calibrate.js');
+    window.__probeCalls = [];
+    window.__probePending = [];
+    _setProbeEncodeForTest((file, plan, durationSec, cb) => {
+      window.__probeCalls.push({
+        videoBitrate: plan.videoBitrate, out: plan.out, outFps: plan.outFps, segments: cb?.segments,
+      });
+      let resolve, reject;
+      const done = new Promise((res, rej) => { resolve = res; reject = rej; });
+      window.__probePending.push({ resolve, reject });
+      return { done, cancel: async () => reject(new Error('probe_cancelled')) };
+    });
+  });
+}
+
+async function waitForProbeCalls(page, n) {
+  await page.waitForFunction((n) => window.__probeCalls && window.__probeCalls.length >= n, n);
+}
+
+async function resolveProbe(page, index, probeBytes, probeSecs) {
+  await page.evaluate(({ index, probeBytes, probeSecs }) => {
+    window.__probePending[index].resolve({ probeBytes, probeSecs });
+  }, { index, probeBytes, probeSecs });
+}
+
+// A probe that fails immediately without being cancelled — the real
+// startProbe does exactly this today when handed the dummy (non-video)
+// fixture the other encode tests use. Faking that failure keeps those
+// tests fast and deterministic instead of depending on mediabunny's actual
+// parse-failure timing against garbage bytes; main.js's fall-through
+// behavior on a non-cancelled probe failure is identical either way.
+async function installFailingProbe(page) {
+  await page.evaluate(async () => {
+    const { _setProbeEncodeForTest } = await import('/compress-video/js/calibrate.js');
+    _setProbeEncodeForTest(() => {
+      const done = Promise.reject(new Error('probe_failed'));
+      done.catch(() => {});
+      return { done, cancel: async () => {} };
+    });
+  });
+}
+
+// A one-shot compress fake for tests that don't need the two-pass
+// machinery: resolves immediately with a Blob of the given size and
+// records every call's plan (so a probe-driven re-plan can be inspected).
+async function installCompressFake(page, blobBytes) {
+  await page.evaluate(async (blobBytes) => {
+    const { _setCompressForTest } = await import('/compress-video/js/engine.js');
+    window.__compressCalls = [];
+    _setCompressForTest((file, plan) => {
+      window.__compressCalls.push({ videoBitrate: plan.videoBitrate, out: plan.out, outFps: plan.outFps });
+      return {
+        done: Promise.resolve(new Blob([new Uint8Array(blobBytes)], { type: 'video/mp4' })),
+        cancel: async () => {},
+      };
+    });
+  }, blobBytes);
+}
+
 test('SEO head: title, canonical, SoftwareApplication JSON-LD, single h1', async ({ page }) => {
   await page.goto('/compress-video/');
   await expect(page).toHaveTitle('Compress Video to a Target File Size — Free, No Upload · NoAdsTools');
@@ -265,6 +331,7 @@ test('manual 30 fps is honored and not credited to Auto', async ({ page }) => {
 test('cancel mid-encode returns to configure without an error', async ({ page }) => {
   await boot(page);
   await installFakeProbe(page);
+  await installFailingProbe(page);
   await page.evaluate(async () => {
     const { _setCompressForTest } = await import('/compress-video/js/engine.js');
     _setCompressForTest((file, plan, cb) => {
@@ -291,6 +358,7 @@ test('cancel mid-encode returns to configure without an error', async ({ page })
 test('overshoot triggers one corrected second pass with the download live', async ({ page }) => {
   await boot(page);
   await installFakeProbe(page);
+  await installFailingProbe(page);
   await installTwoPassFake(page);
   await page.setInputFiles('#file-input', dummyVideo);
   await page.locator('.preset[data-mb="25"]').click();
@@ -327,6 +395,7 @@ test('overshoot triggers one corrected second pass with the download live', asyn
 test('cancel during the second pass keeps the first result', async ({ page }) => {
   await boot(page);
   await installFakeProbe(page);
+  await installFailingProbe(page);
   await installTwoPassFake(page);
   await page.setInputFiles('#file-input', dummyVideo);
   await page.locator('.preset[data-mb="25"]').click();
@@ -351,6 +420,238 @@ test('cancel during the second pass keeps the first result', async ({ page }) =>
   await expect(page.locator('#result-line')).toContainText(/lower resolution will land it/i);
   await expect(page.locator('#download-btn')).toBeEnabled();
   await expect(page.locator('#file-input')).toBeEnabled();
+});
+
+test('the probe runs before the encode and shows its own progress line', async ({ page }) => {
+  await boot(page);
+  await installFakeProbe(page);
+  await installCalibrateFake(page);
+  await installCompressFake(page, 20_000_000); // well under the 25 MB target
+  await page.setInputFiles('#file-input', dummyVideo);
+  await page.locator('.preset[data-mb="25"]').click();
+  await page.locator('#encode-btn').click();
+
+  await waitForProbeCalls(page, 1);
+  await expect(page.locator('#progress')).toBeVisible();
+  await expect(page.locator('#progress-line')).toContainText(/Checking a sample/i);
+
+  // 1.2 MB over 4 probed seconds extrapolates to ~19 MB for the full 60 s
+  // clip — comfortably under the 25 MB target, so no re-plan fires.
+  await resolveProbe(page, 0, 1_200_000, 4);
+
+  await expect(page.locator('#result')).toBeVisible();
+  await expect(page.locator('#progress-line')).toContainText(/Encoding happens on your device/i);
+
+  const compressCalls = await page.evaluate(() => window.__compressCalls);
+  expect(compressCalls).toHaveLength(1);
+  await expect(page.locator('#result-line')).toContainText(/under your 25 MB target/);
+  await expect(page.locator('#result-line')).not.toContainText(/sample check|moved this to/i);
+});
+
+test('a probe that predicts an overshoot re-plans before encoding', async ({ page }) => {
+  await boot(page);
+  await installFakeProbe(page);
+  await page.setInputFiles('#file-input', dummyVideo);
+  await page.locator('.preset[data-mb="25"]').click();
+  // Capture the pre-probe pick from the DOM itself (not asserted from
+  // memory): FAKE_SRC's auto pick at 25 MB is 720p, same as the already
+  // -verified 'configure: auto picks 720p...' test.
+  await expect(page.locator('#band-note')).toContainText('720p');
+
+  await installCalibrateFake(page);
+  await installCompressFake(page, 20_000_000); // lands under target in one pass
+  await page.locator('#encode-btn').click();
+
+  // First probe: implies an overshoot (~38.5 MB predicted for the full
+  // 60 s clip vs. a 25 MB target), so main.js computes a corrected (lower)
+  // bitrate and re-probes ONCE at that bitrate (segments: 1) to check
+  // whether the encoder actually honors it.
+  await waitForProbeCalls(page, 1);
+  await resolveProbe(page, 0, 2_500_000, 4);
+
+  // Second (confirmation) probe: the encoder is genuinely floor-bound for
+  // this footage — even at the lower requested bitrate it still produces
+  // ~5 Mbps (the same measured rate as the first probe), so the
+  // prediction still misses the target and main.js concludes a
+  // resolution/fps drop is the only lever left, using THIS probe's
+  // measured floor (not the first probe's) to re-plan.
+  await waitForProbeCalls(page, 2);
+  await resolveProbe(page, 1, 1_250_000, 2);
+
+  await expect(page.locator('#result')).toBeVisible();
+  const calls = await page.evaluate(() => window.__compressCalls);
+  expect(calls).toHaveLength(1);
+  expect(calls[0].out.height).toBeLessThan(720);
+  // Re-derived against the new two-probe design: chooseAuto against the
+  // measured floor still lands on 480p, the tallest candidate that clears
+  // "acceptable" at that floor.
+  expect(calls[0].out.height).toBe(480);
+  await expect(page.locator('#result-line')).toContainText(/sample check moved this to/i);
+
+  // Bonus pin: the confirmation probe asked for exactly one segment.
+  const probeCalls = await page.evaluate(() => window.__probeCalls);
+  expect(probeCalls).toHaveLength(2);
+  expect(probeCalls[1].segments).toBe(1);
+});
+
+test('a probe that overshoots but responds to a lower bitrate keeps the resolution', async ({ page }) => {
+  await boot(page);
+  await installFakeProbe(page);
+  await page.setInputFiles('#file-input', dummyVideo);
+  await page.locator('.preset[data-mb="25"]').click();
+  await expect(page.locator('#band-note')).toContainText('720p');
+
+  await installCalibrateFake(page);
+  await installCompressFake(page, 20_000_000); // lands under target in one pass
+  await page.locator('#encode-btn').click();
+
+  // First probe: same overshoot signal as the floor-bound test, so main.js
+  // computes the same corrected (lower) bitrate and re-probes once at it.
+  await waitForProbeCalls(page, 1);
+  await resolveProbe(page, 0, 2_500_000, 4);
+
+  // Second (confirmation) probe: here the encoder DOES honor the lower
+  // requested bitrate — the prediction now lands under target — so
+  // main.js keeps the resolution and just uses the lower bitrate instead
+  // of needlessly dropping quality. This is exactly the regression the
+  // old ratio-based discriminator caused at threshold 1.1.
+  await waitForProbeCalls(page, 2);
+  await resolveProbe(page, 1, 700_000, 2);
+
+  await expect(page.locator('#result')).toBeVisible();
+  const calls = await page.evaluate(() => window.__compressCalls);
+  const probeCalls = await page.evaluate(() => window.__probeCalls);
+  expect(calls).toHaveLength(1);
+  expect(calls[0].out.height).toBe(720);
+  expect(calls[0].out.width).toBe(1280);
+  // Lower than the pre-probe plan's own bitrate (captured from the first
+  // probe call, which always runs at the original, un-corrected plan) —
+  // no magic number, derived from what the app itself asked for.
+  expect(calls[0].videoBitrate).toBeLessThan(probeCalls[0].videoBitrate);
+  // Nothing moved: the resolution survived, so no "sample check" note.
+  await expect(page.locator('#result-line')).not.toContainText(/sample check moved this to/i);
+
+  expect(probeCalls).toHaveLength(2);
+  expect(probeCalls[1].segments).toBe(1);
+});
+
+test('cancel during the probe returns to configure without an error', async ({ page }) => {
+  await boot(page);
+  await installFakeProbe(page);
+  await installCalibrateFake(page);
+  await installCompressFake(page, 20_000_000);
+  await page.setInputFiles('#file-input', dummyVideo);
+  await page.locator('#encode-btn').click();
+
+  await waitForProbeCalls(page, 1);
+  await expect(page.locator('#progress-line')).toContainText(/Checking a sample/i);
+
+  await page.locator('#cancel-btn').click();
+
+  await expect(page.locator('#configure')).toBeVisible();
+  await expect(page.locator('#progress')).toBeHidden();
+  await expect(page.locator('#tool-error')).toBeHidden();
+  await expect(page.locator('#file-input')).toBeEnabled();
+  // The real bug this pins: a cancelled probe must not fall through into a
+  // full encode.
+  const compressCalls = await page.evaluate(() => window.__compressCalls);
+  expect(compressCalls).toHaveLength(0);
+});
+
+test('cancel during the confirmation probe keeps nothing running', async ({ page }) => {
+  await boot(page);
+  await installFakeProbe(page);
+  await installCalibrateFake(page);
+  await installCompressFake(page, 20_000_000);
+  await page.setInputFiles('#file-input', dummyVideo);
+  await page.locator('.preset[data-mb="25"]').click();
+  await page.locator('#encode-btn').click();
+
+  // First probe: implies an overshoot, so the flow starts the confirmation
+  // probe (segments: 1) to check whether a lower bitrate is enough.
+  await waitForProbeCalls(page, 1);
+  await resolveProbe(page, 0, 2_500_000, 4);
+
+  await waitForProbeCalls(page, 2);
+  await expect(page.locator('#progress-line')).toContainText(/lower bitrate is enough/i);
+
+  await page.locator('#cancel-btn').click();
+
+  await expect(page.locator('#configure')).toBeVisible();
+  await expect(page.locator('#progress')).toBeHidden();
+  await expect(page.locator('#tool-error')).toBeHidden();
+  await expect(page.locator('#file-input')).toBeEnabled();
+  // Probe 1's cancel path is covered elsewhere; this pins probe 2's: a
+  // cancelled confirmation probe must not fall through into a full encode.
+  const compressCalls = await page.evaluate(() => window.__compressCalls);
+  expect(compressCalls).toHaveLength(0);
+});
+
+test('a floor-bound clip with nowhere left to go skips the futile second pass', async ({ page }) => {
+  await boot(page);
+  await installFakeProbe(page);
+  await page.setInputFiles('#file-input', dummyVideo);
+  // Pin BOTH controls so derivePlan() can't move anywhere: resolution
+  // explicitly at the bottom of the ladder (360p, the lowest option), and
+  // FAKE_SRC's fps (30) is under the 40fps gate so #framerate is already
+  // hidden/forced to source — confirmed by reading main.js's derivePlan():
+  // with autoRes and autoFps both false it takes the outHeight/outFps-pinned
+  // branch directly, never calling chooseAuto, so there is no smaller
+  // candidate for the probe-driven re-plan to find.
+  await page.selectOption('#resolution', '360');
+  await page.locator('#target-mb').fill('5');
+  await expect(page.locator('#encode-btn')).toBeEnabled();
+
+  await installCalibrateFake(page);
+  await installCompressFake(page, 6_000_000); // stays over the 5 MB target
+  await page.locator('#encode-btn').click();
+
+  // First probe: a guessed-floor bitrate of ~539 kbps at 360p was never
+  // going to survive a real encoder — 1 MB over 4 probed seconds implies
+  // ~2 Mbps achieved and a 16 MB prediction against the 5 MB target.
+  await waitForProbeCalls(page, 1);
+  await resolveProbe(page, 0, 1_000_000, 4);
+
+  // Second (confirmation) probe: the SAME ~2 Mbps floor persists even at
+  // the corrected (much lower) requested bitrate — genuinely floor-bound —
+  // and derivePlan() at floorBpp≈0.289 makes 360p itself unreachable, so
+  // there is nowhere smaller to move to.
+  await waitForProbeCalls(page, 2);
+  await resolveProbe(page, 1, 500_000, 2);
+
+  await expect(page.locator('#result')).toBeVisible();
+  const compressCalls = await page.evaluate(() => window.__compressCalls);
+  expect(compressCalls).toHaveLength(1);
+  const line = page.locator('#result-line');
+  await expect(line).toContainText(/over your .* target/);
+  // overAdvice() for this exact state (out.height 360, so not >360; fps
+  // already below the 40fps gate) falls through to its last branch.
+  await expect(line).toContainText('a shorter clip or a larger target are the ways out');
+  await expect(line).not.toContainText(/Re-compressing/i);
+  await expect(line).not.toContainText(/after a second pass/i);
+});
+
+test('short clips skip the probe entirely', async ({ page }) => {
+  await boot(page);
+  await page.evaluate(async () => {
+    const { _setProbeEncodeForTest } = await import('/compress-video/js/calibrate.js');
+    window.__probeWasCalled = false;
+    _setProbeEncodeForTest(() => {
+      window.__probeWasCalled = true;
+      throw new Error('the calibration probe must not run under PROBE_MIN_DURATION_SEC');
+    });
+  });
+  await installFakeProbe(page, { ...FAKE_SRC, durationSec: 5 }); // under PROBE_MIN_DURATION_SEC (15)
+  await installCompressFake(page, 20_000_000);
+  await page.setInputFiles('#file-input', dummyVideo);
+  await page.locator('.preset[data-mb="25"]').click();
+  await page.locator('#encode-btn').click();
+
+  await expect(page.locator('#result')).toBeVisible();
+  const probeWasCalled = await page.evaluate(() => window.__probeWasCalled);
+  expect(probeWasCalled).toBe(false);
+  await expect(page.locator('#progress-line')).not.toContainText(/Checking a sample/i);
+  await expect(page.locator('#progress-line')).toContainText(/Encoding happens on your device/i);
 });
 
 test('no horizontal overflow at 375px with content loaded', async ({ page }) => {

@@ -130,7 +130,7 @@
     </section>
 
     <section id="progress" hidden>
-      <p class="progress-line">Encoding happens on your device. Closing this tab will stop it.</p>
+      <p class="progress-line" id="progress-line">Encoding happens on your device. Closing this tab will stop it.</p>
       <div class="progress-track" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" aria-label="Encoding progress" id="progress-track">
         <div class="progress-fill" id="progress-fill"></div>
       </div>
@@ -154,7 +154,8 @@
       <h2>Preview the quality before compressing</h2>
       <p>The quality meter estimates how much bitrate is available for each pixel. It is a useful guide, but different videos compress differently.</p>
       <p>For a better check, press Preview quality. The tool compresses short samples from your actual video at the same settings as the final encode, so you can compare them with the original before processing the whole file.</p>
-      <p>If the finished video still comes out larger than you asked for, the tool automatically runs a corrected second pass and keeps the smaller result.</p>
+      <p>Before the full compression starts, the tool encodes two or three short samples from your video and measures them. Encoders have a floor they will not go below, and where that floor sits depends on the footage, so measuring your actual video is the only honest way to know whether the size you asked for is reachable. If it is not, the tool adjusts the settings before spending time on the full encode, and tells you what it changed. This check takes a few seconds and is skipped for clips under about fifteen seconds, where compressing the whole thing is quick anyway.</p>
+      <p>If the finished video still comes out larger than you asked for, the tool runs a corrected second pass and keeps the smaller result.</p>
       <h2>Your video stays on your device</h2>
       <p>Compression happens locally in your browser, using your device's video encoder and the open-source mediabunny media engine.</p>
       <p>The browser reads your video from disk, compresses it inside the tab, and hands it back as a download. It is not uploaded to NoAdsTools or anywhere else.</p>
