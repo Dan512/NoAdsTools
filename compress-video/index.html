@@ -130,7 +130,7 @@
     </section>
 
     <section id="result" hidden>
-      <p id="result-line" class="result-line"></p>
+      <p id="result-line" class="result-line" aria-live="polite"></p>
       <div class="actions">
         <button type="button" id="download-btn" class="btn-primary">Download MP4</button>
         <button type="button" id="again-btn">Change settings and re-compress</button>
@@ -145,7 +145,7 @@
       <p>Sometimes the honest answer is that the target is too tight at full resolution. When that happens the tool says so, and offers the resolution that fixes it. A 720p video that looks clean beats a 1080p video made of smudges.</p>
       <h2>What the quality estimate means</h2>
       <p>The meter is arithmetic, not magic: the bitrate divided by the pixels it has to cover each second. It is a good predictor, and it is still an estimate. Fast-moving footage is harder to compress than a still interview, and no formula knows which one you dropped.</p>
-      <p>That is what the Preview button is for. It encodes a few one-second samples of your actual video at the exact settings the full encode would use, and shows them next to the original. What you see is what you will get, because it is the same encoder doing the same work.</p>
+      <p>That is what the Preview button is for. It encodes a few one-second samples of your actual video at the exact settings the full encode would use, and shows them next to the original. What you see is what you will get, because it is the same encoder doing the same work. If the encoder still overshoots your target, the tool runs one corrected second pass automatically and keeps the smaller result.</p>
       <h2>How this stays private</h2>
       <p>The tool is built on mediabunny, an open-source media engine, and your browser's own built-in video encoder. Dropping your first video pulls the engine, about 660&nbsp;KB, from this site. From then on everything runs on your device: the video is read from disk into the tab, re-encoded there, and handed back as a download.</p>
       <p>Your video is never uploaded. There is no server that could receive it. You can verify that: open your browser's DevTools Network tab and compress something. You will see the engine come down from this domain once, and nothing go up, ever.</p>
@@ -172,7 +172,7 @@
         <dt>Why does it say my target is unreachable?</dt>
         <dd>
           <p>The audio track is copied through untouched, so it has a fixed cost. If your target is smaller than the audio plus a minimum workable video bitrate, no encoder settings can hit it honestly.</p>
-          <p>The message tells you the smallest target that can work for that clip. A shorter clip or a larger target are the two ways out.</p>
+          <p>The message tells you the smallest target that can work for that clip at that resolution. A shorter clip, a larger target, or a lower resolution are the ways out.</p>
         </dd>
         <dt>What formats can I drop, and what comes out?</dt>
         <dd>

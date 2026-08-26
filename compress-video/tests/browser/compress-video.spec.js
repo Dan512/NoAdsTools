@@ -23,6 +23,35 @@ async function installFakeProbe(page, src = FAKE_SRC) {
 
 const dummyVideo = { name: 'clip.mp4', mimeType: 'video/mp4', buffer: Buffer.from('not-really-a-video') };
 
+// A compress fake whose done-promises are resolved/rejected from the test
+// side (via window.__pending), not on a timer — so assertions between the
+// first and second pass are deterministic. window.__calls records each
+// call's plan.videoBitrate for the "second pass is actually lower" check.
+async function installTwoPassFake(page) {
+  await page.evaluate(async () => {
+    const { _setCompressForTest } = await import('/compress-video/js/engine.js');
+    window.__calls = [];
+    window.__pending = [];
+    _setCompressForTest((file, plan) => {
+      window.__calls.push(plan.videoBitrate);
+      let resolve, reject;
+      const done = new Promise((res, rej) => { resolve = res; reject = rej; });
+      window.__pending.push({ resolve, reject });
+      return { done, cancel: async () => reject(new Error('compress_cancelled')) };
+    });
+  });
+}
+
+async function waitForCalls(page, n) {
+  await page.waitForFunction((n) => window.__calls && window.__calls.length >= n, n);
+}
+
+async function resolvePass(page, index, bytes) {
+  await page.evaluate(({ index, bytes }) => {
+    window.__pending[index].resolve(new Blob([new Uint8Array(bytes)], { type: 'video/mp4' }));
+  }, { index, bytes });
+}
+
 test('SEO head: title, canonical, SoftwareApplication JSON-LD, single h1', async ({ page }) => {
   await page.goto('/compress-video/');
   await expect(page).toHaveTitle('Compress Video to a Target File Size — Free, No Upload · NoAdsTools');
@@ -128,6 +157,30 @@ test('configure: unreachable target disables encode and names the minimum', asyn
   await expect(page.locator('#preview-btn')).toBeDisabled();
 });
 
+test('unreachable at high fps suggests the tallest reachable resolution', async ({ page }) => {
+  await boot(page);
+  // The real field case: 60fps raises the fps-aware bpp floor enough that a
+  // 10 MB target on 1080p60 is unreachable, but 720p60 clears it.
+  await installFakeProbe(page, {
+    durationSec: 150, width: 1920, height: 1080, fps: 60,
+    audioBytes: 2_400_000, hasAudio: true, sourceBytes: 178_000_000,
+  });
+  await page.setInputFiles('#file-input', dummyVideo);
+  await page.locator('#target-mb').fill('10');
+  await expect(page.locator('#band-label')).toContainText('too small');
+  await expect(page.locator('#band-note')).toContainText('1920×1080');
+  const suggest = page.locator('#suggest-btn');
+  await expect(suggest).toBeVisible();
+  await expect(suggest).toContainText('720p');
+  await expect(page.locator('#encode-btn')).toBeDisabled();
+
+  await suggest.click();
+  await expect(page.locator('#resolution')).toHaveValue('720');
+  // 10 MB at 720p60 clears the fps-aware floor — the unit tests pin the
+  // math (25/25); here we only assert the UI actually flips on it.
+  await expect(page.locator('#encode-btn')).toBeEnabled();
+});
+
 test('cancel mid-encode returns to configure without an error', async ({ page }) => {
   await boot(page);
   await installFakeProbe(page);
@@ -152,6 +205,67 @@ test('cancel mid-encode returns to configure without an error', async ({ page })
   await expect(page.locator('#configure')).toBeVisible();
   await expect(page.locator('#file-input')).toBeEnabled();
   await expect(page.locator('#tool-error')).toBeHidden();
+});
+
+test('overshoot triggers one corrected second pass with the download live', async ({ page }) => {
+  await boot(page);
+  await installFakeProbe(page);
+  await installTwoPassFake(page);
+  await page.setInputFiles('#file-input', dummyVideo);
+  await page.locator('.preset[data-mb="25"]').click();
+  await page.locator('#encode-btn').click();
+
+  // First pass lands over target (~30 MB vs a 25 MB target).
+  await waitForCalls(page, 1);
+  await resolvePass(page, 0, 30_000_000);
+
+  await expect(page.locator('#result')).toBeVisible();
+  await expect(page.locator('#result-line'))
+    .toContainText(/over your 25 MB target\. Re-compressing to get under your 25 MB target/);
+  // The first attempt's output stays downloadable while the second pass
+  // runs; only "compress again" is blocked mid-correction.
+  await expect(page.locator('#download-btn')).toBeEnabled();
+  await expect(page.locator('#again-btn')).toBeDisabled();
+  await expect(page.locator('#progress')).toBeVisible();
+  await expect(page.locator('#file-input')).toBeDisabled();
+
+  // Second pass lands under target (~20 MB).
+  await waitForCalls(page, 2);
+  await resolvePass(page, 1, 20_000_000);
+
+  await expect(page.locator('#result-line')).toContainText(/under your 25 MB target/);
+  await expect(page.locator('#again-btn')).toBeEnabled();
+  await expect(page.locator('#progress')).toBeHidden();
+  await expect(page.locator('#file-input')).toBeEnabled();
+
+  const calls = await page.evaluate(() => window.__calls);
+  expect(calls).toHaveLength(2);
+  expect(calls[1]).toBeLessThan(calls[0]);
+});
+
+test('cancel during the second pass keeps the first result', async ({ page }) => {
+  await boot(page);
+  await installFakeProbe(page);
+  await installTwoPassFake(page);
+  await page.setInputFiles('#file-input', dummyVideo);
+  await page.locator('.preset[data-mb="25"]').click();
+  await page.locator('#encode-btn').click();
+
+  await waitForCalls(page, 1);
+  await resolvePass(page, 0, 30_000_000);
+  await expect(page.locator('#result-line')).toContainText(/Re-compressing/);
+  await waitForCalls(page, 2);
+
+  await page.locator('#cancel-btn').click();
+
+  // A cancelled (or failed) second pass falls back to the first result —
+  // it must never bounce all the way back to #configure.
+  await expect(page.locator('#result')).toBeVisible();
+  await expect(page.locator('#configure')).toBeHidden();
+  await expect(page.locator('#result-line')).toContainText(/over your 25 MB target/);
+  await expect(page.locator('#result-line')).toContainText(/slightly smaller target|lower resolution/i);
+  await expect(page.locator('#download-btn')).toBeEnabled();
+  await expect(page.locator('#file-input')).toBeEnabled();
 });
 
 test('no horizontal overflow at 375px with content loaded', async ({ page }) => {

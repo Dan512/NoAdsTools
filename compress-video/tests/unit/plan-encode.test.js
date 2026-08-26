@@ -3,7 +3,8 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   planEncode, bandForBpp, evenDim, scaleToHeight, muxOverheadBytes,
-  SAFETY, FLOOR_VIDEO_BPS, BANDS, STANDARD_HEIGHTS,
+  SAFETY, FLOOR_VIDEO_BPS, FLOOR_BPP, BANDS, STANDARD_HEIGHTS,
+  correctedBitrate,
 } from '../../js/plan-encode.js';
 
 test('evenDim rounds to the nearest even number, floor 2', () => {
@@ -104,4 +105,160 @@ test('planEncode: missing audio track (audioBytes 0) still plans', () => {
 
 test('STANDARD_HEIGHTS descend so the first hit is the tallest fix', () => {
   assert.deepEqual([...STANDARD_HEIGHTS], [1080, 720, 480, 360]);
+});
+
+// --- Resolution/fps-aware unreachable floor (FLOOR_BPP) -------------------
+//
+// Field bug: a 178 MB 1080p60 clip promised "10 MB" and produced 22 MB. The
+// old FLOOR_VIDEO_BPS (100 kbps flat) never fired because it ignores
+// resolution/fps. FLOOR_BPP scales the floor with output pixels x fps.
+
+test('FLOOR_BPP is exported and set to the calibrated floor', () => {
+  assert.equal(FLOOR_BPP, 0.005);
+});
+
+// The real field case: 178 MB 1080p60 clip, "10 MB" target.
+const SRC_FIELD = {
+  targetBytes: 10_000_000, durationSec: 150,
+  width: 1920, height: 1080, fps: 60, audioBytes: 2_400_000,
+};
+
+test('planEncode: field case (1080p60, 10MB/150s) is unreachable at source res, suggests 720p', () => {
+  const overhead = muxOverheadBytes(SRC_FIELD.durationSec);
+  const budget = Math.floor(SRC_FIELD.targetBytes * SAFETY) - SRC_FIELD.audioBytes - overhead;
+  const minVideoBps = Math.max(FLOOR_VIDEO_BPS,
+    Math.ceil(FLOOR_BPP * SRC_FIELD.width * SRC_FIELD.height * SRC_FIELD.fps));
+  assert.equal(minVideoBps, 622_080); // 0.005 * 1920 * 1080 * 60
+  const minVideoBytes = Math.ceil(minVideoBps * SRC_FIELD.durationSec / 8);
+  assert.ok(budget < minVideoBytes, 'the requested bitrate must sit under the resolution-aware floor');
+
+  const p = planEncode(SRC_FIELD);
+  assert.equal(p.unreachable, true);
+  assert.deepEqual(p.out, { width: 1920, height: 1080 });
+
+  const expectedMinTargetBytes = Math.ceil((SRC_FIELD.audioBytes + overhead + minVideoBytes) / SAFETY);
+  assert.equal(p.minTargetBytes, expectedMinTargetBytes);
+
+  // Suggestion: tallest standard height below source res that the SAME
+  // budget clears against ITS OWN resolution-scaled floor.
+  const candidateBitrate = Math.floor(budget * 8 / SRC_FIELD.durationSec);
+  const alt720 = scaleToHeight(SRC_FIELD.width, SRC_FIELD.height, 720);
+  const floor720 = Math.max(FLOOR_VIDEO_BPS,
+    Math.ceil(FLOOR_BPP * alt720.width * alt720.height * SRC_FIELD.fps));
+  assert.equal(floor720, 276_480); // 0.005 * 1280 * 720 * 60
+  assert.ok(candidateBitrate >= floor720, '720p60 must be reachable at this budget');
+
+  assert.ok(p.suggestion);
+  assert.equal(p.suggestion.height, 720);
+  assert.deepEqual(
+    p.suggestion.band,
+    bandForBpp(candidateBitrate / (alt720.width * alt720.height * SRC_FIELD.fps)),
+  );
+});
+
+test('planEncode: field case rescued by an explicit lower output resolution', () => {
+  const p = planEncode(SRC_FIELD, { outHeight: 720 });
+  assert.equal(p.unreachable, false);
+  assert.deepEqual(p.out, { width: 1280, height: 720 });
+});
+
+test('planEncode: field case at fps 30 is reachable at source resolution (fps-aware floor)', () => {
+  const src30 = { ...SRC_FIELD, fps: 30 };
+  const overhead = muxOverheadBytes(src30.durationSec);
+  const budget = Math.floor(src30.targetBytes * SAFETY) - src30.audioBytes - overhead;
+  const minVideoBps = Math.max(FLOOR_VIDEO_BPS,
+    Math.ceil(FLOOR_BPP * src30.width * src30.height * src30.fps));
+  assert.equal(minVideoBps, 311_040); // 0.005 * 1920 * 1080 * 30
+  const minVideoBytes = Math.ceil(minVideoBps * src30.durationSec / 8);
+  assert.ok(budget >= minVideoBytes, 'the same budget clears the floor at half the fps');
+
+  const p = planEncode(src30);
+  assert.equal(p.unreachable, false);
+});
+
+test('planEncode: minTargetBytes reported for the unreachable field case is itself reachable', () => {
+  const p = planEncode(SRC_FIELD);
+  assert.equal(p.unreachable, true);
+  const retry = planEncode({ ...SRC_FIELD, targetBytes: p.minTargetBytes });
+  assert.equal(retry.unreachable, false);
+});
+
+test('planEncode: unreachable with budget <= 0 (audio eats the target) has no suggestion', () => {
+  const p = planEncode({ ...SRC_1080, targetBytes: 900_000 });
+  assert.equal(p.unreachable, true);
+  assert.equal(p.suggestion, null);
+});
+
+test('planEncode: SRC_1080 worked example is unaffected by the bpp floor', () => {
+  // 25 MB / 60s / 1080p30 sits far above the bpp floor, so behavior must be
+  // identical to before this change.
+  const p = planEncode(SRC_1080);
+  assert.equal(p.unreachable, false);
+  assert.equal(p.band.id, 'soft');
+});
+
+// --- correctedBitrate: one-shot proportional re-compress -------------------
+
+test('correctedBitrate: null when the encode already met or beat the target', () => {
+  assert.equal(correctedBitrate({
+    videoBitrate: 3_000_000, actualBytes: 20_000_000, targetBytes: 25_000_000,
+    audioBytes: 1_000_000, durationSec: 60,
+  }), null);
+  // exactly-equal counts as "not over"
+  assert.equal(correctedBitrate({
+    videoBitrate: 3_000_000, actualBytes: 25_000_000, targetBytes: 25_000_000,
+    audioBytes: 1_000_000, durationSec: 60,
+  }), null);
+});
+
+test('correctedBitrate: proportional correction for an overshoot lands below the input bitrate', () => {
+  const r = {
+    videoBitrate: 3_093_853, actualBytes: 30_000_000, targetBytes: 25_000_000,
+    audioBytes: 1_000_000, durationSec: 60,
+  };
+  // Pinned, not formula-mirrored: overhead 46,096; achievedVideo 28,953,904;
+  // targetVideo 23,203,904 (verified in Node against these exact inputs).
+  const b2 = correctedBitrate(r);
+  assert.ok(Number.isInteger(b2));
+  assert.ok(b2 < r.videoBitrate);
+  assert.equal(b2, 2_405_056);
+});
+
+test('correctedBitrate: clamps up to FLOOR_VIDEO_BPS when that is still an improvement', () => {
+  const r = {
+    videoBitrate: 200_000, actualBytes: 200_000_000, targetBytes: 25_000_000,
+    audioBytes: 1_000_000, durationSec: 60,
+  };
+  const overhead = muxOverheadBytes(r.durationSec);
+  const achievedVideo = r.actualBytes - r.audioBytes - overhead;
+  const targetVideo = Math.floor(r.targetBytes * SAFETY) - r.audioBytes - overhead;
+  const rawB2 = Math.floor(r.videoBitrate * (targetVideo / achievedVideo) * SAFETY);
+  assert.ok(rawB2 < FLOOR_VIDEO_BPS, 'the scenario must actually exercise the clamp');
+
+  const b2 = correctedBitrate(r);
+  assert.equal(b2, FLOOR_VIDEO_BPS);
+  assert.ok(b2 < r.videoBitrate);
+});
+
+test('correctedBitrate: null when the clamped floor bitrate is not below the input', () => {
+  // Same overshoot as above, but the input bitrate was already at/under the
+  // floor: clamping to FLOOR_VIDEO_BPS would not lower it, so no correction.
+  const r = {
+    videoBitrate: 90_000, actualBytes: 200_000_000, targetBytes: 25_000_000,
+    audioBytes: 1_000_000, durationSec: 60,
+  };
+  assert.equal(correctedBitrate(r), null);
+});
+
+test('correctedBitrate: null when achievedVideo or targetVideo collapses to zero or negative', () => {
+  // achievedVideo <= 0: audio + overhead alone exceeds what was delivered.
+  assert.equal(correctedBitrate({
+    videoBitrate: 500_000, actualBytes: 1_000_001, targetBytes: 1_000_000,
+    audioBytes: 5_000_000, durationSec: 10,
+  }), null);
+  // targetVideo <= 0: audio + overhead alone exceeds the safety-margined target.
+  assert.equal(correctedBitrate({
+    videoBitrate: 500_000, actualBytes: 2_000_000, targetBytes: 1_000_000,
+    audioBytes: 990_000, durationSec: 10,
+  }), null);
 });

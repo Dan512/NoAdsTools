@@ -7,7 +7,7 @@ import { injectTopbar } from '/shared/topbar.js';
 import { injectFooter } from '/shared/footer.js';
 import { initSettings } from '/shared/settings.js';
 import { escapeHtml } from '/shared/escape.js';
-import { planEncode } from './plan-encode.js';
+import { planEncode, correctedBitrate } from './plan-encode.js';
 import { hasWebCodecs, startCompress, EngineLoadError } from './engine.js';
 import { probeFile } from './probe.js';
 import { encodeSample, SAMPLE_POINTS } from './preview.js';
@@ -203,10 +203,17 @@ function recompute() {
     bandNote.textContent =
       `The audio track is copied through unchanged, and it plus a minimum watchable `
       + `picture need about ${prettyBytes(plan.minTargetBytes)}. `
-      + `That is the smallest target that can work for this clip.`;
+      + `That is the smallest target that can work at ${plan.out.width}×${plan.out.height}.`;
     steps.forEach(s => s.classList.remove('is-filled'));
     bandMeter.setAttribute('aria-label', 'Quality: target unreachable');
-    suggestBtn.hidden = true;
+    if (plan.suggestion) {
+      suggestBtn.hidden = false;
+      suggestBtn.textContent =
+        `This size needs ${plan.suggestion.height}p or lower. `
+        + `Use ${plan.suggestion.height}p (${plan.suggestion.band.label.toLowerCase()})`;
+    } else {
+      suggestBtn.hidden = true;
+    }
     encodeBtn.disabled = true;
     previewBtn.disabled = true;
     return;
@@ -322,10 +329,48 @@ encodeBtn.addEventListener('click', async () => {
     progress.hidden = true;
     result.hidden = false;
     const target = currentTargetBytes();
-    resultLine.textContent = outBlob.size <= target
-      ? `${prettyBytes(outBlob.size)}, under your ${prettyBytes(target)} target.`
-      : `${prettyBytes(outBlob.size)}, over your ${prettyBytes(target)} target. `
-        + `Encoders overshoot sometimes; a slightly smaller target or a lower resolution will land it.`;
+    if (outBlob.size <= target) {
+      resultLine.textContent = `${prettyBytes(outBlob.size)}, under your ${prettyBytes(target)} target.`;
+    } else {
+      const b2 = correctedBitrate({
+        videoBitrate: plan.videoBitrate,
+        actualBytes: outBlob.size,
+        targetBytes: target,
+        audioBytes: src.audioBytes,
+        durationSec: src.durationSec,
+      });
+      if (b2 === null || userCancelled) {
+        resultLine.textContent =
+          `${prettyBytes(outBlob.size)}, over your ${prettyBytes(target)} target. `
+          + `Encoders overshoot sometimes; a slightly smaller target or a lower resolution will land it.`;
+      } else {
+        resultLine.textContent =
+          `${prettyBytes(outBlob.size)}, over your ${prettyBytes(target)} target. `
+          + `Re-compressing to get under your ${prettyBytes(target)} target…`;
+        againBtn.disabled = true;
+        progress.hidden = false;
+        setProgress(0);
+        try {
+          handle = startCompress(file, { videoBitrate: b2, out: plan.out }, { onProgress: setProgress });
+          const second = await handle.done;
+          if (second.size < outBlob.size) outBlob = second;
+          resultLine.textContent = outBlob.size <= target
+            ? `${prettyBytes(outBlob.size)}, under your ${prettyBytes(target)} target.`
+            : `${prettyBytes(outBlob.size)}, still over your ${prettyBytes(target)} target after a `
+              + `second pass. This clip is not going smaller at ${plan.out.width}×${plan.out.height}; `
+              + `a lower resolution will land it.`;
+        } catch {
+          // Cancel or a failed second pass both fall back to the first result,
+          // which is valid output the user can already download.
+          resultLine.textContent =
+            `${prettyBytes(outBlob.size)}, over your ${prettyBytes(target)} target. `
+            + `Encoders overshoot sometimes; a slightly smaller target or a lower resolution will land it.`;
+        } finally {
+          progress.hidden = true;
+          againBtn.disabled = false;
+        }
+      }
+    }
   } catch (err) {
     progress.hidden = true;
     if (userCancelled) { configure.hidden = false; return; }
