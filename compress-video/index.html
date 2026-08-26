@@ -62,12 +62,12 @@
 <body>
   <header class="topbar" aria-hidden="true"></header>
   <main id="tool">
-    <h1>Compress video to a target size</h1>
-    <p class="tool-lead">Pick the size the video has to be, see what the quality will look like, then encode it. Everything happens in your browser: no upload, no watermark, no account.</p>
+    <h1>Compress video to a specific file size</h1>
+    <p class="tool-lead">Set the maximum file size you need, preview the quality, then compress. Your video stays on your device. No uploads, watermarks, accounts, or usage limits.</p>
 
     <div id="wall" class="wall" hidden>
-      <p><strong>This browser can't encode video locally yet.</strong> Video compression here runs on your browser's built-in encoder (the WebCodecs API). Firefox on Android and Safari before version 26 don't provide it. On this device, Chrome or Edge will work; on a Mac or iPhone, Safari 26 or newer.</p>
-      <p>Nothing else about this page changes in those browsers, because there is no server to fall back to. Your file staying on your device is the whole point.</p>
+      <p><strong>This browser can't compress video locally.</strong> Video compression runs on your browser's built-in encoder (the WebCodecs API). Chrome, Edge, and Samsung Internet are supported. Firefox works on desktop but not Android. Safari needs version 26 or newer.</p>
+      <p>There is no server fallback, because that would require uploading your video.</p>
     </div>
 
     <section class="dropzone" id="dropzone" aria-label="Add a video">
@@ -75,7 +75,7 @@
       <label class="file-label">Choose a video<input id="file-input" type="file" accept="video/mp4,video/quicktime,video/webm,video/x-matroska,.mp4,.mov,.m4v,.webm,.mkv"></label>
       <p class="dropzone-hint">MP4, MOV, WebM, MKV · one video at a time · nothing is uploaded</p>
     </section>
-    <p class="engine-note">Your first video pulls a 660&nbsp;KB engine from this site. The encoding itself runs on your device's own hardware.</p>
+    <p class="engine-note">The first time you use the tool, your browser downloads a 660&nbsp;KB media engine from this site. The encoding itself runs on your device.</p>
 
     <div id="tool-error" class="tool-error" role="alert" hidden></div>
 
@@ -130,7 +130,7 @@
     </section>
 
     <section id="progress" hidden>
-      <p class="progress-line">Encoding on your device. Closing this tab stops it.</p>
+      <p class="progress-line">Encoding happens on your device. Closing this tab will stop it.</p>
       <div class="progress-track" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" aria-label="Encoding progress" id="progress-track">
         <div class="progress-fill" id="progress-fill"></div>
       </div>
@@ -142,56 +142,56 @@
       <p id="result-line" class="result-line" aria-live="polite"></p>
       <div class="actions">
         <button type="button" id="download-btn" class="btn-primary">Download MP4</button>
-        <button type="button" id="again-btn">Change settings and re-compress</button>
+        <button type="button" id="again-btn">Change settings and compress again</button>
       </div>
     </section>
 
     <section class="prose tool-copy">
-      <h2>Why the video will not send</h2>
-      <p>An email bounces at 25&nbsp;MB. Discord stops at 10&nbsp;MB without Nitro. A form somewhere says the file is too large, and the file is a forty-second clip off a phone.</p>
-      <p>Phones record generously. A minute of 1080p video straight off a camera can run a couple of hundred megabytes, because the phone's priority is quality, not your email provider's attachment cap.</p>
-      <p>Compression re-encodes the video at a lower bitrate, and this tool works backwards from the number you actually care about: the size limit. Tell it the video has to be under 25&nbsp;MB and it computes the bitrate that fits, splits it sensibly between the picture and the sound, and tells you honestly what that bitrate will look like before you spend time encoding.</p>
-      <p>Sometimes the honest answer is that the target is too tight at full resolution. When that happens the tool says so, and offers the resolution that fixes it. A 720p video that looks clean beats a 1080p video made of smudges.</p>
-      <h2>What the quality estimate means</h2>
-      <p>The meter is arithmetic, not magic: the bitrate divided by the pixels it has to cover each second. It is a good predictor, and it is still an estimate. Fast-moving footage is harder to compress than a still interview, and no formula knows which one you dropped.</p>
-      <p>That is what the Preview button is for. It encodes a few one-second samples of your actual video at the exact settings the full encode would use, and shows them next to the original. What you see is what you will get, because it is the same encoder doing the same work. If the encoder still overshoots your target, the tool runs one corrected second pass automatically and keeps the smaller result.</p>
-      <h2>How this stays private</h2>
-      <p>The tool is built on mediabunny, an open-source media engine, and your browser's own built-in video encoder. Dropping your first video pulls the engine, about 660&nbsp;KB, from this site. From then on everything runs on your device: the video is read from disk into the tab, re-encoded there, and handed back as a download.</p>
-      <p>Your video is never uploaded. There is no server that could receive it. You can verify that: open your browser's DevTools Network tab and compress something. You will see the engine come down from this domain once, and nothing go up, ever.</p>
-      <p>The offline question deserves a precise answer rather than a generous one. Before your first video, the engine has not arrived, so the tool needs the network once. After it has arrived, you can disconnect and keep compressing.</p>
-      <p>The full source is <a href="https://github.com/Dan512/NoAdsTools" target="_blank" rel="noopener">public on GitHub</a> under the AGPL-3.0 license, and <a href="/privacy#compress-video">the privacy page</a> lists this tool's one download and the moment it happens.</p>
+      <h2>Compress a video to fit a file-size limit</h2>
+      <p>Phone videos get large quickly. Even a short 1080p clip can be too big for an email attachment, a Discord upload, or an online form.</p>
+      <p>Instead of making you guess at bitrate and quality settings, this tool starts with the final file size. Enter the size you need and it calculates a video bitrate that fits within that limit.</p>
+      <p>By default the resolution is set automatically. If the target is too tight for the source resolution, the tool drops to the tallest resolution that still looks good, and for 60&nbsp;fps videos it will also consider 30&nbsp;fps. In many cases a clean 720p video will look better than heavily compressed 1080p. You can override both choices.</p>
+      <h2>Preview the quality before compressing</h2>
+      <p>The quality meter estimates how much bitrate is available for each pixel. It is a useful guide, but different videos compress differently.</p>
+      <p>For a better check, press Preview quality. The tool compresses short samples from your actual video at the same settings as the final encode, so you can compare them with the original before processing the whole file.</p>
+      <p>If the finished video still comes out larger than you asked for, the tool automatically runs a corrected second pass and keeps the smaller result.</p>
+      <h2>Your video stays on your device</h2>
+      <p>Compression happens locally in your browser, using your device's video encoder and the open-source mediabunny media engine.</p>
+      <p>The browser reads your video from disk, compresses it inside the tab, and hands it back as a download. It is not uploaded to NoAdsTools or anywhere else.</p>
+      <p>You can verify this yourself in your browser's Network panel. The first time you use the tool, it downloads the media engine from this site. Your video file is never sent anywhere.</p>
+      <p>Once that engine has loaded, you can disconnect from the internet and keep compressing.</p>
+      <p>The full source is <a href="https://github.com/Dan512/NoAdsTools" target="_blank" rel="noopener">public on GitHub</a> under the AGPL-3.0 license, and <a href="/privacy#compress-video">the privacy page</a> lists exactly what this tool loads and when.</p>
 
       <h2>Questions</h2>
       <dl class="faq">
         <dt>How do I compress a video to 10 MB for Discord?</dt>
         <dd>
-          <p>Drop the video, press the 10&nbsp;MB preset, and compress. The tool computes the bitrate that lands under 10&nbsp;MB and tells you what quality to expect first.</p>
-          <p>If ten megabytes is too tight for the length of your clip at full resolution, it will say so and suggest the resolution that works.</p>
+          <p>Add your video and press the 10&nbsp;MB preset. The tool calculates the bitrate that stays under 10&nbsp;MB and shows you the expected quality before you compress.</p>
+          <p>If 10&nbsp;MB is tight at the source resolution, it picks a lower resolution automatically. You can override that with the Resolution control.</p>
         </dd>
         <dt>Is my video uploaded anywhere?</dt>
         <dd>
-          <p>No. It is read into the browser tab and re-encoded there by your device's own hardware.</p>
-          <p>Watch the DevTools Network tab while it runs: a 660&nbsp;KB engine comes down from this site on your first file, and nothing goes up on any of them.</p>
+          <p>No. The compression runs in your browser and your video is never sent to a server.</p>
+          <p>The only download is the media engine, the first time you use the tool.</p>
         </dd>
-        <dt>Will there be a watermark?</dt>
+        <dt>Does the compressed video have a watermark?</dt>
         <dd>
-          <p>No watermark, no account, no daily limit, no paid tier that removes any of those.</p>
-          <p>The output is your video, smaller, and nothing else.</p>
+          <p>No. There are no watermarks, accounts, daily limits, or paid tiers.</p>
         </dd>
-        <dt>Why does it say my target is unreachable?</dt>
+        <dt>Why does it say my target size can't be reached?</dt>
         <dd>
-          <p>The audio track is copied through untouched, so it has a fixed cost. If your target is smaller than the audio plus a minimum workable video bitrate, no encoder settings can hit it honestly.</p>
-          <p>The message tells you the smallest target that can work for that clip at that resolution. A shorter clip, a larger target, a lower resolution, or a lower frame rate are the ways out.</p>
+          <p>The audio track takes up part of the file size. If the space left over is too small to encode watchable video, the target can't be reached at that resolution.</p>
+          <p>The tool shows the smallest target that can work. A shorter clip, a larger target, a lower resolution, or a lower frame rate are the ways out.</p>
         </dd>
-        <dt>What formats can I drop, and what comes out?</dt>
+        <dt>What video formats are supported?</dt>
         <dd>
-          <p>MP4, MOV, WebM, and MKV go in, subject to what your browser can decode. An MP4 with H.264 video comes out, which is the most widely accepted combination there is.</p>
-          <p>When the audio codec fits MP4, which covers nearly everything phones and browsers produce, the track is copied as it is, not re-encoded, so it loses nothing.</p>
+          <p>MP4, MOV, WebM, and MKV, as long as your browser can decode them. The output is an MP4 with H.264 video, which plays almost everywhere.</p>
+          <p>When the original audio format fits MP4, which covers nearly everything phones and browsers produce, the audio track is copied without re-encoding.</p>
         </dd>
-        <dt>Why doesn't it work in my browser?</dt>
+        <dt>Why doesn't video compression work in my browser?</dt>
         <dd>
-          <p>The tool needs the WebCodecs API, which is how a web page reaches your device's hardware video encoder. Chrome, Edge, and Samsung Internet have it everywhere; Firefox has it on desktop but not on Android; Safari has it from version 26.</p>
-          <p>There is no server-side fallback, deliberately. A fallback would mean uploading your video, which is the thing this site does not do.</p>
+          <p>The tool needs the WebCodecs API to reach your device's video encoder. Chrome, Edge, and Samsung Internet support it. Firefox supports it on desktop but not Android. Safari has it from version 26.</p>
+          <p>There is intentionally no server-side fallback. Supporting one would mean uploading your video.</p>
         </dd>
       </dl>
 
