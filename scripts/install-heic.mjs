@@ -1,5 +1,21 @@
 #!/usr/bin/env node
-// scripts/install-heic.mjs — vendors libheif-js (LGPL-3.0) into js/vendor/heic/.
+// scripts/install-heic.mjs — vendors libheif-js (LGPL-3.0) into BOTH of the
+// repo's vendored copies: vendor/libheif/ and photo-editor/js/vendor/heic/.
+//
+// Why two destinations: the decoder is carried twice, byte-for-byte identical,
+// because two different loaders fetch it from two different absolute URLs —
+//
+//   vendor/libheif/               → shared/heic-loader.js (no-modal variant),
+//                                   consumers: /heic-to-jpg/, /find-duplicate-photos/
+//   photo-editor/js/vendor/heic/  → photo-editor/js/vendor/heic-loader.js
+//                                   (first-use consent-modal variant) and
+//                                   photo-editor/js/workers/heicWorker.js
+//
+// Each loader hardcodes its own URL prefix, so neither copy can be dropped
+// without repointing its loader; deduping them is a later platform task (see
+// vendor/libheif/LICENSE.md). Feeding only one destination would let a
+// LIBHEIF_VERSION bump silently strand the other on the old bytes, so this
+// script writes both and keeps them in lockstep.
 //
 // We pick the SPLIT wasm variant from the upstream package — `libheif-wasm/libheif.js`
 // (~81 KB JS glue) + `libheif-wasm/libheif.wasm` (~1.03 MB compiled wasm) — rather
@@ -9,11 +25,19 @@
 //
 // What this script does:
 //   1. `npm pack libheif-js@<VERSION>` into .tmp-vendor/.
-//   2. Extract and copy the three files we ship:
-//        - libheif-wasm/libheif.js   → js/vendor/heic/libheif.js
-//        - libheif-wasm/libheif.wasm → js/vendor/heic/libheif.wasm
-//        - libheif/LICENSE           → js/vendor/heic/LICENSE
-//   3. (Optional) clean .tmp-vendor with --clean-tmp.
+//   2. Extract and copy the three files we ship into EACH destination:
+//        - libheif-wasm/libheif.js   → <dest>/libheif.js
+//        - libheif-wasm/libheif.wasm → <dest>/libheif.wasm
+//        - libheif/LICENSE           → <dest>/LICENSE
+//   3. If anything changed, print the re-vendoring checklist (see below).
+//   4. (Optional) clean .tmp-vendor with --clean-tmp.
+//
+// Provenance docs are hand-written here and deliberately NOT generated:
+// `vendor/libheif/LICENSE.md` and `photo-editor/js/vendor/heic/.notice`. (The
+// sibling scripts/install-mediabunny.mjs generates its LICENSE.md; these two
+// carry a per-file source table, the LGPL-3.0/AGPL-3.0 compatibility note and
+// runtime-discipline prose that a generator would flatten.) Step 3's checklist
+// is the reminder to hand-update them on a version bump.
 //
 // Idempotent: re-running is a no-op if the vendored files already match the
 // tarball's bytes. Run with `node scripts/install-heic.mjs`.
@@ -27,12 +51,19 @@ import { createHash } from 'node:crypto';
 const LIBHEIF_VERSION = '1.19.8';
 
 const PROJECT_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const HEIC_DIR     = path.join(PROJECT_ROOT, 'js', 'vendor', 'heic');
 const TMP_DIR      = path.join(PROJECT_ROOT, '.tmp-vendor');
 
-// Files we copy from the tarball into js/vendor/heic/.
+// Every vendored copy the tarball feeds. `label` is display-only; `dir` is the
+// destination on disk. Keep these in sync with the loaders listed in the
+// header comment — a new copy here means a new loader somewhere.
+const DESTS = [
+  { label: 'vendor/libheif',              dir: path.join(PROJECT_ROOT, 'vendor', 'libheif') },
+  { label: 'photo-editor/js/vendor/heic', dir: path.join(PROJECT_ROOT, 'photo-editor', 'js', 'vendor', 'heic') },
+];
+
+// Files we copy from the tarball into each destination.
 //   src: relative to extracted `package/` directory.
-//   dst: relative to HEIC_DIR.
+//   dst: relative to a destination dir.
 const COPY_PLAN = [
   { src: 'libheif-wasm/libheif.js',   dst: 'libheif.js' },
   { src: 'libheif-wasm/libheif.wasm', dst: 'libheif.wasm' },
@@ -47,7 +78,6 @@ async function fileHash(p) {
 async function main() {
   console.log(`--- libheif-js v${LIBHEIF_VERSION} ---`);
   await mkdir(TMP_DIR, { recursive: true });
-  await mkdir(HEIC_DIR, { recursive: true });
 
   // 1. Pack.
   console.log(`npm pack libheif-js@${LIBHEIF_VERSION}…`);
@@ -58,26 +88,53 @@ async function main() {
   console.log('Extracting tarball…');
   execSync(`tar -xzf ${tarball}`, { cwd: TMP_DIR, stdio: 'inherit' });
 
-  // 3. Copy the three files, with sha256 idempotency.
-  let copied = 0;
-  let skipped = 0;
+  // 3. Read each source file once, then fan out to every destination with
+  //    sha256 idempotency per file.
+  const sources = [];
   for (const { src, dst } of COPY_PLAN) {
     const srcPath = path.join(TMP_DIR, 'package', src);
-    const dstPath = path.join(HEIC_DIR, dst);
     if (!existsSync(srcPath)) throw new Error(`Missing in tarball: ${src}`);
-    const srcBytes = await readFile(srcPath);
-    const srcSha   = createHash('sha256').update(srcBytes).digest('hex');
-    const dstSha   = await fileHash(dstPath);
-    if (dstSha === srcSha) {
-      skipped++;
-      console.log(`  skip  ${dst} (sha matches)`);
-      continue;
-    }
-    await writeFile(dstPath, srcBytes);
-    copied++;
-    console.log(`  write ${dst} (${(srcBytes.length / 1024).toFixed(1)} KB)`);
+    const bytes = await readFile(srcPath);
+    sources.push({ src, dst, bytes, sha: createHash('sha256').update(bytes).digest('hex') });
   }
-  console.log(`Copy: ${copied} written, ${skipped} skipped`);
+
+  let copied = 0;
+  let skipped = 0;
+  for (const dest of DESTS) {
+    console.log(`\n${dest.label}/`);
+    await mkdir(dest.dir, { recursive: true });
+    for (const { dst, bytes, sha } of sources) {
+      const dstPath = path.join(dest.dir, dst);
+      if (await fileHash(dstPath) === sha) {
+        skipped++;
+        console.log(`  skip  ${dst} (sha matches)`);
+        continue;
+      }
+      await writeFile(dstPath, bytes);
+      copied++;
+      console.log(`  write ${dst} (${(bytes.length / 1024).toFixed(1)} KB)`);
+    }
+  }
+  console.log(`\nCopy: ${copied} written, ${skipped} skipped across ${DESTS.length} destinations`);
+
+  // 4. Provenance is hand-maintained — print what a human has to go update.
+  if (copied > 0) {
+    console.log(`
+sha256 of the vendored bytes:`);
+    for (const { dst, sha } of sources) console.log(`  ${dst.padEnd(13)} ${sha}`);
+    console.log(`
+Bytes changed — the hand-written provenance docs are NOT auto-updated. Still to do:
+  1. Bump VENDOR_HASH in photo-editor/js/vendor/heic-loader.js so previously
+     consented users are re-prompted (the download size may have changed).
+  2. Update the version/size/sha lines in:
+       - vendor/libheif/LICENSE.md
+       - photo-editor/js/vendor/heic/.notice
+       - THIRD-PARTY.md
+       - privacy.html
+       - the heicConsentBody i18n string (if the wasm grew)`);
+  } else {
+    console.log('Everything already up to date — no provenance changes needed.');
+  }
 
   if (process.argv.includes('--clean-tmp')) {
     await rm(TMP_DIR, { recursive: true, force: true });
