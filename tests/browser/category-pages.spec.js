@@ -123,7 +123,7 @@ test('the grouped Tools menu is accessible with the dropdown open', async ({ pag
   await expect(page.locator('#tools-menu-list')).toBeVisible();
 
   const headings = await page.locator('#tools-menu-list .tools-menu-heading').allTextContents();
-  expect(headings).toEqual(['Image tools', 'PDF tools', 'Document tools', 'Other tools']);
+  expect(headings).toEqual(['Image tools', 'PDF tools', 'Video tools', 'Document tools', 'Other tools']);
 
   // Every live tool is reachable from the menu, exactly once.
   // :not(.tools-menu-all) — the trailing "All tools" link shares the item class.

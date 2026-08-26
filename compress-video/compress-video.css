@@ -1,0 +1,118 @@
+/* compress-video/compress-video.css — tool-only styles. Tokens and chrome
+   come from /shared/shell.css. EVERY rule is scoped under #tool: a bare
+   .controls/.actions/.preset would leak onto the injected topbar (real
+   shipped bug; see playbook §4). */
+
+/* This stylesheet centers and pads #tool itself (site convention — shell.css
+   deliberately doesn't). Explicit width also keeps an intrinsically-sized
+   child (the preview videos) from making #tool content-size and overflowing
+   narrow viewports (crop-image bug). */
+#tool { width: 100%; max-width: 46rem; margin: 0 auto; box-sizing: border-box; padding: var(--space-2xl) var(--space-xl) var(--space-4xl); }
+#tool h1 { margin: 0 0 var(--space-sm); font-size: var(--t-2xl); font-weight: 600; }
+#tool .tool-lead { margin: 0 0 var(--space-xl); color: var(--text-secondary); font-size: var(--t-lg); max-width: 70ch; }
+
+#tool .wall {
+  border: 1px solid var(--border, currentColor);
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  margin-bottom: 1rem;
+}
+
+#tool .dropzone {
+  border: 2px dashed var(--border, currentColor);
+  border-radius: 8px;
+  padding: 1.5rem 1rem;
+  text-align: center;
+}
+#tool .dropzone.is-drag { border-style: solid; }
+#tool .dropzone[aria-disabled="true"] { opacity: 0.5; }
+
+/* Visually-hidden clip pattern for the file input (never display:none —
+   WCAG 2.1.1 keyboard access). */
+#tool .file-label {
+  display: inline-block;
+  cursor: pointer;
+  text-decoration: underline;
+  position: relative;
+}
+#tool .file-label input {
+  position: absolute;
+  width: 1px; height: 1px;
+  padding: 0; margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap; border: 0;
+}
+#tool .file-label:focus-within { outline: 2px solid currentColor; outline-offset: 2px; }
+
+#tool .engine-note, #tool .dropzone-hint { font-size: 0.85rem; opacity: 0.75; }
+
+#tool .tool-error {
+  border: 1px solid var(--border, currentColor);
+  border-left-width: 4px;
+  border-radius: 6px;
+  padding: 0.6rem 0.9rem;
+  margin-top: 1rem;
+  font-weight: 500;
+}
+
+#tool .summary { margin-top: 1rem; font-size: 0.95rem; }
+
+#tool #configure, #tool #progress, #tool #result { margin-top: 1rem; }
+
+#tool .target-row { display: flex; flex-wrap: wrap; gap: 0.75rem; align-items: end; }
+#tool .target-row input[type="number"] { display: block; width: 7rem; padding: 0.35rem 0.5rem; }
+#tool .presets { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+/* Snap segmented-ish controls: shell.css's 120ms :where(button) color
+   transition makes axe sample a mid-transition frame (split-pdf bug). */
+#tool .preset, #tool #suggest-btn { transition: none; }
+#tool .preset[aria-pressed="true"] { font-weight: 700; text-decoration: underline; }
+
+#tool .resolution-label { display: inline-block; margin-top: 0.75rem; }
+
+#tool .band { margin-top: 1rem; }
+#tool .band-meter { display: inline-flex; gap: 3px; vertical-align: middle; }
+#tool .band-step {
+  width: 1.4rem; height: 0.6rem;
+  border: 1px solid currentColor;
+  border-radius: 2px;
+  background: transparent;
+}
+/* Filled = weight/position carries the meaning; hue never does. */
+#tool .band-step.is-filled { background: currentColor; }
+#tool .band-line { display: inline-block; margin: 0 0 0 0.6rem; }
+#tool .band-note { margin: 0.35rem 0 0; font-size: 0.9rem; }
+
+#tool .actions { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 1rem; }
+
+#tool .preview-area {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+#tool .preview-pair video { width: 100%; max-width: 100%; height: auto; display: block; }
+#tool .preview-pair figcaption { font-size: 0.8rem; margin-top: 0.2rem; }
+/* "Enlarge" spans the pair across the whole grid so artifacts are viewed at
+   real scale — position/size carries the state, not hue. */
+#tool .preview-pair.is-enlarged { grid-column: 1 / -1; }
+#tool .enlarge-btn { margin-top: 0.3rem; transition: none; }
+
+#tool .progress-track {
+  height: 0.8rem;
+  border: 1px solid currentColor;
+  border-radius: 4px;
+  overflow: hidden;
+}
+#tool .progress-fill { height: 100%; width: 0%; background: currentColor; }
+#tool .progress-pct { font-variant-numeric: tabular-nums; }
+
+/* --- Deep page ------------------------------------------------------------ */
+#tool .tool-copy { margin-top: var(--space-3xl); max-width: 70ch; }
+#tool .faq dt { font-weight: 600; margin-top: var(--space-lg); }
+#tool .faq dd { margin: var(--space-xs) 0 0; color: var(--text-secondary); }
+
+#tool .preview-pair figure { margin: 0; }
+
+/* [hidden] must beat any display we set. */
+#tool [hidden] { display: none !important; }

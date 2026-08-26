@@ -24,6 +24,7 @@ sends over the network. None of the libraries below have any network traffic.
 | [Tesseract.js](https://github.com/naptha/tesseract.js) | 7.0.0 | Apache-2.0 | Apache-2.0 | `js/vendor/tesseract/tesseract.min.js` (~63 KB) + `worker.min.js` (~111 KB) + `.notice`. Vendored 2026-05-22. Install via `node scripts/install-tesseract.mjs`. | OCR engine for the "Detect text" redact button (v1.2 Feature 4) + preview-select mode with PII regex auto-marking. |
 | [tesseract.js-core](https://github.com/naptha/tesseract.js-core) | 7.0.0 | Apache-2.0 | Apache-2.0 | `js/vendor/tesseract/core/tesseract-core-{,simd-,relaxedsimd-}lstm.{wasm,wasm.js}` (~22 MB total, 6 variants). Tesseract.js auto-picks the best variant per browser at runtime. Single-threaded — no SharedArrayBuffer / COOP / COEP required, works on plain GitHub Pages. | WASM-compiled Tesseract OCR engine; data half of the OCR feature. |
 | [tessdata_fast](https://github.com/tesseract-ocr/tessdata_fast) | HEAD on 2024-08-01 (commit `87416418657359cb625c412a48b6e1d6d41c29bd`) | Apache-2.0 | Apache-2.0 | `js/vendor/tesseract/lang/eng.traineddata.gz` (~1.9 MB gzipped; ~4 MB raw). Gzipped during install. | English-language LSTM model for OCR. Other languages can be vendored on demand by extending `scripts/install-tesseract.mjs`. |
+| [mediabunny](https://github.com/Vanilagy/mediabunny) | 1.55.2 | MPL-2.0 | MPL-2.0 | `vendor/mediabunny/mediabunny.min.mjs` (~660 KB) + `LICENSE` + `LICENSE.md`. Vendored 2026-08-25. Install via `node scripts/install-mediabunny.mjs`. | Video compression engine for compress-video, consumed lazily on first file. |
 
 ## License selections
 
@@ -66,6 +67,10 @@ sends over the network. None of the libraries below have any network traffic.
 - **tessdata_fast (English LSTM model)** is **Apache-2.0** by the
   Tesseract OCR project. Commit pinned for reproducibility in
   `scripts/install-tesseract.mjs`.
+- **mediabunny** is **MPL-2.0**, a file-level copyleft license that is
+  AGPL-3.0-compatible. We ship the unmodified upstream minified bundle
+  (`vendor/mediabunny/mediabunny.min.mjs`) with its license text alongside
+  (`vendor/mediabunny/LICENSE`).
 
 ## Loading discipline
 
@@ -112,6 +117,7 @@ sends over the network. None of the libraries below have any network traffic.
   weights + 3 KB metadata + `.notice`).
 - `js/vendor/tesseract/` is ~22 MB (174 KB lib JS + 6 LSTM-only WASM
   variants + 1.9 MB gzipped English language data + `.notice`).
+- `vendor/mediabunny/` is ~0.66 MB (660 KB minified bundle + ~17 KB LICENSE).
 - The total `js/vendor/` footprint is ~155 MB, dominated by the chunked
   ML models + the ORT WASM kernels. A `git clone` of this repo is
   consequently larger than a typical static-site repo. The trade is: zero

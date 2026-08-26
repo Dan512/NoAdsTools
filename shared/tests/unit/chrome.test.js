@@ -105,10 +105,10 @@ test('topbar defaults include both language and settings controls', () => {
 test('tools menu is grouped by category, and every live tool appears once', () => {
   const html = buildToolsMenuGroups('merge-pdf');
 
-  // Four groups in a fixed order; "Other tools" is the catch-all for any
+  // Five groups in a fixed order; "Other tools" is the catch-all for any
   // category without a named group (today: the QR generator).
   const groups = [...html.matchAll(/role="group"[^>]*aria-label="([^"]+)"/g)].map((m) => m[1]);
-  assert.deepEqual(groups, ['Image tools', 'PDF tools', 'Document tools', 'Other tools']);
+  assert.deepEqual(groups, ['Image tools', 'PDF tools', 'Video tools', 'Document tools', 'Other tools']);
 
   // No tool may be dropped or duplicated by the grouping.
   const hrefs = [...html.matchAll(/class="tools-menu-item" href="\/([a-z0-9-]+)\//g)].map((m) => m[1]);

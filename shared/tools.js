@@ -18,6 +18,7 @@
 export const CATEGORIES = Object.freeze([
   { id: 'image',     label: 'Image tools' },
   { id: 'pdf',       label: 'PDF tools' },
+  { id: 'video',     label: 'Video tools' },
   { id: 'documents', label: 'Documents' },
   { id: 'generator', label: 'Generators' },
   { id: 'dev',       label: 'Developer' },
@@ -83,6 +84,9 @@ export const TOOLS = Object.freeze([
     status: 'live' },
   { slug: 'qr-code-generator', title: 'QR Code Generator', category: 'generator',
     blurb: 'Make QR codes. No tracking, no account.',
+    status: 'live' },
+  { slug: 'compress-video', title: 'Compress Video', category: 'video',
+    blurb: 'Shrink a video to a target size like 10 or 25 MB — nothing uploaded.',
     status: 'live' },
 ]);
 

@@ -1,125 +1,163 @@
 # NoAdsTools
 
-NoAdsTools is a privacy-first, client-side image editor and batch processor
-in the NoAds suite. **Image files never leave the browser.** Edit one image
-or a hundred — crop, resize, rotate/flip, brightness/contrast/saturation,
-blur, color-to-transparent, text overlays, freehand brush, shapes,
-blur/pixelate redaction, ML background removal, smart compression and
-"smallest size" preset, EXIF metadata stripping, auto-trim of transparent
-or solid-color borders, HEIC/HEIF import, and export to PNG, JPG, WebP, or
-PDF — per image or as a ZIP. All locally.
+**[noadstools.com](https://noadstools.com)** — twenty-one free tools for images,
+PDFs, documents and video that run entirely in your browser.
 
-## Privacy
+Your files are read from your device, processed there, and handed back. They
+are not uploaded, not queued on a server, and not stored anywhere. There are no
+ads, no analytics, no cookies and no accounts, and there never will be.
 
-Image files never leave the browser. The site fetches its own code, fonts,
-and ML model assets from this origin only. No third-party CDNs, no
-analytics, no tracking, no cookies. See [`privacy.html`](privacy.html) or
-the in-app privacy panel for the full disclosure (including the exact
-localStorage keys we set and which vendored libraries load lazily on first
-use).
+That claim is easy to make and rarely proved, so this repo and the
+[privacy page](https://noadstools.com/privacy) exist to prove it.
 
-## Vendored ML assets (repo size note)
+## The tools
 
-This repo ships ~118&nbsp;MB of pre-vendored binary assets under
-[`js/vendor/bgremove/`](js/vendor/bgremove/) so that the in-browser
-"Remove background" feature works end-to-end after `git clone && npm install`
-with no separate model-download step. With the v1.1 additions
-(jsPDF ~420&nbsp;KB and libheif ~1.1&nbsp;MB), the total disk footprint of
-the working tree is ~135&nbsp;MB; including `.git` history the on-disk
-repo is ~245&nbsp;MB.
+**Image:**
+[Photo Editor](https://noadstools.com/photo-editor/) ·
+[Remove EXIF data](https://noadstools.com/remove-exif/) ·
+[HEIC to JPG](https://noadstools.com/heic-to-jpg/) ·
+[Find Duplicate Photos](https://noadstools.com/find-duplicate-photos/) ·
+[Compress images](https://noadstools.com/compress-images/) ·
+[Resize Image](https://noadstools.com/resize-image/) ·
+[Convert Image](https://noadstools.com/convert-image/) ·
+[Crop Image](https://noadstools.com/crop-image/) ·
+[Color Palette From Image](https://noadstools.com/color-palette-from-image/) ·
+[Favicon Generator](https://noadstools.com/favicon-generator/)
 
-That's:
+**PDF:**
+[Image to PDF](https://noadstools.com/image-to-pdf/) ·
+[Merge PDF](https://noadstools.com/merge-pdf/) ·
+[Split PDF](https://noadstools.com/split-pdf/) ·
+[Watermark PDF](https://noadstools.com/watermark-pdf/) ·
+[Sign PDF](https://noadstools.com/sign-pdf/) ·
+[PDF to JPG](https://noadstools.com/pdf-to-jpg/) ·
+[PDF to Text](https://noadstools.com/pdf-to-text/)
 
-- The [@imgly/background-removal](https://github.com/imgly/background-removal-js)
-  ESM bundle (~170&nbsp;KB, AGPL-3.0) and its license text.
-- The ISNET fp16 segmentation model — content-addressable chunks fetched
-  from `staticimgly.com/@imgly/background-removal-data/1.7.0/` once at
-  install time, then vendored.
-- The [ONNX Runtime Web](https://github.com/microsoft/onnxruntime/tree/main/js/web)
-  SIMD WASM kernels — both the CPU path and the WebGPU/JSEP path — also as
-  content-addressable chunks alongside the model. The browser only
-  downloads the variant it actually uses at runtime.
-- The matching [onnxruntime-web@1.21.0](https://github.com/microsoft/onnxruntime/tree/main/js/web)
-  ESM bundles (CPU + WebGPU, ~800&nbsp;KB total, MIT) under
-  `js/vendor/onnxruntime-web/`, resolved at runtime via an import map in
-  `index.html`.
-- The [jsPDF](https://github.com/parallax/jsPDF) UMD bundle (~420&nbsp;KB,
-  MIT) under `js/vendor/jspdf/` for image-to-PDF export.
-- The [libheif-js](https://github.com/catdad-experiments/libheif-js)
-  decoder (~1.1&nbsp;MB JS + WASM, LGPL-3.0) under `js/vendor/heic/` for
-  HEIC/HEIF import. Loaded on first .heic open, gated by a one-time
-  consent modal.
-- The [JSZip](https://stuk.github.io/jszip/) library (~97&nbsp;KB, MIT) at
-  `js/vendor/jszip.min.js` for batch ZIP export.
-- The [MediaPipe BlazeFace](https://github.com/google/mediapipe) face-detection
-  ONNX export (~600&nbsp;KB, Apache-2.0) under `js/vendor/blazeface/`,
-  re-distributed by [Qualcomm AI Hub Models](https://huggingface.co/qualcomm/MediaPipe-Face-Detection).
-  Powers the "Auto-detect faces" button in the redact tool. Tile-based
-  multi-scale scanning catches small faces in group photos.
-- The [Tesseract.js v7](https://github.com/naptha/tesseract.js) OCR engine
-  (~22&nbsp;MB across 6 LSTM-only WASM variants + English `eng.traineddata.gz`,
-  all Apache-2.0) under `js/vendor/tesseract/`. Powers the "Detect text"
-  button + preview-select mode with PII regex auto-marking.
-- The ONNX Runtime Web threaded JSEP WASM kernels
-  (~36&nbsp;MB across `ort-wasm-simd-threaded.{jsep,}.{wasm,mjs}`)
-  also vendored under `js/vendor/onnxruntime-web/` — required by both
-  BlazeFace and the existing background-removal model at runtime.
+**Documents and generators:**
+[Resume Builder](https://noadstools.com/resume-builder/) ·
+[Cover Letter Generator](https://noadstools.com/cover-letter-generator/) ·
+[QR Code Generator](https://noadstools.com/qr-code-generator/)
 
-A clone of this repo is consequently larger and slower than a typical
-static-site repo. The trade is intentional: zero third-party CDN reliance,
-self-hosted everything, and a deploy that works immediately on a freshly
-cloned site. See [THIRD-PARTY.md](THIRD-PARTY.md) and
-[`js/vendor/bgremove/.notice`](js/vendor/bgremove/.notice) for the full
-inventory + re-vendoring instructions.
+**Video:**
+[Compress Video](https://noadstools.com/compress-video/)
 
-## What we ship
+## The privacy claim is enforced by the browser, not just promised
 
-- **vanilla JS, no framework, no build step** — native ES modules and a
-  single CSS file.
-- **Self-hosted Onest font** (variable, OFL) under `fonts/`.
-- **Vendored libraries** under `js/vendor/`:
-  [`bgremove/`](js/vendor/bgremove/) (@imgly/background-removal + ISNET
-  model + ONNX runtime WASM),
-  [`onnxruntime-web/`](js/vendor/onnxruntime-web/) (peer ESM bundle + the
-  threaded JSEP WASM kernels shared by BlazeFace + bg-remove),
-  [`blazeface/`](js/vendor/blazeface/) (face detection ONNX, ~600 KB),
-  [`tesseract/`](js/vendor/tesseract/) (OCR engine + English language data, ~22 MB),
-  [`jspdf/`](js/vendor/jspdf/) (PDF export),
-  [`heic/`](js/vendor/heic/) (HEIC decoder),
-  [`jszip.min.js`](js/vendor/jszip.min.js) (ZIP batch export).
-- **PWA manifest + icons** — installable on desktop and mobile. Icons live
-  at `img/logo.svg`, `img/icon-192.png`, `img/icon-512.png`,
-  `img/icon-512-maskable.png`, `img/apple-touch-icon.png` (all generated
-  from `img/logo.svg` via `node scripts/build-icons.mjs`).
-- **No analytics, no telemetry, no third-party requests at runtime.**
+Most privacy-first tools ask you to trust a sentence in a footer. This site
+ships a Content-Security-Policy with `connect-src 'self'`, which means the
+browser itself refuses any request to another origin. A compromised build or a
+malicious dependency could not upload your file, because the browser would
+block it before it left the machine.
+
+The policy is generated from the tool manifest by
+[`scripts/gen-headers.mjs`](scripts/gen-headers.mjs) and lives in
+[`_headers`](_headers). `scripts/serve.js` replays it locally so the test suite
+runs under the real policy rather than a policy that only exists in production.
+
+Two honest caveats, both stated on the privacy page as well:
+
+- A web server still sends you the page and sees that request, including your
+  IP, the way every web server does. Code comes down to your device; your data
+  never goes up.
+- `/photo-editor/` is the one page allowed `'unsafe-eval'`, because the
+  vendored background-removal bundle compiles kernels with `new Function`. Its
+  `connect-src` is still `'self'`, so the no-upload guarantee holds there too.
+
+### Checking for yourself
+
+Open any tool, open DevTools, select the Network tab, and use it. You will see
+files arriving from noadstools.com. You will not see a request carrying your
+file anywhere. [The privacy page](https://noadstools.com/privacy) lists, per
+tool, exactly what gets downloaded and what triggers each download.
+
+## How it is built
+
+- **Vanilla JavaScript. No framework, no bundler, no build step.** Native ES
+  modules, loaded directly by the browser. Editing a file and reloading is the
+  entire development loop.
+- **A shared shell** in [`shared/`](shared/) provides the topbar, footer,
+  settings, theme and i18n. [`shared/tools.js`](shared/tools.js) is the single
+  manifest that drives the tools dropdown, the homepage grid, the category
+  pages, the sitemap, the CSP and the publish include-set. Adding a tool means
+  adding one entry there.
+- **Everything is self-hosted.** No third-party CDN, not even for fonts. Google
+  Fonts logs the IP of every visitor who loads a font from it, which is exactly
+  the sort of thing this site exists to avoid.
+- **Heavy engines load lazily**, only when you use the feature that needs them,
+  and always from this origin. A tool you never use costs you nothing.
+- **Static hosting.** The repo lives on GitHub and the site is deployed by
+  Cloudflare Pages from a published mirror.
+
+## Repo size
+
+A clone is roughly **350 MB**: about 216 MB of tracked files plus about 133 MB
+of git history. Around 180 MB of that is pre-vendored binary assets under
+`photo-editor/js/vendor/`, mostly the background-removal model and the ONNX
+Runtime WASM kernels.
+
+That is far larger than a typical static site, and it is deliberate. The
+alternative is fetching model weights from someone else's CDN at runtime, which
+would break the one promise the project is built on. Vendoring means a fresh
+clone works immediately with no download step, and every byte the browser
+fetches comes from an origin we control.
+
+There are two vendor trees, which is worth knowing before you go looking:
+
+- [`vendor/`](vendor/) holds the platform-shared libraries used by the
+  nineteen newer tools: pdf.js, pdf-lib, jsQuash codecs, pica, libheif, JSZip,
+  qrcodegen and Tesseract.
+- [`photo-editor/js/vendor/`](photo-editor/js/vendor/) holds the photo
+  editor's own set, which predates the shared tree: @imgly/background-removal
+  plus the ISNET model, ONNX Runtime Web, MediaPipe BlazeFace, Tesseract,
+  jsPDF and libheif. Some libraries therefore exist in both.
+
+[THIRD-PARTY.md](THIRD-PARTY.md) has the full inventory with licenses, and
+[`photo-editor/js/vendor/bgremove/.notice`](photo-editor/js/vendor/bgremove/.notice)
+covers re-vendoring the model.
+
+## Local development
+
+Requires Node 22 (see [`.nvmrc`](.nvmrc)).
+
+```
+nvm use && npm install     # dev dependencies only (Playwright, axe-core)
+npm run serve              # static server on http://localhost:4173
+npm test                   # unit tests, Node's built-in runner
+npm run test:browser       # Playwright (run test:browser:install first)
+```
+
+The browser suite runs five projects; chromium is the one that gates. There is
+one known failure, `photo-editor/tests/browser/perf-budget.spec.js`: that page
+loads about 1.7 MB against a 1.2 MB budget, which is a real problem rather than
+a flaky test.
+
+Generators that must be re-run when the manifest changes, both guarded by tests
+so you cannot forget:
+
+```
+node scripts/gen-headers.mjs        # rebuild _headers (CSP) from the manifest
+node scripts/gen-breadcrumbs.mjs    # rebuild BreadcrumbList JSON-LD
+```
+
+Other scripts: `install-bgremove`, `install-blazeface`, `install-tesseract`,
+`install-ort` and `install-heic` re-fetch vendored assets (already committed;
+only needed after bumping a pinned version), `build-icons` re-renders the app
+icons from the logo, and `measure-weight` prints the initial-load wire byte
+count.
+
+## Publishing
+
+`node scripts/publish.mjs` mirrors the tracked tree into a sibling public repo,
+which Cloudflare Pages deploys. `--dry-run` reports what would be copied and
+runs two guards: one fails if any published file would be swallowed by the
+mirror's `.gitignore`, and one fails if a load-bearing engine file is missing.
+Both exist because a bare `build/` rule once silently dropped the pdf.js engine
+from the deployed site while every local check passed.
 
 ## License
 
-This project is licensed under the GNU AGPL v3.0 — see [LICENSE](LICENSE).
-The AGPL's source-availability requirement means the running site links to
-its own source repository in the footer and privacy panel.
+[GNU AGPL v3.0](LICENSE). The AGPL's source-availability requirement is why the
+running site links back to this repository from its footer and its privacy
+page.
 
 Source: <https://github.com/Dan512/NoAdsTools>
-
-## Local dev setup
-
-Requires Node 22+.
-
-- `nvm use && npm install` — install dev deps (Playwright, axe-core)
-- `npm test` — unit tests via Node's built-in test runner
-- `npm run test:browser` — Playwright browser tests (after
-  `npm run test:browser:install` to fetch browser binaries)
-- `npm run serve` — local static dev server on `http://localhost:4173`
-- `node scripts/build-icons.mjs` — re-render `img/icon-*.png` from
-  `img/logo.svg` (committed to the repo; only re-run if the logo changes)
-- `node scripts/install-blazeface.mjs` — re-fetch the BlazeFace face-detect
-  ONNX from Qualcomm AI Hub's S3 release bucket (already committed; only
-  re-run after bumping `QAI_VERSION`)
-- `node scripts/install-tesseract.mjs` — re-fetch Tesseract.js v7 +
-  tesseract.js-core v7 + English `eng.traineddata` (already committed;
-  only re-run after bumping the pinned versions)
-- `node scripts/install-ort.mjs` — re-fetch the ONNX Runtime Web threaded
-  JSEP WASM kernels (already committed; only re-run after bumping
-  `ORT_VERSION`)
-- `node scripts/measure-weight.mjs` — print the initial-load wire byte
-  count (raw + gzipped) for the static page

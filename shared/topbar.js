@@ -25,6 +25,7 @@ import { privacyHref } from './footer.js';
 const MENU_GROUPS = Object.freeze([
   { id: 'image', label: 'Image tools', href: '/image-tools/' },
   { id: 'pdf', label: 'PDF tools', href: '/pdf-tools/' },
+  { id: 'video', label: 'Video tools', href: null },
   { id: 'documents', label: 'Document tools', href: '/document-tools/' },
 ]);
 const OTHER_LABEL = 'Other tools';
