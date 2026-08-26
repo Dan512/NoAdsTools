@@ -95,11 +95,20 @@
 
       <label class="resolution-label" for="resolution">Resolution
         <select id="resolution">
-          <option value="source" selected>Keep source</option>
+          <option value="auto" selected>Auto (best fit)</option>
+          <option value="source">Keep source</option>
           <option value="1080">1080p</option>
           <option value="720">720p</option>
           <option value="480">480p</option>
           <option value="360">360p</option>
+        </select>
+      </label>
+
+      <label class="resolution-label" id="framerate-label" for="framerate" hidden>Frame rate
+        <select id="framerate">
+          <option value="auto" selected>Auto (best fit)</option>
+          <option value="source">Keep source</option>
+          <option value="30">30 fps</option>
         </select>
       </label>
 
@@ -172,7 +181,7 @@
         <dt>Why does it say my target is unreachable?</dt>
         <dd>
           <p>The audio track is copied through untouched, so it has a fixed cost. If your target is smaller than the audio plus a minimum workable video bitrate, no encoder settings can hit it honestly.</p>
-          <p>The message tells you the smallest target that can work for that clip at that resolution. A shorter clip, a larger target, or a lower resolution are the ways out.</p>
+          <p>The message tells you the smallest target that can work for that clip at that resolution. A shorter clip, a larger target, a lower resolution, or a lower frame rate are the ways out.</p>
         </dd>
         <dt>What formats can I drop, and what comes out?</dt>
         <dd>

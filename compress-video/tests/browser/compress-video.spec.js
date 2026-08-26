@@ -124,7 +124,7 @@ test('capability wall renders when WebCodecs is absent', async ({ page }) => {
   await expect(page.locator('.tool-copy h2').first()).toBeVisible();
 });
 
-test('configure: summary, live band, presets, and the 720p suggestion', async ({ page }) => {
+test('configure: auto picks 720p; source override shows the soft band and suggestion', async ({ page }) => {
   await boot(page);
   await installFakeProbe(page);
   await page.setInputFiles('#file-input', dummyVideo);
@@ -132,9 +132,23 @@ test('configure: summary, live band, presets, and the 720p suggestion', async ({
   await expect(page.locator('#summary')).toContainText('clip.mp4');
   await expect(page.locator('#summary')).toContainText('1920×1080');
   await expect(page.locator('#configure')).toBeVisible();
+  await expect(page.locator('#resolution')).toHaveValue('auto');
+  // FAKE_SRC is 30 fps: below the 40fps gate, so the frame-rate control
+  // must not appear at all — there is no meaningful fps to drop.
+  await expect(page.locator('#framerate-label')).toBeHidden();
 
-  // 25 MB on 60s of 1080p30 = the spec's worked example: soft, suggest 720p.
+  // 25 MB on 60s of 1080p30, auto default: 720p is the tallest candidate
+  // that clears "acceptable", so auto picks it and says so in the note.
   await page.locator('.preset[data-mb="25"]').click();
+  await expect(page.locator('#band-label')).toHaveText('Good quality');
+  await expect(page.locator('#band-meter .band-step.is-filled')).toHaveCount(4);
+  await expect(page.locator('#band-note'))
+    .toContainText('Auto picked 720p for this target. About 3.3 Mbps of video at 1280×720.');
+  await expect(page.locator('#suggest-btn')).toBeHidden();
+
+  // Overriding to the explicit source resolution re-anchors the original
+  // worked example: full 1080p is soft at this bitrate, so it suggests 720p.
+  await page.selectOption('#resolution', 'source');
   await expect(page.locator('#band-label')).toHaveText('Noticeably soft');
   await expect(page.locator('#band-meter .band-step.is-filled')).toHaveCount(2);
   const suggest = page.locator('#suggest-btn');
@@ -157,16 +171,44 @@ test('configure: unreachable target disables encode and names the minimum', asyn
   await expect(page.locator('#preview-btn')).toBeDisabled();
 });
 
-test('unreachable at high fps suggests the tallest reachable resolution', async ({ page }) => {
+test('auto rescues an impossible source-res target at 480p30; full source pin shows unreachable with a fix', async ({ page }) => {
   await boot(page);
   // The real field case: 60fps raises the fps-aware bpp floor enough that a
-  // 10 MB target on 1080p60 is unreachable, but 720p60 clears it.
+  // 10 MB target on 1080p60 is unreachable. Auto tries a fps drop to 30
+  // before the next resolution step down, and 480p30 is the first (height,
+  // fps) pair that clears "soft".
   await installFakeProbe(page, {
     durationSec: 150, width: 1920, height: 1080, fps: 60,
     audioBytes: 2_400_000, hasAudio: true, sourceBytes: 178_000_000,
   });
   await page.setInputFiles('#file-input', dummyVideo);
+  await expect(page.locator('#resolution')).toHaveValue('auto');
+  // 60 fps clears the 40fps gate, so the frame-rate control appears,
+  // defaulted to auto alongside the resolution control.
+  await expect(page.locator('#framerate-label')).toBeVisible();
+  await expect(page.locator('#framerate')).toHaveValue('auto');
   await page.locator('#target-mb').fill('10');
+
+  await expect(page.locator('#band-label')).toHaveText('Noticeably soft');
+  await expect(page.locator('#band-meter .band-step.is-filled')).toHaveCount(2);
+  await expect(page.locator('#band-note')).toContainText(
+    'Auto picked 480p at 30 fps, the best any setting does at this size. About 0.4 Mbps of video at 854×480.');
+  await expect(page.locator('#encode-btn')).toBeEnabled();
+  await expect(page.locator('#suggest-btn')).toBeHidden();
+
+  // Pinning resolution to source alone (fps still auto) pins the independence
+  // of the two controls: auto now only has fps left to drop, and 1080p30 is
+  // the best it can do at this size.
+  await page.selectOption('#resolution', 'source');
+  await expect(page.locator('#band-label')).toHaveText('Blocky, poor quality');
+  await expect(page.locator('#band-note')).toContainText(
+    'Auto picked 30 fps, the best any setting does at this size. About 0.4 Mbps of video at 1920×1080.');
+  await expect(page.locator('#encode-btn')).toBeEnabled();
+
+  // Pinning frame rate to source too re-anchors the original, pre-auto-fps
+  // unreachable coverage: 1080p60 at this target names the minimum and
+  // offers the 720p fix instead of silently dropping anything.
+  await page.selectOption('#framerate', 'source');
   await expect(page.locator('#band-label')).toContainText('too small');
   await expect(page.locator('#band-note')).toContainText('1920×1080');
   const suggest = page.locator('#suggest-btn');
@@ -177,8 +219,47 @@ test('unreachable at high fps suggests the tallest reachable resolution', async 
   await suggest.click();
   await expect(page.locator('#resolution')).toHaveValue('720');
   // 10 MB at 720p60 clears the fps-aware floor — the unit tests pin the
-  // math (25/25); here we only assert the UI actually flips on it.
+  // math; here we only assert the UI actually flips on it (fps still
+  // pinned to source).
   await expect(page.locator('#encode-btn')).toBeEnabled();
+});
+
+test('auto is the default and generous targets keep the source resolution', async ({ page }) => {
+  await boot(page);
+  await installFakeProbe(page);
+  await page.setInputFiles('#file-input', dummyVideo);
+  await expect(page.locator('#resolution')).toHaveValue('auto');
+  // FAKE_SRC is 30 fps: below the 40fps gate, so the frame-rate control
+  // must not appear.
+  await expect(page.locator('#framerate-label')).toBeHidden();
+  await page.locator('#target-mb').fill('200');
+  await expect(page.locator('#band-label')).toHaveText('Near-original quality');
+  await expect(page.locator('#band-note')).not.toContainText('Auto picked');
+  await expect(page.locator('#band-note')).toContainText('1920×1080');
+});
+
+test('manual 30 fps is honored and not credited to Auto', async ({ page }) => {
+  await boot(page);
+  // Same field fixture as the 480p30 test: 60 fps clears the 40fps gate,
+  // so the frame-rate control is present, and 10 MB is tight enough that
+  // dropping to 30 fps actually changes the outcome.
+  await installFakeProbe(page, {
+    durationSec: 150, width: 1920, height: 1080, fps: 60,
+    audioBytes: 2_400_000, hasAudio: true, sourceBytes: 178_000_000,
+  });
+  await page.setInputFiles('#file-input', dummyVideo);
+  await page.locator('#target-mb').fill('10');
+  await expect(page.locator('#resolution')).toHaveValue('auto');
+
+  // The user picks 30 fps themselves; resolution is left on auto.
+  await page.selectOption('#framerate', '30');
+  await expect(page.locator('#resolution')).toHaveValue('auto');
+  const note = page.locator('#band-note');
+  await expect(note).toContainText('Auto picked 480p');
+  // The fps was the user's own choice, not Auto's — the note must credit
+  // only the resolution it actually picked, never the pinned fps.
+  await expect(note).not.toContainText('Auto picked 480p at 30 fps');
+  await expect(note).toContainText('Auto picked 480p, the best any setting does at this size.');
 });
 
 test('cancel mid-encode returns to configure without an error', async ({ page }) => {
@@ -263,7 +344,11 @@ test('cancel during the second pass keeps the first result', async ({ page }) =>
   await expect(page.locator('#result')).toBeVisible();
   await expect(page.locator('#configure')).toBeHidden();
   await expect(page.locator('#result-line')).toContainText(/over your 25 MB target/);
-  await expect(page.locator('#result-line')).toContainText(/slightly smaller target|lower resolution/i);
+  // Pin the real overAdvice() string for this fixture (FAKE_SRC's auto pick
+  // is 720p > 360, so the resolution branch fires) rather than an OR that
+  // partially matched stale copy — "slightly smaller target" doesn't exist
+  // in main.js anymore.
+  await expect(page.locator('#result-line')).toContainText(/lower resolution will land it/i);
   await expect(page.locator('#download-btn')).toBeEnabled();
   await expect(page.locator('#file-input')).toBeEnabled();
 });

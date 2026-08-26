@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
 import {
   planEncode, bandForBpp, evenDim, scaleToHeight, muxOverheadBytes,
   SAFETY, FLOOR_VIDEO_BPS, FLOOR_BPP, BANDS, STANDARD_HEIGHTS,
-  correctedBitrate,
+  correctedBitrate, chooseAuto,
 } from '../../js/plan-encode.js';
 
 test('evenDim rounds to the nearest even number, floor 2', () => {
@@ -261,4 +261,149 @@ test('correctedBitrate: null when achievedVideo or targetVideo collapses to zero
     videoBitrate: 500_000, actualBytes: 2_000_000, targetBytes: 1_000_000,
     audioBytes: 990_000, durationSec: 10,
   }), null);
+});
+
+// --- planEncode: outFps (fps-reduction, tried before the next res drop) --
+
+test('planEncode: outFps reduces the floor and exactly doubles bpp vs the same height at source fps', () => {
+  const at480SourceFps = planEncode(SRC_FIELD, { outHeight: 480, outFps: null });
+  const at480Reduced = planEncode(SRC_FIELD, { outHeight: 480, outFps: 30 });
+
+  assert.equal(at480SourceFps.unreachable, false);
+  assert.equal(at480SourceFps.outFps, null);
+
+  assert.equal(at480Reduced.unreachable, false);
+  assert.equal(at480Reduced.outFps, 30);
+  // Halving fps exactly doubles bpp (same bitrate, same resolution, half the frames).
+  assert.equal(at480Reduced.bpp, at480SourceFps.bpp * 2);
+  // The floor is fps-scaled too: a lower effFps means a lower minTargetBytes.
+  assert.ok(at480Reduced.minTargetBytes < at480SourceFps.minTargetBytes);
+});
+
+test('planEncode: outFps at or above source fps is ignored (never upsamples)', () => {
+  assert.equal(planEncode(SRC_FIELD, { outHeight: 480, outFps: 120 }).outFps, null); // above source
+  assert.equal(planEncode(SRC_FIELD, { outHeight: 480, outFps: 60 }).outFps, null);  // equal to source
+  assert.equal(planEncode(SRC_FIELD, { outHeight: 480, outFps: 0 }).outFps, null);   // falsy/absent-like
+});
+
+test('planEncode: outFps at source resolution improves the quality band (1080p30 vs 1080p60)', () => {
+  const src60 = { targetBytes: 25_000_000, durationSec: 60, width: 1920, height: 1080, fps: 60, audioBytes: 1_000_000 };
+  const at60 = planEncode(src60, { outFps: null });
+  const at30 = planEncode(src60, { outFps: 30 });
+  assert.equal(at60.unreachable, false);
+  assert.equal(at30.unreachable, false);
+  assert.equal(at30.outFps, 30);
+  assert.equal(at30.bpp, at60.bpp * 2);
+  assert.equal(at60.band.id, 'blocky');
+  assert.equal(at30.band.id, 'soft');
+  assert.ok(at30.band.step > at60.band.step);
+});
+
+// --- chooseAuto: pure resolution+fps pick for "Auto (best fit)" ----------
+//
+// Signature note: chooseAuto(src, opts) reads targetBytes FROM src (like
+// planEncode), fixing the reviewer-flagged asymmetry in the old
+// chooseAutoHeight(src, targetBytes). SRC_1080 and SRC_FIELD already carry
+// their own targetBytes field, so most calls below need no override.
+
+test('chooseAuto: generous target keeps source resolution and source fps', () => {
+  const pick = chooseAuto({ ...SRC_1080, targetBytes: 200_000_000 });
+  assert.deepEqual(pick, { height: 1080, fps: null });
+});
+
+test('chooseAuto: SRC_1080 worked example (25MB, fps 30 < 40 so no fps candidates) picks 720p/source-fps', () => {
+  const pick = chooseAuto(SRC_1080);
+  assert.deepEqual(pick, { height: 720, fps: null });
+});
+
+test('chooseAuto: field case (1080p60, 10MB/150s) now picks 480p/30fps over 360p/source-fps', () => {
+  // Full pair walk (height desc, fps [source, 30] within each height), all
+  // via planEncode so the test can't drift from the implementation's floor:
+  //   1080/null unreachable | 1080/30 blocky | 720/null blocky | 720/30 blocky
+  //   480/null blocky       | 480/30  SOFT    | 360/null blocky | 360/30 soft
+  // Tier 1 (step>=3): none. Tier 2 (step>=2): first hit is 480/30.
+  const heights = [1080, 720, 480, 360];
+  const fpsCands = [null, 30]; // SRC_FIELD.fps (60) >= 40
+  let firstTier2 = null;
+  for (const h of heights) {
+    for (const f of fpsCands) {
+      const p = planEncode(SRC_FIELD, { outHeight: h, outFps: f });
+      if (!p.unreachable && p.band.step >= 2) { firstTier2 = { height: h, fps: p.outFps }; break; }
+    }
+    if (firstTier2) break;
+  }
+  assert.deepEqual(firstTier2, { height: 480, fps: 30 });
+
+  const pick = chooseAuto(SRC_FIELD);
+  assert.deepEqual(pick, firstTier2);
+});
+
+test('chooseAuto: nothing reachable — picks the pair with the minimum minTargetBytes', () => {
+  // budget <= 0 (900_000 target vs 2.4MB audio + overhead): every (height,
+  // fps) pair is unreachable, so tier 4 applies. minTargetBytes doesn't
+  // depend on target/budget, so brute-force every candidate directly.
+  const src = { ...SRC_FIELD, targetBytes: 900_000 };
+  const heights = [1080, 720, 480, 360];
+  const fpsCands = [null, 30];
+  let min = null;
+  for (const h of heights) {
+    for (const f of fpsCands) {
+      const p = planEncode(src, { outHeight: h, outFps: f });
+      assert.equal(p.unreachable, true); // sanity: budget <= 0 means nothing is reachable
+      if (min === null || p.minTargetBytes < min.minTargetBytes) min = { height: h, fps: p.outFps, minTargetBytes: p.minTargetBytes };
+    }
+  }
+
+  const pick = chooseAuto(src);
+  assert.deepEqual(pick, { height: min.height, fps: min.fps });
+
+  // Minor-4 contract: the picked pair's minTargetBytes IS that minimum.
+  const picked = planEncode(src, { outHeight: pick.height, outFps: pick.fps });
+  assert.equal(picked.minTargetBytes, min.minTargetBytes);
+});
+
+const SRC_SMALL = { targetBytes: 5_000_000, durationSec: 60, width: 426, height: 240, fps: 30, audioBytes: 500_000 };
+
+test('chooseAuto: source below the standard ladder has only one height candidate, source fps (< 40)', () => {
+  assert.deepEqual(chooseAuto(SRC_SMALL), { height: 240, fps: null });
+  assert.deepEqual(chooseAuto({ ...SRC_SMALL, targetBytes: 200_000 }), { height: 240, fps: null });
+});
+
+test('chooseAuto: opts.outFps pin (explicit null) forces source fps — reproduces the old chooseAutoHeight answer', () => {
+  const pick = chooseAuto(SRC_FIELD, { outFps: null });
+  assert.deepEqual(pick, { height: 360, fps: null });
+});
+
+test('chooseAuto: opts.outHeight pin frees only fps — tier 3 (max bpp) picks the reduced-fps variant', () => {
+  // At height 720 fixed: (720,null) is blocky, (720,30) bpp ~0.01387 is also
+  // blocky (step 1) — neither clears tier 1/2, so tier 3 (max bpp among
+  // reachable) applies and (720,30) wins since it has the higher bpp.
+  const p720Source = planEncode(SRC_FIELD, { outHeight: 720, outFps: null });
+  const p720Reduced = planEncode(SRC_FIELD, { outHeight: 720, outFps: 30 });
+  assert.ok(!p720Source.unreachable && p720Source.band.step < 2);
+  assert.ok(!p720Reduced.unreachable && p720Reduced.band.step < 2);
+  assert.ok(p720Reduced.bpp > p720Source.bpp);
+
+  const pick = chooseAuto(SRC_FIELD, { outHeight: 720 });
+  assert.deepEqual(pick, { height: 720, fps: 30 });
+});
+
+test('chooseAuto: contract with planEncode — the auto choice is always encodable when any candidate is', () => {
+  const cases = [
+    { ...SRC_1080, targetBytes: 200_000_000 },
+    SRC_1080,
+    SRC_FIELD,
+  ];
+  for (const src of cases) {
+    const pick = chooseAuto(src);
+    const p = planEncode(src, { outHeight: pick.height, outFps: pick.fps });
+    assert.equal(p.unreachable, false,
+      `pick=${JSON.stringify(pick)} should be reachable for targetBytes=${src.targetBytes}`);
+  }
+});
+
+test('chooseAuto: throws on nonsense input', () => {
+  assert.throws(() => chooseAuto({ ...SRC_1080, fps: 0 }), /plan_invalid_input/);
+  assert.throws(() => chooseAuto({ ...SRC_1080, durationSec: 0 }), /plan_invalid_input/);
+  assert.throws(() => chooseAuto({ ...SRC_1080, targetBytes: 0 }), /plan_invalid_input/);
 });

@@ -7,7 +7,7 @@ import { injectTopbar } from '/shared/topbar.js';
 import { injectFooter } from '/shared/footer.js';
 import { initSettings } from '/shared/settings.js';
 import { escapeHtml } from '/shared/escape.js';
-import { planEncode, correctedBitrate } from './plan-encode.js';
+import { planEncode, correctedBitrate, chooseAuto } from './plan-encode.js';
 import { hasWebCodecs, startCompress, EngineLoadError } from './engine.js';
 import { probeFile } from './probe.js';
 import { encodeSample, SAMPLE_POINTS } from './preview.js';
@@ -32,6 +32,8 @@ const summary = el('summary');
 const configure = el('configure');
 const targetMb = el('target-mb');
 const resolution = el('resolution');
+const framerate = el('framerate');
+const framerateLabel = el('framerate-label');
 const bandMeter = el('band-meter');
 const bandLabel = el('band-label');
 const bandNote = el('band-note');
@@ -77,6 +79,14 @@ function prettyBytes(n) {
   while (v >= 1024 && u < units.length - 1) { v /= 1024; u += 1; }
   const s = v >= 10 ? String(Math.round(v)) : v.toFixed(1).replace(/\.0$/, '');
   return `${s} ${units[u]}`;
+}
+
+// What to suggest when an encode lands over target: the honest next lever,
+// not a dead end when the resolution is already at its floor.
+function overAdvice() {
+  if (plan.out.height > 360) return 'a lower resolution will land it';
+  if (src.fps >= 40 && plan.outFps == null) return 'dropping the frame rate to 30 fps would help';
+  return 'a shorter clip or a larger target are the ways out';
 }
 
 function prettyDuration(sec) {
@@ -161,7 +171,9 @@ async function handleFile(f) {
   // Default target: 25 MB, or about half the source for already-small files.
   const sourceMb = src.sourceBytes / 1048576;
   targetMb.value = String(sourceMb > 50 ? 25 : Math.max(1, Math.round(sourceMb / 2)));
-  resolution.value = 'source';
+  resolution.value = 'auto';
+  framerate.value = 'auto';
+  framerateLabel.hidden = !(src.fps >= 40);
   configure.hidden = false;
   recompute();
 }
@@ -196,14 +208,30 @@ function recompute() {
     previewBtn.disabled = true;
     return;
   }
-  plan = planEncode({ ...src, targetBytes }, { outHeight: currentOutHeight() });
+  const autoRes = resolution.value === 'auto';
+  const fpsSel = framerateLabel.hidden ? 'source' : framerate.value; // low-fps sources: no fps choice
+  const autoFps = fpsSel === 'auto';
+  let outHeight; let outFps;
+  if (autoRes || autoFps) {
+    const pins = {};
+    if (!autoRes) pins.outHeight = currentOutHeight() ?? src.height;
+    if (!autoFps) pins.outFps = fpsSel === '30' ? 30 : null;
+    const pick = chooseAuto({ ...src, targetBytes }, pins);
+    outHeight = pick.height;
+    outFps = pick.fps;
+  } else {
+    outHeight = currentOutHeight();
+    outFps = fpsSel === '30' ? 30 : null;
+  }
+  plan = planEncode({ ...src, targetBytes }, { outHeight, outFps });
 
   if (plan.unreachable) {
     bandLabel.textContent = 'Target too small for this video';
     bandNote.textContent =
       `The audio track is copied through unchanged, and it plus a minimum watchable `
       + `picture need about ${prettyBytes(plan.minTargetBytes)}. `
-      + `That is the smallest target that can work at ${plan.out.width}×${plan.out.height}.`;
+      + `That is the smallest target that can work at ${plan.out.width}×${plan.out.height}`
+      + `${plan.outFps ? ` at ${plan.outFps} fps` : ''}.`;
     steps.forEach(s => s.classList.remove('is-filled'));
     bandMeter.setAttribute('aria-label', 'Quality: target unreachable');
     if (plan.suggestion) {
@@ -225,8 +253,23 @@ function recompute() {
   bandMeter.setAttribute('aria-label', `Quality: ${plan.band.label}, ${plan.band.step} of 5`);
   bandLabel.textContent = plan.band.label;
   const outLine = `${plan.out.width}×${plan.out.height}`;
+  const droppedRes = plan.out.height < src.height;
+  const droppedFps = plan.outFps != null;
+  // Only credit "Auto" for a dimension it actually chose — a manually
+  // pinned value (e.g. the user picked 30 fps themselves) must never read
+  // as something auto decided; its own control already shows it.
+  const noteRes = autoRes && droppedRes;
+  const noteFps = autoFps && droppedFps;
+  let autoNote = '';
+  if (noteRes || noteFps) {
+    const what = noteRes && noteFps ? `${plan.out.height}p at ${plan.outFps} fps`
+      : noteRes ? `${plan.out.height}p` : `${plan.outFps} fps`;
+    autoNote = plan.band.step <= 2
+      ? `Auto picked ${what}, the best any setting does at this size. `
+      : `Auto picked ${what} for this target. `;
+  }
   bandNote.textContent =
-    `About ${(plan.videoBitrate / 1e6).toFixed(1)} Mbps of video at ${outLine}. `
+    `${autoNote}About ${(plan.videoBitrate / 1e6).toFixed(1)} Mbps of video at ${outLine}. `
     + `An estimate from bitrate and pixels; the Preview button shows the real thing.`;
   if (plan.suggestion) {
     suggestBtn.hidden = false;
@@ -247,6 +290,7 @@ function settingsChanged() {
 
 targetMb.addEventListener('input', settingsChanged);
 resolution.addEventListener('change', settingsChanged);
+framerate.addEventListener('change', settingsChanged);
 for (const b of configure.querySelectorAll('.preset')) {
   b.addEventListener('click', () => { targetMb.value = b.dataset.mb; settingsChanged(); });
 }
@@ -342,7 +386,7 @@ encodeBtn.addEventListener('click', async () => {
       if (b2 === null || userCancelled) {
         resultLine.textContent =
           `${prettyBytes(outBlob.size)}, over your ${prettyBytes(target)} target. `
-          + `Encoders overshoot sometimes; a slightly smaller target or a lower resolution will land it.`;
+          + `Encoders overshoot sometimes; ${overAdvice()}.`;
       } else {
         resultLine.textContent =
           `${prettyBytes(outBlob.size)}, over your ${prettyBytes(target)} target. `
@@ -351,20 +395,20 @@ encodeBtn.addEventListener('click', async () => {
         progress.hidden = false;
         setProgress(0);
         try {
-          handle = startCompress(file, { videoBitrate: b2, out: plan.out }, { onProgress: setProgress });
+          handle = startCompress(file, { videoBitrate: b2, out: plan.out, outFps: plan.outFps }, { onProgress: setProgress });
           const second = await handle.done;
           if (second.size < outBlob.size) outBlob = second;
           resultLine.textContent = outBlob.size <= target
             ? `${prettyBytes(outBlob.size)}, under your ${prettyBytes(target)} target.`
             : `${prettyBytes(outBlob.size)}, still over your ${prettyBytes(target)} target after a `
-              + `second pass. This clip is not going smaller at ${plan.out.width}×${plan.out.height}; `
-              + `a lower resolution will land it.`;
+              + `second pass. This clip is not going smaller with these settings; `
+              + `${overAdvice()}.`;
         } catch {
           // Cancel or a failed second pass both fall back to the first result,
           // which is valid output the user can already download.
           resultLine.textContent =
             `${prettyBytes(outBlob.size)}, over your ${prettyBytes(target)} target. `
-            + `Encoders overshoot sometimes; a slightly smaller target or a lower resolution will land it.`;
+            + `Encoders overshoot sometimes; ${overAdvice()}.`;
         } finally {
           progress.hidden = true;
           againBtn.disabled = false;

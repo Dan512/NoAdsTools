@@ -28,6 +28,7 @@ export async function encodeSample(file, plan, startSec, sampleSec = 1) {
       width: plan.out.width,
       height: plan.out.height,
       fit: 'contain',
+      ...(plan.outFps ? { frameRate: plan.outFps } : {}),
     },
     audio: { discard: true },
   });

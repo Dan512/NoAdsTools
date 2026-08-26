@@ -64,13 +64,15 @@ export function scaleToHeight(width, height, outHeight) {
 /**
  * @param {{targetBytes:number, durationSec:number, width:number,
  *   height:number, fps:number, audioBytes:number}} src probed source facts
- * @param {{outHeight?:number|null}} [opts] chosen output height (null/absent
- *   = keep source resolution)
+ * @param {{outHeight?:number|null, outFps?:number|null}} [opts] chosen
+ *   output height (null/absent = keep source resolution) and output fps
+ *   (null/absent, or a value >= source fps, = keep source fps; never
+ *   upsamples)
  * @returns {{unreachable:true, minTargetBytes:number,
- *   out:{width:number,height:number},
+ *   out:{width:number,height:number}, outFps:number|null,
  *   suggestion:{height:number,band:object}|null} | {unreachable:false,
  *   minTargetBytes:number, videoBitrate:number,
- *   out:{width:number,height:number}, bpp:number,
+ *   out:{width:number,height:number}, outFps:number|null, bpp:number,
  *   band:{id:string,label:string,min:number,step:number},
  *   suggestion:{height:number,band:object}|null}}
  */
@@ -84,7 +86,9 @@ export function planEncode(src, opts = {}) {
   const overhead = muxOverheadBytes(durationSec);
   const budget = Math.floor(targetBytes * SAFETY) - audioBytes - overhead;
   const out = scaleToHeight(width, height, opts.outHeight ?? height);
-  const minVideoBps = Math.max(FLOOR_VIDEO_BPS, Math.ceil(FLOOR_BPP * out.width * out.height * fps));
+  const outFps = (opts.outFps && opts.outFps < fps) ? opts.outFps : null;
+  const effFps = outFps ?? fps;
+  const minVideoBps = Math.max(FLOOR_VIDEO_BPS, Math.ceil(FLOOR_BPP * out.width * out.height * effFps));
   const minVideoBytes = Math.ceil(minVideoBps * durationSec / 8);
   const minTargetBytes = Math.ceil((audioBytes + overhead + minVideoBytes) / SAFETY);
 
@@ -97,17 +101,17 @@ export function planEncode(src, opts = {}) {
     for (const h of STANDARD_HEIGHTS) {
       if (h >= out.height) continue;
       const alt = scaleToHeight(width, height, h);
-      const altMinVideoBps = Math.max(FLOOR_VIDEO_BPS, Math.ceil(FLOOR_BPP * alt.width * alt.height * fps));
+      const altMinVideoBps = Math.max(FLOOR_VIDEO_BPS, Math.ceil(FLOOR_BPP * alt.width * alt.height * effFps));
       if (candidateBitrate >= altMinVideoBps) {
-        suggestion = { height: h, band: bandForBpp(candidateBitrate / (alt.width * alt.height * fps)) };
+        suggestion = { height: h, band: bandForBpp(candidateBitrate / (alt.width * alt.height * effFps)) };
         break;
       }
     }
-    return { unreachable: true, minTargetBytes, out, suggestion };
+    return { unreachable: true, minTargetBytes, out, outFps, suggestion };
   }
 
   const videoBitrate = Math.floor(budget * 8 / durationSec);
-  const bpp = videoBitrate / (out.width * out.height * fps);
+  const bpp = videoBitrate / (out.width * out.height * effFps);
   const band = bandForBpp(bpp);
 
   // Advice: only when the chosen resolution lands below "acceptable" and a
@@ -117,11 +121,74 @@ export function planEncode(src, opts = {}) {
     for (const h of STANDARD_HEIGHTS) {
       if (h >= out.height) continue;
       const alt = scaleToHeight(width, height, h);
-      const altBand = bandForBpp(videoBitrate / (alt.width * alt.height * fps));
+      const altBand = bandForBpp(videoBitrate / (alt.width * alt.height * effFps));
       if (altBand.step >= 3) { suggestion = { height: h, band: altBand }; break; }
     }
   }
-  return { unreachable: false, minTargetBytes, videoBitrate, out, bpp, band, suggestion };
+  return { unreachable: false, minTargetBytes, videoBitrate, out, outFps, bpp, band, suggestion };
+}
+
+/**
+ * Pick the output height AND fps for "Auto (best fit)": walk candidate
+ * (height, fps) pairs — tallest height first, source fps before a 30fps
+ * drop within each height — evaluating each pair THROUGH planEncode (no
+ * duplicated floor/band math, so this can't drift from it). Prefers the
+ * first pair reaching "acceptable" quality; failing that, the first
+ * reaching "soft"; failing that, the reachable pair with the highest bpp
+ * (best picture the budget can buy); failing that (nothing reachable),
+ * the pair with the smallest minTargetBytes. fps is only ever dropped to
+ * 30 (never upsampled), and only offered as a candidate when the source
+ * is high-fps (>= 40) — trying that drop BEFORE the next resolution step
+ * down, since 1080p30 usually beats 720p60 for a given byte budget.
+ * @param {{targetBytes:number, durationSec:number, width:number,
+ *   height:number, fps:number, audioBytes:number}} src probed source facts
+ *   (targetBytes included, exactly like planEncode)
+ * @param {{outHeight?:number, outFps?:number|null}} [opts] pins: outHeight
+ *   restricts the height search to that one value; outFps (present, even
+ *   as null) restricts the fps search to that one value
+ * @returns {{height:number, fps:number|null}} fps null = keep source fps
+ */
+export function chooseAuto(src, opts = {}) {
+  const { targetBytes, durationSec, width, height, fps } = src;
+  if (!(targetBytes > 0) || !(durationSec > 0) || !(width > 0)
+      || !(height > 0) || !(fps > 0)) {
+    throw new Error('plan_invalid_input');
+  }
+
+  const heights = opts.outHeight
+    ? [opts.outHeight]
+    : [height, ...STANDARD_HEIGHTS.filter(h => h < height)];
+  const fpsCands = ('outFps' in opts)
+    ? [opts.outFps]
+    : (fps >= 40 ? [null, 30] : [null]);
+
+  const pairs = [];
+  for (const h of heights) {
+    for (const f of fpsCands) {
+      const plan = planEncode(src, { outHeight: h, outFps: f });
+      pairs.push({ height: h, fps: plan.outFps, plan });
+    }
+  }
+
+  for (const minStep of [3, 2]) {
+    const hit = pairs.find(c => !c.plan.unreachable && c.plan.band.step >= minStep);
+    if (hit) return { height: hit.height, fps: hit.fps };
+  }
+
+  const reachable = pairs.filter(c => !c.plan.unreachable);
+  if (reachable.length > 0) {
+    let best = reachable[0];
+    for (const c of reachable.slice(1)) {
+      if (c.plan.bpp > best.plan.bpp) best = c;
+    }
+    return { height: best.height, fps: best.fps };
+  }
+
+  let best = pairs[0];
+  for (const c of pairs.slice(1)) {
+    if (c.plan.minTargetBytes < best.plan.minTargetBytes) best = c;
+  }
+  return { height: best.height, fps: best.fps };
 }
 
 /**

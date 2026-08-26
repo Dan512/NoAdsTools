@@ -45,7 +45,9 @@ export async function loadMediabunny() {
  * COPIES it whenever the codec fits MP4 — the stream-copy the size math
  * assumes.
  * @param {File} file
- * @param {{videoBitrate:number, out:{width:number,height:number}}} plan
+ * @param {{videoBitrate:number, out:{width:number,height:number},
+ *   outFps?:number|null}} plan outFps resamples the frame rate (mediabunny
+ *   options.video.frameRate); null/absent keeps the source timing untouched.
  * @param {{onProgress?:(p:number)=>void}} [cb]
  * @returns {{done:Promise<Blob>, cancel:() => Promise<void>}}
  */
@@ -67,6 +69,7 @@ export function startCompress(file, plan, cb = {}) {
         width: plan.out.width,
         height: plan.out.height,
         fit: 'contain',
+        ...(plan.outFps ? { frameRate: plan.outFps } : {}),
       },
     });
     if (cancelledEarly) throw new Error('compress_cancelled');
