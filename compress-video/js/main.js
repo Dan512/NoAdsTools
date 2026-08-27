@@ -7,8 +7,8 @@ import { injectTopbar } from '/shared/topbar.js';
 import { injectFooter } from '/shared/footer.js';
 import { initSettings } from '/shared/settings.js';
 import { escapeHtml } from '/shared/escape.js';
-import { planEncode, correctedBitrate, chooseAuto, predictFromProbe } from './plan-encode.js';
-import { hasWebCodecs, startCompress, EngineLoadError } from './engine.js';
+import { planEncode, correctedBitrate, chooseAuto, predictFromProbe, resolveAudio, AUDIO_STEPS } from './plan-encode.js';
+import { hasWebCodecs, startCompress, probeAudioFloorBps, EngineLoadError } from './engine.js';
 import { probeFile } from './probe.js';
 import { encodeSample, SAMPLE_POINTS } from './preview.js';
 import { shouldProbe, startProbe } from './calibrate.js';
@@ -35,6 +35,9 @@ const targetMb = el('target-mb');
 const resolution = el('resolution');
 const framerate = el('framerate');
 const framerateLabel = el('framerate-label');
+const audioSel = el('audio');
+const audioLabel = el('audio-label');
+const audioNote = el('audio-note');
 const bandMeter = el('band-meter');
 const bandLabel = el('band-label');
 const bandNote = el('band-note');
@@ -83,11 +86,31 @@ function prettyBytes(n) {
   return `${s} ${units[u]}`;
 }
 
+// Is there audio left to give up, and would giving it up actually shrink the
+// FILE? Only in the case overAdvice() speaks to: the encoder is at its floor
+// and ignoring the requested bitrate, so bytes the audio releases are not
+// immediately spent back on a higher video request. Reachability of a lower
+// rung is asked of resolveAudio rather than re-derived from AUDIO_STEPS and
+// src.audioFloorBps here, so this can't drift from what the control offers.
+function audioAdvice() {
+  if (!src.hasAudio || !(plan.audioBytes > 0) || plan.audio.mode === 'remove') return null;
+  const canReduce = AUDIO_STEPS.some(s => s.id !== 'copy'
+    && resolveAudio(src, s.id).bytes < plan.audioBytes);
+  return canReduce
+    ? `reducing or removing the audio under Audio frees up to ${prettyBytes(plan.audioBytes)}`
+    : `removing the audio under Audio frees ${prettyBytes(plan.audioBytes)}`;
+}
+
 // What to suggest when an encode lands over target: the honest next lever,
-// not a dead end when the resolution is already at its floor.
+// not a dead end when the resolution is already at its floor. Resolution and
+// frame rate come first because they lower the encoder's floor itself, so
+// they scale with the overshoot; audio releases a fixed, bounded number of
+// bytes, and losing the sound is usually the more noticeable trade.
 function overAdvice() {
   if (plan.out.height > 360) return 'a lower resolution will land it';
   if (src.fps >= 40 && plan.outFps == null) return 'dropping the frame rate to 30 fps would help';
+  const audio = audioAdvice();
+  if (audio) return audio;
   return 'a shorter clip or a larger target are the ways out';
 }
 
@@ -148,7 +171,19 @@ async function handleFile(f) {
   summary.hidden = false;
   summary.textContent = 'Reading the video…';
   try {
-    src = await probeFile(f);
+    const probed = await probeFile(f);
+    // Resolved per file, never persisted: the lowest AAC bitrate this
+    // browser will actually encode (null = it can't encode AAC at all).
+    // Chromium's floor is 96 kbps. Read per file rather than once at boot,
+    // because probeAudioFloorBps also returns null when the ENGINE failed to
+    // load, and freezing that pessimistic answer would drop audio tracks
+    // that are fine. probeFile succeeding means the engine is loaded already.
+    // A silent file gets `undefined`, not null — plan-encode.js reads absent
+    // as "unmeasured, be permissive" and null as the measured "no AAC
+    // encoder here", and a silent file is the former. Nothing downstream
+    // reads it today (every consumer checks hasAudio first), which is
+    // exactly why the two meanings must not be allowed to blur.
+    src = { ...probed, audioFloorBps: probed.hasAudio ? await probeAudioFloorBps() : undefined };
   } catch (err) {
     summary.hidden = true;
     if (err instanceof EngineLoadError) {
@@ -176,6 +211,52 @@ async function handleFile(f) {
   resolution.value = 'auto';
   framerate.value = 'auto';
   framerateLabel.hidden = !(src.fps >= 40);
+  audioSel.value = 'auto';
+  audioLabel.hidden = !src.hasAudio;
+  audioNote.hidden = true;
+  // Clearing the TEXT, not just hiding: this element is #audio's
+  // aria-describedby target, and the accessible-description algorithm ignores
+  // a referenced node's hidden state. Leaving stale text here hands the next
+  // file's screen-reader users the previous file's disclosure — a wrong one
+  // that only they hear.
+  audioNote.textContent = '';
+  // Reset outside the hasAudio guard: a silent file takes none of the
+  // branches below, and must not inherit the last file's hidden/disabled.
+  for (const opt of audioSel.options) { opt.disabled = false; opt.hidden = false; }
+  if (src.hasAudio) {
+    // `!== null` and `!== false`, never truthiness or `!=`: plan-encode.js
+    // reads both fields exactly this way (absent audioFloorBps is permissive,
+    // absent audioCopyable means copyable). Any looser test would put this
+    // control and the planner on opposite answers for a src that omits the
+    // field, and the visible half of such a disagreement is a false
+    // disclosure.
+    const canEncode = src.audioFloorBps !== null;
+    const copyable = src.audioCopyable !== false;
+    for (const opt of audioSel.options) {
+      const step = AUDIO_STEPS.find(s => s.id === opt.value);
+      if (!step || step.bps == null) continue; // 'auto', 'copy', 'none': always offered
+      // Offer a rung only when the planner will deliver it AT ITS LABEL:
+      // anything that collapses to copy, or clamps to a different bitrate,
+      // would put the control's own text at odds with what the encoder is
+      // asked for. Asking resolveAudio is what keeps that true in the
+      // uncarriable-codec branch, where the clamp is to a THIRD value rather
+      // than a collapse a hand-written predicate would catch.
+      const r = resolveAudio(src, step.id);
+      const unavailable = r.id !== step.id || r.bps !== step.bps;
+      opt.disabled = unavailable;
+      opt.hidden = unavailable;
+    }
+    const copyOpt = audioSel.querySelector('option[value="copy"]');
+    copyOpt.textContent = (!copyable && canEncode) ? 'Keep (converted to AAC)' : 'Keep original';
+    if (!canEncode && copyable) {
+      audioNote.hidden = false;
+      audioNote.textContent = "This browser can't re-encode audio. The track can be kept or removed, but not shrunk.";
+    } else if (!canEncode && !copyable) {
+      audioLabel.hidden = true;
+      audioNote.hidden = false;
+      audioNote.textContent = "This browser can't keep this file's audio format, so the output will have no audio.";
+    }
+  }
   configure.hidden = false;
   recompute();
 }
@@ -191,26 +272,44 @@ function currentOutHeight() {
   return resolution.value === 'source' ? null : parseInt(resolution.value, 10);
 }
 
+function currentAudioId() {
+  // Hidden control = no audio track, or the corner where the audio can't be
+  // kept at all (resolveAudio turns 'copy' into removal on its own there).
+  return audioLabel.hidden ? 'copy' : audioSel.value;
+}
+
 // Resolve the current control selections into a plan. `floorBpp` (optional)
 // replaces the guessed encoder floor with one measured from this clip.
-function derivePlan(targetBytes, floorBpp) {
+// `audioOverride` (optional) substitutes an audio step id for whatever the
+// control says, so a caller can ask "what would this same configuration do
+// under a different audio choice?" while keeping every OTHER pin the user
+// set — asking chooseAuto with a bare audio pin instead would quietly let
+// the resolution the user chose float, and answer a question nobody asked.
+function derivePlan(targetBytes, floorBpp, audioOverride) {
   const autoRes = resolution.value === 'auto';
   const fpsSel = framerateLabel.hidden ? 'source' : framerate.value; // low-fps sources: no fps choice
   const autoFps = fpsSel === 'auto';
-  let outHeight; let outFps;
-  if (autoRes || autoFps) {
+  const audioId = audioOverride ?? currentAudioId();
+  const autoAudio = audioId === 'auto';
+  let outHeight; let outFps; let audio;
+  if (autoRes || autoFps || autoAudio) {
     const pins = { floorBpp };
     if (!autoRes) pins.outHeight = currentOutHeight() ?? src.height;
     if (!autoFps) pins.outFps = fpsSel === '30' ? 30 : null;
+    // Conditional assignment, not a ternary with undefined: chooseAuto pins
+    // by KEY PRESENCE, so an explicit undefined would pin to [undefined].
+    if (!autoAudio) pins.audio = audioId;
     const pick = chooseAuto({ ...src, targetBytes }, pins);
     outHeight = pick.height;
     outFps = pick.fps;
+    audio = pick.audio;
   } else {
     outHeight = currentOutHeight();
     outFps = fpsSel === '30' ? 30 : null;
+    audio = audioId;
   }
-  const plan = planEncode({ ...src, targetBytes }, { outHeight, outFps, floorBpp });
-  return { plan, autoRes, autoFps };
+  const plan = planEncode({ ...src, targetBytes }, { outHeight, outFps, floorBpp, audio });
+  return { plan, autoRes, autoFps, autoAudio };
 }
 
 function recompute() {
@@ -233,16 +332,21 @@ function recompute() {
     return;
   }
   const derived = derivePlan(targetBytes);
-  const { autoRes, autoFps } = derived;
+  const { autoRes, autoFps, autoAudio } = derived;
   plan = derived.plan;
 
   if (plan.unreachable) {
     bandLabel.textContent = 'Target too small for this video';
+    // plan.audioBytes can be 0 (no track), the stream-copy figure, or a
+    // forced-transcode figure (uncarriable codec) — never assume "copied
+    // through unchanged" here.
     bandNote.textContent =
-      `The audio track is copied through unchanged, and it plus a minimum watchable `
-      + `picture need about ${prettyBytes(plan.minTargetBytes)}. `
+      (plan.audioBytes > 0
+        ? `The audio track plus a minimum watchable picture need about ${prettyBytes(plan.minTargetBytes)}. `
+        : `A minimum watchable picture needs about ${prettyBytes(plan.minTargetBytes)}. `)
       + `That is the smallest target that can work at ${plan.out.width}×${plan.out.height}`
-      + `${plan.outFps ? ` at ${plan.outFps} fps` : ''}.`;
+      + `${plan.outFps ? ` at ${plan.outFps} fps` : ''}.`
+      + (plan.audioBytes > 0 ? ' Removing the audio track under Audio lowers it.' : '');
     steps.forEach(s => s.classList.remove('is-filled'));
     bandMeter.setAttribute('aria-label', 'Quality: target unreachable');
     if (plan.suggestion) {
@@ -271,17 +375,49 @@ function recompute() {
   // as something auto decided; its own control already shows it.
   const noteRes = autoRes && droppedRes;
   const noteFps = autoFps && droppedFps;
+  // Read the RESOLVED step, not the pick: a rung at or above the source
+  // bitrate collapses to copy, and only plan.audio reports that.
+  const noteAudio = autoAudio && src.hasAudio && plan.audio.mode === 'encode' && !plan.audio.forced;
   let autoNote = '';
-  if (noteRes || noteFps) {
-    const what = noteRes && noteFps ? `${plan.out.height}p at ${plan.outFps} fps`
-      : noteRes ? `${plan.out.height}p` : `${plan.outFps} fps`;
-    autoNote = plan.band.step <= 2
-      ? `Auto picked ${what}, the best any setting does at this size. `
-      : `Auto picked ${what} for this target. `;
+  if (noteRes || noteFps || noteAudio) {
+    let what = noteRes && noteFps ? `${plan.out.height}p at ${plan.outFps} fps`
+      : noteRes ? `${plan.out.height}p` : noteFps ? `${plan.outFps} fps` : '';
+    if (noteAudio) {
+      const audioDesc = `${Math.round(plan.audio.bps / 1000)} kbps${plan.audio.channels === 1 ? ' mono' : ''} audio`;
+      what = what ? `${what} with ${audioDesc}` : audioDesc;
+    }
+    if (plan.band.step <= 2) {
+      // "the best any setting does" has to exclude the one setting Auto
+      // refuses to take: chooseAuto never returns 'none', so whenever
+      // removing the track would raise the band, that sentence is false and
+      // the better setting is sitting right there in the Audio control.
+      // Ask, rather than claim. Only asked below Acceptable — where the
+      // claim is actually made — so the extra planning costs nothing on the
+      // targets that are already fine, and the answer honors every pin the
+      // user set (derivePlan, not a bare chooseAuto).
+      let removalBeats = false;
+      if (autoAudio && plan.audioBytes > 0) {
+        const removed = derivePlan(targetBytes, undefined, 'none').plan;
+        removalBeats = !removed.unreachable && removed.band.step > plan.band.step;
+      }
+      autoNote = removalBeats
+        ? `Auto picked ${what}, the best it does without dropping the sound; Remove audio does better. `
+        : `Auto picked ${what}, the best any setting does at this size. `;
+    } else {
+      autoNote = `Auto picked ${what} for this target. `;
+    }
   }
+  // forced marks the cases where plan.audio.id under-reports: a transcode the
+  // user didn't ask for, or the track being dropped because it can't be kept.
+  const forcedNote = plan.audio.forced
+    ? (plan.audio.mode === 'remove'
+      ? ` This file's audio can't be kept here, so the output will have no audio.`
+      : ` This file's audio format doesn't fit MP4, so it gets converted to AAC.`)
+    : '';
   bandNote.textContent =
     `${autoNote}About ${(plan.videoBitrate / 1e6).toFixed(1)} Mbps of video at ${outLine}. `
-    + `An estimate from bitrate and pixels; the Preview button shows the real thing.`;
+    + `An estimate from bitrate and pixels; the Preview button shows the real thing.`
+    + forcedNote;
   if (plan.suggestion) {
     suggestBtn.hidden = false;
     suggestBtn.textContent =
@@ -302,6 +438,7 @@ function settingsChanged() {
 targetMb.addEventListener('input', settingsChanged);
 resolution.addEventListener('change', settingsChanged);
 framerate.addEventListener('change', settingsChanged);
+audioSel.addEventListener('change', settingsChanged);
 for (const b of configure.querySelectorAll('.preset')) {
   b.addEventListener('click', () => { targetMb.value = b.dataset.mb; settingsChanged(); });
 }
@@ -398,7 +535,12 @@ encodeBtn.addEventListener('click', async () => {
   // was never going to hit the target. Optimization only — a probe that
   // fails or gets cancelled must not be treated as an encode failure.
   const target = currentTargetBytes();
-  const planBefore = { w: plan.out.width, h: plan.out.height, fps: plan.outFps };
+  // Everything the re-plan below can change and the band note already
+  // showed. Audio belongs here for the same reason width/height/fps do: the
+  // re-plan runs chooseAuto again against a measured floor, and its audio
+  // answer can differ from the one the user was last shown. Recording only
+  // the picture would let the track be silently re-encoded.
+  const planBefore = { w: plan.out.width, h: plan.out.height, fps: plan.outFps, audio: plan.audio.id };
   let probeNote = '';
   // Set when the two probes together already proved a lower bitrate alone
   // won't land the target and there's no smaller resolution/fps left to
@@ -413,12 +555,12 @@ encodeBtn.addEventListener('click', async () => {
       const effFps = plan.outFps ?? src.fps;
       const p1 = predictFromProbe({
         probeBytes, probeSecs, durationSec: src.durationSec,
-        audioBytes: src.audioBytes, out: plan.out, fps: effFps,
+        audioBytes: plan.audioBytes, out: plan.out, fps: effFps,
       });
       if (p1.predictedBytes > target) {
         const b2 = correctedBitrate({
           videoBitrate: plan.videoBitrate, actualBytes: p1.predictedBytes,
-          targetBytes: target, audioBytes: src.audioBytes, durationSec: src.durationSec,
+          targetBytes: target, audioBytes: plan.audioBytes, durationSec: src.durationSec,
         });
         let measuredBpp = p1.achievedBpp;
         let settled = false;
@@ -438,7 +580,7 @@ encodeBtn.addEventListener('click', async () => {
           if (userCancelled) { cancelBackToConfigure(); return; }
           const p2 = predictFromProbe({
             probeBytes: r2.probeBytes, probeSecs: r2.probeSecs,
-            durationSec: src.durationSec, audioBytes: src.audioBytes,
+            durationSec: src.durationSec, audioBytes: trial.audioBytes,
             out: trial.out, fps: trial.outFps ?? src.fps,
           });
           if (p2.predictedBytes <= target) { plan = trial; settled = true; }
@@ -471,9 +613,34 @@ encodeBtn.addEventListener('click', async () => {
       // Any other probe failure is not a failed encode — it was only an
       // optimization attempt. Fall through and encode with the original plan.
     }
-    if (plan.out.width !== planBefore.w || plan.out.height !== planBefore.h || plan.outFps !== planBefore.fps) {
+    const pictureMoved = plan.out.width !== planBefore.w
+      || plan.out.height !== planBefore.h || plan.outFps !== planBefore.fps;
+    const audioMoved = plan.audio.id !== planBefore.audio;
+    // What the audio BECAME, as a noun phrase. mode, not id: a forced
+    // transcode reports id 'copy' while re-encoding, and naming the id there
+    // would repeat the under-report this note exists to prevent.
+    const audioPhrase = plan.audio.mode === 'encode'
+      ? `${Math.round(plan.audio.bps / 1000)} kbps${plan.audio.channels === 1 ? ' mono' : ''} audio`
+      : plan.audio.mode === 'remove' ? 'no audio' : 'the original audio';
+    if (pictureMoved) {
       probeNote = ` The sample check moved this to ${plan.out.width}×${plan.out.height}`
-        + `${plan.outFps ? ` at ${plan.outFps} fps` : ''} to fit.`;
+        + `${plan.outFps ? ` at ${plan.outFps} fps` : ''}`
+        + (audioMoved ? ` with ${audioPhrase}` : '')
+        + ` to fit.`;
+    } else if (audioMoved) {
+      // Audio alone moved, so the sentence must not name dimensions that
+      // didn't change — "moved this to 1920×1080" would read as a change
+      // where there was none.
+      // NOT REACHABLE TODAY, and deliberately kept: the `moved` gate above
+      // only adopts a candidate whose width/height/fps differ, so a
+      // candidate that changes nothing but the audio is discarded and this
+      // branch never fires. It exists so that widening that gate — the
+      // obvious next change, since an audio-only candidate is a real way to
+      // fit that is currently thrown away — cannot reintroduce the silent
+      // re-encode this whole block was added to stop.
+      probeNote = plan.audio.mode === 'copy'
+        ? ` The sample check went back to the original audio to fit.`
+        : ` The sample check switched the audio to ${audioPhrase} to fit.`;
     }
     setProgress(0);
   }
@@ -503,7 +670,7 @@ encodeBtn.addEventListener('click', async () => {
         videoBitrate: plan.videoBitrate,
         actualBytes: outBlob.size,
         targetBytes: target,
-        audioBytes: src.audioBytes,
+        audioBytes: plan.audioBytes,
         durationSec: src.durationSec,
       });
       if (b2 === null || userCancelled) {
@@ -518,7 +685,11 @@ encodeBtn.addEventListener('click', async () => {
         progress.hidden = false;
         setProgress(0);
         try {
-          handle = startCompress(file, { videoBitrate: b2, out: plan.out, outFps: plan.outFps }, { onProgress: setProgress });
+          // Spread, not a hand-copied field list, for the same reason
+          // `trial` above spreads: the second pass re-plans the VIDEO
+          // BITRATE and nothing else, and a list would silently drop any
+          // field planEncode gains later.
+          handle = startCompress(file, { ...plan, videoBitrate: b2 }, { onProgress: setProgress });
           const second = await handle.done;
           if (second.size < outBlob.size) outBlob = second;
           resultLine.textContent = outBlob.size <= target
@@ -546,6 +717,8 @@ encodeBtn.addEventListener('click', async () => {
       showError("Couldn't load the video engine. Check your connection and try again.");
     } else if (err && err.message === 'video_unsupported') {
       showError("This video's codec can't be decoded by this browser, so it can't be re-encoded here. Converting it to MP4 elsewhere first would work around that.");
+    } else if (err && err.message === 'audio_unsupported') {
+      showError("The audio track can't be carried into the output MP4. Set Audio to Remove audio to compress the video without sound.");
     } else {
       showError("The encode failed partway. For a large video that usually means the browser ran out of memory; a lower resolution often gets it through.");
     }

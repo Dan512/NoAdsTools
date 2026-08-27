@@ -80,7 +80,7 @@ function planSegments(durationSec, count) {
 /**
  * Encode short segments of the real clip at the planned settings and report
  * how many bytes they actually cost. Video only: audio is discarded, and the
- * caller adds the (stream-copied) audio bytes back when predicting.
+ * caller adds the planned audio bytes back when predicting.
  * @param {File} file
  * @param {{videoBitrate:number, out:{width:number,height:number}, outFps?:number|null}} plan
  * @param {number} durationSec source duration

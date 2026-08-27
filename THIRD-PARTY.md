@@ -35,8 +35,9 @@ writes which copy. See [Libraries vendored twice](#libraries-vendored-twice).
 | [@imgly/background-removal-data](https://github.com/imgly/background-removal-js) (data assets) | 1.7.0 (from `staticimgly.com`) | AGPL-3.0 | AGPL-3.0 | Co-located under `photo-editor/js/vendor/bgremove/` (resources.json + 33 binary chunks for the CPU-only `isnet_fp16` model + the `ort-wasm-simd-threaded` runtime + the WebGPU/JSEP variant). | ISNET fp16 segmentation model + ONNX Runtime Web SIMD WASM kernel (data half of the bg-removal feature). |
 | [onnxruntime-web](https://github.com/microsoft/onnxruntime/tree/main/js/web) | 1.21.0  | MIT            | MIT      | `photo-editor/js/vendor/onnxruntime-web/ort.bundle.min.mjs` (~400 KB) + `ort.webgpu.bundle.min.mjs` (~400 KB) + the threaded JSEP WASM kernels `ort-wasm-simd-threaded.{jsep,}.{wasm,mjs}` (~36 MB total) + `LICENSE`. Resolved at runtime via an import map in `index.html`. Re-vendor with `node scripts/install-ort.mjs`. | JS + WASM halves of the ONNX runtime. Used by @imgly/background-removal AND the BlazeFace face-detect model (Feature 1). |
 | [MediaPipe BlazeFace](https://github.com/google/mediapipe) (via [Qualcomm AI Hub Models](https://huggingface.co/qualcomm/MediaPipe-Face-Detection)) | QAI v0.54.0 | Apache-2.0 | Apache-2.0 | `photo-editor/js/vendor/blazeface/face_detector.onnx` (~78 KB) + `face_detector.data` (~517 KB) + `qualcomm-metadata.json` + `.notice`. Vendored 2026-05-22. Install via `node scripts/install-blazeface.mjs`. | "Auto-detect faces" redact button (v1.2 Feature 1). Runs against the existing vendored ORT — no extra runtime download. Tile-based multi-scale scan catches small faces in crowded group photos. |
-| [Tesseract.js](https://github.com/naptha/tesseract.js) | 7.0.0 | Apache-2.0 | Apache-2.0 | Two byte-identical copies: `vendor/tesseract/` (shared tools, + [`LICENSE.md`](vendor/tesseract/LICENSE.md)) and `photo-editor/js/vendor/tesseract/` (photo editor, + `.notice`), each holding `tesseract.min.js` (62,961 B) + `worker.min.js` (111,307 B). Vendored 2026-05-22. `node scripts/install-tesseract.mjs` writes **only the shared copy**; the editor's is refreshed by hand. | OCR engine for the editor's "Detect text" redact button (v1.2 Feature 4) + preview-select mode with PII regex auto-marking; and for `/pdf-to-text/` (via `shared/tesseract-loader.js`) when a PDF page has no text layer. |
-| [tesseract.js-core](https://github.com/naptha/tesseract.js-core) | 7.0.0 | Apache-2.0 | Apache-2.0 | `core/tesseract-core-{,simd-,relaxedsimd-}lstm.{wasm,wasm.js}` — 3 LSTM-only variants × 2 files = 6 files, ~19.3 MB — inside **each** of the two Tesseract copies above. Tesseract.js auto-picks the best variant per browser at runtime. Single-threaded — no SharedArrayBuffer / COOP / COEP required, works on plain static hosting. | WASM-compiled Tesseract OCR engine; data half of the OCR feature. |
+| [Tesseract.js](https://github.com/naptha/tesseract.js) | 7.0.0 | Apache-2.0 | Apache-2.0 | Two byte-identical copies: `vendor/tesseract/` (shared tools, + [`LICENSE.md`](vendor/tesseract/LICENSE.md)) and `photo-editor/js/vendor/tesseract/` (photo editor, + `.notice`), each holding `tesseract.min.js` (62,961 B) + `worker.min.js` (111,307 B) + `LICENSE` (Apache-2.0, 11,357 B) + the two webpack banner sidecars `tesseract.min.js.LICENSE.txt` / `worker.min.js.LICENSE.txt`. Vendored 2026-05-22. `node scripts/install-tesseract.mjs` writes and verifies **both** copies. | OCR engine for the editor's "Detect text" redact button (v1.2 Feature 4) + preview-select mode with PII regex auto-marking; and for `/pdf-to-text/` (via `shared/tesseract-loader.js`) when a PDF page has no text layer. |
+| [tesseract.js-core](https://github.com/naptha/tesseract.js-core) | 7.0.0 | Apache-2.0 | Apache-2.0 | `core/tesseract-core-{,simd-,relaxedsimd-}lstm.{wasm,wasm.js}` — 3 LSTM-only variants × 2 files = 6 files, ~19.3 MB — plus `core/LICENSE` (Apache-2.0, 11,358 B), inside **each** of the two Tesseract copies above. Tesseract.js auto-picks the best variant per browser at runtime. Single-threaded — no SharedArrayBuffer / COOP / COEP required, works on plain static hosting. | WASM-compiled Tesseract OCR engine; data half of the OCR feature. |
+| regenerator-runtime, [buffer](https://github.com/feross/buffer), [ieee754](https://github.com/feross/ieee754), [zlib.js](https://github.com/imaya/zlib.js) (bundled into Tesseract.js) | as bundled by tesseract.js 7.0.0 | MIT (×3) + BSD-3-Clause (ieee754) | as upstream | No separate files — these are webpack-inlined into `tesseract.min.js` and `worker.min.js`. Their extracted banners ship beside the bundles as `tesseract.min.js.LICENSE.txt` (149 B) and `worker.min.js.LICENSE.txt` (466 B), in both copies. | Transitive dependencies we redistribute inside the Tesseract bundles. Listed here because shipping the bundles ships them, and the banners are their only attribution. |
 | [tessdata_fast](https://github.com/tesseract-ocr/tessdata_fast) | HEAD on 2024-08-01 (commit `87416418657359cb625c412a48b6e1d6d41c29bd`) | Apache-2.0 | Apache-2.0 | `lang/eng.traineddata.gz` (1,962,155 B gzipped; ~4 MB raw) inside **each** of the two Tesseract copies above. Gzipped during install. | English-language LSTM model for OCR. Other languages can be vendored on demand by extending `scripts/install-tesseract.mjs`. |
 | [mediabunny](https://github.com/Vanilagy/mediabunny) | 1.55.2 | MPL-2.0 | MPL-2.0 | `vendor/mediabunny/mediabunny.min.mjs` (~660 KB) + `LICENSE` + `LICENSE.md`. Vendored 2026-08-25. Install via `node scripts/install-mediabunny.mjs`. | Video compression engine for compress-video, consumed lazily on first file. |
 | [@jsquash/jpeg](https://github.com/jamsinclair/jSquash) (wraps **mozjpeg**) | 1.6.0 | Apache-2.0 (wrapper) + BSD-3-Clause / IJG / zlib (mozjpeg) | as upstream | `vendor/jsquash/jpeg/codec/enc/mozjpeg_enc.{js,wasm}` (~283 KB) + `LICENSE` + `codec/LICENSE.codec.md` + [`LICENSE.md`](vendor/jsquash/jpeg/LICENSE.md). Hand-vendored — no install script. | JPEG encoder for `/compress-images/` and `/convert-image/`, via `shared/jsquash-loader.js`. |
@@ -66,11 +67,12 @@ bytes; two rows would invite them to drift.
 | JSZip 3.10.1 | `vendor/jszip/jszip.min.js` | `photo-editor/js/vendor/jszip.min.js` | hand-vendored (no script) | sha256 `acc7e414…d59e` |
 | jsPDF 3.0.4 | `vendor/jspdf/` | `photo-editor/js/vendor/jspdf/` | hand-vendored (no script) | sha256 `0e2ca540…5131` |
 | libheif-js 1.19.8 | `vendor/libheif/` | `photo-editor/js/vendor/heic/` | `scripts/install-heic.mjs` writes **both** | sha256 `fdc7bcb6…a34f8` (js), `615bfe84…7fb3` (wasm) |
-| Tesseract 7.0.0 (9 files) | `vendor/tesseract/` | `photo-editor/js/vendor/tesseract/` | `scripts/install-tesseract.mjs` writes **only the shared copy** | all 9 files, per the pins in [`vendor/tesseract/LICENSE.md`](vendor/tesseract/LICENSE.md) |
+| Tesseract 7.0.0 (13 files) | `vendor/tesseract/` | `photo-editor/js/vendor/tesseract/` | `scripts/install-tesseract.mjs` writes **both** | all 13 files, per the pins in [`vendor/tesseract/LICENSE.md`](vendor/tesseract/LICENSE.md) |
 
-All four pairs were re-verified byte-for-byte on 2026-08-26. Tesseract is the
-one to watch: its installer refreshes a single copy, so a version bump silently
-leaves the editor's tree on the old version until someone updates it by hand.
+All four pairs were re-verified byte-for-byte on 2026-08-26. Two of the four
+installers fan out to both destinations and verify both, so a version bump
+cannot strand one copy on stale bytes; the JSZip and jsPDF pairs have no
+installer at all and are kept in step by hand.
 
 ## License selections
 
@@ -108,14 +110,23 @@ leaves the editor's tree on the old version until someone updates it by hand.
   Each link of the chain redistributes under Apache-2.0; the upstream
   attributions live at the Qualcomm Hugging Face repo. Provenance + SHA-256
   hashes pinned at `photo-editor/js/vendor/blazeface/.notice`.
-- **Tesseract.js + tesseract.js-core** are both **Apache-2.0** by Naptha.
-  Provenance at [`vendor/tesseract/LICENSE.md`](vendor/tesseract/LICENSE.md)
-  (shared copy) and `photo-editor/js/vendor/tesseract/.notice` (editor copy).
-  We vendor LSTM-only builds (Tesseract 5+ legacy mode dropped) which saves
-  ~24 MB vs vendoring all 12 variants. **Open gap:** neither copy ships a full
-  Apache-2.0 text — the two `.md`/`.notice` files link upstream instead — and
-  the `tesseract.min.js.LICENSE.txt` that the bundle's header points at is not
-  vendored. Fetching both in `scripts/install-tesseract.mjs` would close it.
+- **Tesseract.js + tesseract.js-core** are both **Apache-2.0** by Naptha, with
+  the full text vendored at `LICENSE` and `core/LICENSE` in each of the two
+  copies. Provenance at
+  [`vendor/tesseract/LICENSE.md`](vendor/tesseract/LICENSE.md) (shared copy)
+  and `photo-editor/js/vendor/tesseract/.notice` (editor copy). We vendor
+  LSTM-only builds (Tesseract 5+ legacy mode dropped) which saves ~24 MB per
+  copy vs vendoring all 12 variants.
+- **The libraries bundled inside Tesseract.js** — regenerator-runtime (MIT),
+  buffer (MIT), ieee754 (BSD-3-Clause) and zlib.js (MIT) — are webpack-inlined
+  into `tesseract.min.js` and `worker.min.js`, so we redistribute them whether
+  or not we name them. Their attribution is the pair of extracted banner files
+  upstream ships for exactly this purpose, `tesseract.min.js.LICENSE.txt` and
+  `worker.min.js.LICENSE.txt`, now vendored beside the bundles in both copies.
+  The filenames are load-bearing: each bundle's first line is a bare-filename
+  pointer at its sidecar. Until 2026-08-26 neither the Apache-2.0 texts nor
+  these banners were vendored, and these four were shipped with no notice at
+  all — the one real attribution gap the 2026-08-26 audit turned up.
 - **tessdata_fast (English LSTM model)** is **Apache-2.0** by the
   Tesseract OCR project. Commit pinned for reproducibility in
   `scripts/install-tesseract.mjs`.
@@ -207,7 +218,7 @@ page boots with **0 bytes** of vendored library:
 
 Measured on disk 2026-08-26 as the sum of file sizes (not block allocation).
 
-### `photo-editor/js/vendor/` — 176.9 MB, 69 files
+### `photo-editor/js/vendor/` — 176.9 MB, 73 files
 
 - `bgremove/` is ~117.6 MB (170 KB code + 34 KB license + 9 KB
   manifest + ~117 MB of chunked binary data for the CPU + WebGPU ORT
@@ -215,14 +226,14 @@ Measured on disk 2026-08-26 as the sum of file sizes (not block allocation).
 - `onnxruntime-web/` is ~35.7 MB (CPU bundle + WebGPU bundle +
   4 threaded JSEP WASM kernel files + LICENSE).
 - `tesseract/` is ~21.4 MB (174 KB lib JS + 6 LSTM-only WASM files +
-  1.9 MB gzipped English language data + `.notice`).
+  1.9 MB gzipped English language data + 23 KB of license texts + `.notice`).
 - `heic/` is ~1.11 MB (80 KB JS + 1.0 MB WASM + 43 KB LICENSE).
 - `blazeface/` is ~0.57 MB (78 KB ONNX graph + 517 KB external
   weights + 3 KB metadata + `.notice`).
 - `jspdf/` is ~0.40 MB (UMD bundle + LICENSE + `.notice`).
 - `jszip.min.js` is 97,630 B; the three `*-loader.js` files add ~15 KB.
 
-### `vendor/` — 32.1 MB, 234 files
+### `vendor/` — 32.1 MB, 240 files
 
 - `tesseract/` is ~21.4 MB — a byte-identical copy of the editor's, and by
   itself two-thirds of this tree.
@@ -240,7 +251,7 @@ Measured on disk 2026-08-26 as the sum of file sizes (not block allocation).
 ### Total
 
 **~209 MB across both trees**, dominated by the chunked ML models + the ORT
-WASM kernels. About **22.9 MB of that is duplication** — the four
+WASM kernels. About **23 MB of that is duplication** — the four
 byte-identical pairs, of which Tesseract alone is 21.4 MB. A `git clone` of
 this repo is consequently larger than a typical static-site repo. The trade
 is: zero deploy-time install, every feature works immediately on a freshly

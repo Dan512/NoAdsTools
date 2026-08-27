@@ -112,6 +112,21 @@
         </select>
       </label>
 
+      <label class="resolution-label" id="audio-label" for="audio" hidden>Audio
+        <select id="audio" aria-describedby="audio-note">
+          <option value="auto" selected>Auto (best fit)</option>
+          <option value="copy">Keep original</option>
+          <option value="128k">128 kbps</option>
+          <option value="96k">96 kbps</option>
+          <option value="64k-mono">64 kbps mono</option>
+          <option value="none">Remove audio</option>
+        </select>
+      </label>
+      <!-- Deliberately NOT a live region: it is hidden whenever its text
+           changes, and revealed together with #configure, so nothing would
+           announce. #audio's aria-describedby is what delivers this. -->
+      <p class="band-note" id="audio-note" hidden></p>
+
       <div id="band" class="band" aria-live="polite">
         <div class="band-meter" id="band-meter" role="img" aria-label="">
           <span class="band-step"></span><span class="band-step"></span><span class="band-step"></span><span class="band-step"></span><span class="band-step"></span>
@@ -150,7 +165,7 @@
       <h2>Compress a video to fit a file-size limit</h2>
       <p>Phone videos get large quickly. Even a short 1080p clip can be too big for an email attachment, a Discord upload, or an online form.</p>
       <p>Instead of making you guess at bitrate and quality settings, this tool starts with the final file size. Enter the size you need and it calculates a video bitrate that fits within that limit.</p>
-      <p>By default the resolution is set automatically. If the target is too tight for the source resolution, the tool drops to the tallest resolution that still looks good, and for 60&nbsp;fps videos it will also consider 30&nbsp;fps. In many cases a clean 720p video will look better than heavily compressed 1080p. You can override both choices.</p>
+      <p>By default the resolution is set automatically. If the target is too tight for the source resolution, the tool drops to the tallest resolution that still looks good, and for 60&nbsp;fps videos it will also consider 30&nbsp;fps. In many cases a clean 720p video will look better than heavily compressed 1080p. If the audio track is taking a big share of a tight target, the tool trims that too. You can override all three choices, including removing the audio entirely.</p>
       <h2>Preview the quality before compressing</h2>
       <p>The quality meter estimates how much bitrate is available for each pixel. It is a useful guide, but different videos compress differently.</p>
       <p>For a better check, press Preview quality. The tool compresses short samples from your actual video at the same settings as the final encode, so you can compare them with the original before processing the whole file.</p>
@@ -179,15 +194,21 @@
         <dd>
           <p>No. There are no watermarks, accounts, daily limits, or paid tiers.</p>
         </dd>
+        <dt>Can it reduce or remove the audio track?</dt>
+        <dd>
+          <p>Yes. The Audio control can re-encode the audio at a lower bitrate or drop the track entirely. Every byte the audio gives up goes to the picture, which matters most on long clips with small targets.</p>
+          <p>On automatic, the tool only reduces audio when doing so visibly helps the video quality. It never removes audio on its own, unless your browser can't carry the file's audio format at all, which it says plainly when it happens.</p>
+          <p>Which bitrates are offered depends on your browser's audio encoder. Chrome will not encode AAC below 96&nbsp;kbps, so lower options are hidden there. Firefox and Safari cannot re-encode audio at all, and offer only Auto, Keep, or Remove.</p>
+        </dd>
         <dt>Why does it say my target size can't be reached?</dt>
         <dd>
           <p>The audio track takes up part of the file size. If the space left over is too small to encode watchable video, the target can't be reached at that resolution.</p>
-          <p>The tool shows the smallest target that can work. A shorter clip, a larger target, a lower resolution, or a lower frame rate are the ways out.</p>
+          <p>The tool shows the smallest target that can work. A shorter clip, a larger target, a lower resolution, a lower frame rate, or reducing or removing the audio are the ways out.</p>
         </dd>
         <dt>What video formats are supported?</dt>
         <dd>
           <p>MP4, MOV, WebM, and MKV, as long as your browser can decode them. The output is an MP4 with H.264 video, which plays almost everywhere.</p>
-          <p>When the original audio format fits MP4, which covers nearly everything phones and browsers produce, the audio track is copied without re-encoding.</p>
+          <p>When the original audio format fits MP4, which covers nearly everything phones and browsers produce, the tool copies the audio track without re-encoding unless you or Auto reduce it. Audio that doesn't fit MP4 gets converted to AAC.</p>
         </dd>
         <dt>Why doesn't video compression work in my browser?</dt>
         <dd>

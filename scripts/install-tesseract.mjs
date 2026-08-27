@@ -1,23 +1,54 @@
 #!/usr/bin/env node
 // scripts/install-tesseract.mjs — fetch the Tesseract.js OCR engine
-// (Apache-2.0) into vendor/tesseract/. Mirror of install-blazeface.mjs /
-// install-bgremove.mjs's pattern: one-time fetch + SHA-256 verification,
-// then the files live in the repo and the site loads them locally at
-// runtime (no third-party CDN at user-visit time).
+// (Apache-2.0) into BOTH of the repo's vendored copies. Mirror of
+// install-blazeface.mjs / install-bgremove.mjs's pattern for the fetch half
+// (one-time download + SHA-256 verification, then the files live in the repo
+// and the site loads them locally at runtime — no third-party CDN at
+// user-visit time) and of install-heic.mjs's pattern for the fan-out half.
+//
+// Why two destinations: the engine is carried twice, byte-for-byte identical,
+// because two different loaders fetch it from two different absolute URLs —
+//
+//   vendor/tesseract/                  → shared/tesseract-loader.js
+//                                        consumer: /pdf-to-text/ (OCR fallback
+//                                        for pages with no text layer)
+//   photo-editor/js/vendor/tesseract/  → photo-editor/js/ops/textDetect.js
+//                                        ("Detect text" auto-redact)
+//
+// Each loader hardcodes its own URL prefix, so neither copy can be dropped
+// without repointing its loader; deduping them is a later platform task (see
+// vendor/tesseract/LICENSE.md). Until 2026-08-26 this script wrote only the
+// shared copy, which meant a TESSERACT_*_VERSION bump would silently strand
+// the editor on the old bytes. It now writes both and verifies both.
 //
 // What this script does, end-to-end:
 //   1. Downloads tesseract.js@7.0.0 + tesseract.js-core@7.0.0 tarballs
 //      from registry.npmjs.org, verifying the npm-published SHA-512
 //      `integrity` of each tarball before unpacking.
-//   2. Extracts the published JS + WASM artifacts.
+//   2. Extracts the published JS + WASM artifacts, plus the license texts
+//      (see "License files" below).
 //   3. Fetches eng.traineddata from the tessdata_fast GitHub repo, gzip-
 //      compresses it locally (Tesseract's loader expects .traineddata.gz),
 //      and stages it under lang/.
-//   4. Copies the curated file set into vendor/tesseract/ and verifies
-//      each one against the pinned SHA-256s below.
+//   4. Writes the curated file set into EVERY destination and verifies each
+//      destination against the pinned SHA-256s below.
 //
-// The script is idempotent: if all vendored files already match their
-// pinned hashes, nothing is re-downloaded.
+// License files — why four of them, and why they are not optional:
+//   - `LICENSE` (from the tarball's `LICENSE.md`) is the Apache-2.0 text for
+//     tesseract.js itself, and `core/LICENSE` the same for tesseract.js-core.
+//     Renamed on the way in because `LICENSE.md` in the vendored directory is
+//     OUR hand-written provenance doc; every other vendored library follows
+//     the same split (`LICENSE` = upstream text, `LICENSE.md` = ours).
+//   - `tesseract.min.js.LICENSE.txt` and `worker.min.js.LICENSE.txt` are
+//     webpack-extracted banners for libraries bundled INTO the two minified
+//     files: regenerator-runtime (MIT), buffer (MIT), ieee754 (BSD-3-Clause)
+//     and zlib.js (MIT). Each bundle's first line is a bare-filename pointer
+//     at its sidecar, so the sidecar has to sit beside the bundle. Without
+//     them we redistribute four MIT/BSD libraries with no notice at all —
+//     which the AGPL-3.0 stance in THIRD-PARTY.md does not get to hand-wave.
+//
+// The script is idempotent: if all vendored files in all destinations already
+// match their pinned hashes, nothing is re-downloaded.
 //
 // First-run note: if any PINNED entry is the placeholder string `TBD`,
 // the script writes the file anyway, prints the computed SHA-256, and
@@ -26,7 +57,7 @@
 //
 // Run: `node scripts/install-tesseract.mjs`
 // Optional: `--clean-tmp` to remove .tmp-vendor/ when done.
-import { readFile, writeFile, mkdir, rm, copyFile } from 'node:fs/promises';
+import { readFile, writeFile, mkdir, rm } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
 import { gzipSync } from 'node:zlib';
 import { execSync } from 'node:child_process';
@@ -56,43 +87,65 @@ const TARBALLS = {
   },
 };
 
-// Files we vendor from each tarball (relative to package/ inside the tgz).
-// tesseract.js ships its dist/ — we need the browser bundle + worker harness.
-// tesseract.js-core ships all 12 WASM variants (plain/simd/relaxedsimd ×
-// LSTM/non-LSTM × .wasm/.wasm.js) — vendoring all of them is ~12 MB total
-// and lets Tesseract.js auto-pick the fastest your browser supports
-// without us having to feature-detect.
+// Files we vendor from the tesseract.js tarball.
+//   src: relative to the extracted package root.
+//   dst: relative to a destination dir.
+// The two `.LICENSE.txt` sidecars MUST keep their names — each minified
+// bundle's header comment points at its sidecar by bare filename.
 const TESSERACT_JS_FILES = [
-  'dist/tesseract.min.js',
-  'dist/worker.min.js',
+  { src: 'dist/tesseract.min.js',             dst: 'tesseract.min.js' },
+  { src: 'dist/worker.min.js',                dst: 'worker.min.js' },
+  { src: 'dist/tesseract.min.js.LICENSE.txt', dst: 'tesseract.min.js.LICENSE.txt' },
+  { src: 'dist/worker.min.js.LICENSE.txt',    dst: 'worker.min.js.LICENSE.txt' },
+  // Upstream ships the Apache-2.0 text as LICENSE.md; we land it as LICENSE
+  // so our own LICENSE.md provenance doc keeps that name. Bytes unchanged.
+  { src: 'LICENSE.md',                        dst: 'LICENSE' },
 ];
 
-// We collect all .wasm + .wasm.js files emitted by tesseract.js-core into
-// vendor/tesseract/core/.
-//
-// Pinned SHA-256 hashes for the FILES WE COMMIT to vendor/tesseract/.
-// Bump alongside TESSERACT_*_VERSION. Use `TBD` on first run; copy printed
-// hashes here after the script writes them once.
+// Files we vendor from the tesseract.js-core tarball, beyond the WASM
+// variants collected by pattern below.
+const TESSERACT_CORE_FILES = [
+  { src: 'LICENSE', dst: 'core/LICENSE' },
+];
+
+// Pinned SHA-256 hashes for the FILES WE COMMIT, keyed by path relative to
+// EACH destination dir. Bump alongside TESSERACT_*_VERSION. Use `TBD` on
+// first run; copy printed hashes here after the script writes them once.
 const PINNED = {
-  'tesseract.min.js':                                '000c27d9cd0def655f77b36c72a389c0ab13793aa31cb4d7aab56d09c0afbc7e',
-  'worker.min.js':                                   '576b7df7e3393e137e51849357c9adb53fe7ac1bb69bfa06cf3d61520f182c6d',
-  'lang/eng.traineddata.gz':                         'b130d16b69e3888bc099133991a50a5b50e1da0e3ff6ca31a5496fab0fb386c3',
-  'core/tesseract-core-lstm.wasm':                   '66b17df6e20c5329a17ffa9c202a47eaa3e32500b253d4c7f38e7f2bc01457c3',
-  'core/tesseract-core-lstm.wasm.js':                'eef5f8b2f8e20e150680b20adaec4a60babafee3adbe8a94583c81fee46e8680',
-  'core/tesseract-core-simd-lstm.wasm':              '34e8d50cac216427d86bf397d610fdd9f49492539bbcdfbfccc4eda20c810bea',
-  'core/tesseract-core-simd-lstm.wasm.js':           'c58b46a4c796c0b8afccf77591d5b875b6896b45d402bbce8caa6f5362447b38',
-  'core/tesseract-core-relaxedsimd-lstm.wasm':       '7985c92d4c64e7267d24cadffe1b2a1da6bf8aa55fdcaf953fe94fe122a24545',
-  'core/tesseract-core-relaxedsimd-lstm.wasm.js':    '861a536cf9ef8e63cb644d57bab39c388f37f7d6b6f60024b741c5f6b39a59b3',
+  'tesseract.min.js':                             '000c27d9cd0def655f77b36c72a389c0ab13793aa31cb4d7aab56d09c0afbc7e',
+  'worker.min.js':                                '576b7df7e3393e137e51849357c9adb53fe7ac1bb69bfa06cf3d61520f182c6d',
+  'tesseract.min.js.LICENSE.txt':                 'cdf963ced7d25a0f98901a547647b4d6e2dbe0197fd78c87a059a87b0e542fe2',
+  'worker.min.js.LICENSE.txt':                    '45f54171aeaa1d10c0c1a66f374b7bba1f02472b1487fbe892eec04f840002ac',
+  'LICENSE':                                      'b40930bbcf80744c86c46a12bc9da056641d722716c378f5659b9e555ef833e1',
+  'core/LICENSE':                                 'c6596eb7be8581c18be736c846fb9173b69eccf6ef94c5135893ec56bd92ba08',
+  'lang/eng.traineddata.gz':                      'b130d16b69e3888bc099133991a50a5b50e1da0e3ff6ca31a5496fab0fb386c3',
+  'core/tesseract-core-lstm.wasm':                '66b17df6e20c5329a17ffa9c202a47eaa3e32500b253d4c7f38e7f2bc01457c3',
+  'core/tesseract-core-lstm.wasm.js':             'eef5f8b2f8e20e150680b20adaec4a60babafee3adbe8a94583c81fee46e8680',
+  'core/tesseract-core-simd-lstm.wasm':           '34e8d50cac216427d86bf397d610fdd9f49492539bbcdfbfccc4eda20c810bea',
+  'core/tesseract-core-simd-lstm.wasm.js':        'c58b46a4c796c0b8afccf77591d5b875b6896b45d402bbce8caa6f5362447b38',
+  'core/tesseract-core-relaxedsimd-lstm.wasm':    '7985c92d4c64e7267d24cadffe1b2a1da6bf8aa55fdcaf953fe94fe122a24545',
+  'core/tesseract-core-relaxedsimd-lstm.wasm.js': '861a536cf9ef8e63cb644d57bab39c388f37f7d6b6f60024b741c5f6b39a59b3',
 };
 
 const PROJECT_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const VENDOR_DIR   = path.join(PROJECT_ROOT, 'vendor', 'tesseract');
 const TMP_DIR      = path.join(PROJECT_ROOT, '.tmp-vendor');
+
+// Every vendored copy this install feeds. `label` is display-only; `dir` is
+// the destination on disk. Keep these in sync with the loaders listed in the
+// header comment — a new copy here means a new loader somewhere.
+const DESTS = [
+  { label: 'vendor/tesseract',                 dir: path.join(PROJECT_ROOT, 'vendor', 'tesseract') },
+  { label: 'photo-editor/js/vendor/tesseract', dir: path.join(PROJECT_ROOT, 'photo-editor', 'js', 'vendor', 'tesseract') },
+];
 
 // ----- Helpers -------------------------------------------------------------
 
 async function sha256(filepath) {
   const bytes = await readFile(filepath);
+  return createHash('sha256').update(bytes).digest('hex');
+}
+
+function hashBytes(bytes) {
   return createHash('sha256').update(bytes).digest('hex');
 }
 
@@ -147,25 +200,29 @@ async function extractTarball(name, buf) {
   return extractDir;
 }
 
-// ----- Steps ---------------------------------------------------------------
-
-async function vendorTesseractJs() {
-  const buf = await fetchVerified('tesseract.js', TARBALLS['tesseract.js']);
-  const extractDir = await extractTarball('tesseract.js', buf);
-  await mkdir(VENDOR_DIR, { recursive: true });
-  for (const rel of TESSERACT_JS_FILES) {
-    const src = path.join(extractDir, rel);
-    const dst = path.join(VENDOR_DIR, path.basename(rel));
-    await copyFile(src, dst);
-    console.log(`  → ${path.relative(PROJECT_ROOT, dst).replace(/\\/g, '/')}`);
-  }
+// Read one staged file into a { rel, bytes } source record. `rel` is the path
+// relative to a destination dir — the same key PINNED uses.
+async function stage(extractDir, src, rel) {
+  const srcPath = path.join(extractDir, src);
+  if (!existsSync(srcPath)) throw new Error(`Missing in tarball: ${src}`);
+  return { rel, bytes: await readFile(srcPath) };
 }
 
-async function vendorTesseractCore() {
+// ----- Steps ---------------------------------------------------------------
+
+async function collectTesseractJs() {
+  const buf = await fetchVerified('tesseract.js', TARBALLS['tesseract.js']);
+  const extractDir = await extractTarball('tesseract.js', buf);
+  const out = [];
+  for (const { src, dst } of TESSERACT_JS_FILES) out.push(await stage(extractDir, src, dst));
+  return out;
+}
+
+async function collectTesseractCore() {
   const buf = await fetchVerified('tesseract.js-core', TARBALLS['tesseract.js-core']);
   const extractDir = await extractTarball('tesseract.js-core', buf);
-  const coreOut = path.join(VENDOR_DIR, 'core');
-  await mkdir(coreOut, { recursive: true });
+  const out = [];
+  for (const { src, dst } of TESSERACT_CORE_FILES) out.push(await stage(extractDir, src, dst));
   // tesseract.js-core@7 ships 12 WASM variants:
   //   tesseract-core{,-simd,-relaxedsimd}{,-lstm}.wasm + matching .wasm.js
   //
@@ -173,23 +230,21 @@ async function vendorTesseractCore() {
   // integer-only code paths AND the LSTM model — ~600 KB larger each. We
   // only ever use LSTM mode (modern Tesseract 5+ default; we don't expose
   // legacy in the UI), so the LSTM-only variants are the right pick. This
-  // saves ~24 MB of vendored disk vs vendoring all 12.
+  // saves ~24 MB of vendored disk per destination vs vendoring all 12.
   const { readdir } = await import('node:fs/promises');
   const entries = await readdir(extractDir);
   const wantPattern = /-lstm\.wasm(\.js)?$/;
   for (const entry of entries) {
     if (!wantPattern.test(entry)) continue;
-    const src = path.join(extractDir, entry);
-    const dst = path.join(coreOut, entry);
-    await copyFile(src, dst);
-    const hash = await sha256(dst);
+    const rel = `core/${entry}`;
     // Add a PINNED entry on the fly so verify() considers it.
-    PINNED[`core/${entry}`] = PINNED[`core/${entry}`] || 'TBD';
-    console.log(`  → vendor/tesseract/core/${entry}  [sha256: ${hash.slice(0, 12)}…]`);
+    PINNED[rel] = PINNED[rel] || 'TBD';
+    out.push(await stage(extractDir, entry, rel));
   }
+  return out;
 }
 
-async function vendorEnglishLanguageData() {
+async function collectEnglishLanguageData() {
   console.log(`Downloading eng.traineddata from ${ENG_TRAINEDDATA_URL}`);
   const res = await fetch(ENG_TRAINEDDATA_URL);
   if (!res.ok) throw new Error(`eng.traineddata fetch failed: HTTP ${res.status}`);
@@ -198,50 +253,68 @@ async function vendorEnglishLanguageData() {
   // Tesseract.js's loader expects .traineddata.gz when gzip:true (default).
   const gz = gzipSync(raw, { level: 9 });
   console.log(`  → ${(gz.length / 1048576).toFixed(2)} MB gzipped`);
-  const langDir = path.join(VENDOR_DIR, 'lang');
-  await mkdir(langDir, { recursive: true });
-  const dst = path.join(langDir, 'eng.traineddata.gz');
-  await writeFile(dst, gz);
-  console.log(`  → vendor/tesseract/lang/eng.traineddata.gz`);
+  return [{ rel: 'lang/eng.traineddata.gz', bytes: gz }];
+}
+
+// Fan every staged source out to every destination, skipping files whose
+// bytes are already on disk (per-file sha256, so a partial re-run is cheap).
+async function writeToAllDests(sources) {
+  let written = 0;
+  let skipped = 0;
+  for (const dest of DESTS) {
+    console.log(`\n${dest.label}/`);
+    for (const { rel, bytes } of sources) {
+      const dstPath = path.join(dest.dir, rel);
+      const sha = hashBytes(bytes);
+      if (existsSync(dstPath) && await sha256(dstPath) === sha) {
+        skipped++;
+        console.log(`  skip  ${rel} (sha matches)`);
+        continue;
+      }
+      await mkdir(path.dirname(dstPath), { recursive: true });
+      await writeFile(dstPath, bytes);
+      written++;
+      console.log(`  write ${rel} (${(bytes.length / 1024).toFixed(1)} KB)`);
+    }
+  }
+  console.log(`\nCopy: ${written} written, ${skipped} skipped across ${DESTS.length} destinations`);
 }
 
 async function verify() {
   let failed = 0;
-  let tbd = 0;
-  const computed = {};
-  for (const [name, expected] of Object.entries(PINNED)) {
-    const filepath = path.join(VENDOR_DIR, name);
-    if (!existsSync(filepath)) {
-      console.error(`  ✗ ${name} missing — install incomplete`);
-      failed++;
-      continue;
-    }
-    const got = await sha256(filepath);
-    computed[name] = got;
-    if (expected === 'TBD') {
-      console.log(`  ⚠ ${name} not yet pinned — computed sha256: ${got}`);
-      tbd++;
-    } else if (got === expected) {
-      console.log(`  ✓ ${name} matches pinned SHA-256`);
-    } else {
-      console.error(`  ✗ ${name} hash mismatch`);
-      console.error(`    expected: ${expected}`);
-      console.error(`    actual:   ${got}`);
-      failed++;
+  const unpinned = {};
+  for (const dest of DESTS) {
+    console.log(`\n${dest.label}/`);
+    for (const [name, expected] of Object.entries(PINNED)) {
+      const filepath = path.join(dest.dir, name);
+      if (!existsSync(filepath)) {
+        console.error(`  ✗ ${name} missing — install incomplete`);
+        failed++;
+        continue;
+      }
+      const got = await sha256(filepath);
+      if (expected === 'TBD') {
+        console.log(`  ⚠ ${name} not yet pinned — computed sha256: ${got}`);
+        unpinned[name] = got;
+      } else if (got === expected) {
+        console.log(`  ✓ ${name} matches pinned SHA-256`);
+      } else {
+        console.error(`  ✗ ${name} hash mismatch`);
+        console.error(`    expected: ${expected}`);
+        console.error(`    actual:   ${got}`);
+        failed++;
+      }
     }
   }
   if (failed > 0) {
     throw new Error(`${failed} file(s) failed SHA verification — bundle may have been tampered with or upstream changed without a version bump`);
   }
-  if (tbd > 0) {
+  const names = Object.keys(unpinned);
+  if (names.length > 0) {
     console.log('');
-    console.log(`${tbd} file(s) were not pinned. Copy these hashes into PINNED in scripts/install-tesseract.mjs and re-run to confirm:`);
+    console.log('Unpinned file(s) found. Copy these hashes into PINNED in scripts/install-tesseract.mjs and re-run to confirm:');
     console.log('');
-    for (const [name, got] of Object.entries(computed)) {
-      if (PINNED[name] === 'TBD') {
-        console.log(`  '${name}': '${got}',`);
-      }
-    }
+    for (const name of names) console.log(`  '${name}': '${unpinned[name]}',`);
   }
 }
 
@@ -250,11 +323,15 @@ async function allHashesMatch() {
   for (const expected of Object.values(PINNED)) {
     if (expected === 'TBD') return false;
   }
-  for (const [name, expected] of Object.entries(PINNED)) {
-    const filepath = path.join(VENDOR_DIR, name);
-    if (!existsSync(filepath)) return false;
-    const got = await sha256(filepath);
-    if (got !== expected) return false;
+  // EVERY destination has to match, not just the first — the whole point of
+  // the fan-out is that one stale copy is a bug, not a cache hit.
+  for (const dest of DESTS) {
+    for (const [name, expected] of Object.entries(PINNED)) {
+      const filepath = path.join(dest.dir, name);
+      if (!existsSync(filepath)) return false;
+      const got = await sha256(filepath);
+      if (got !== expected) return false;
+    }
   }
   return true;
 }
@@ -263,20 +340,30 @@ async function allHashesMatch() {
 
 async function main() {
   if (await allHashesMatch()) {
-    console.log('All vendored files already match pinned SHA-256s. Nothing to do.');
+    console.log(`All vendored files in all ${DESTS.length} destinations already match pinned SHA-256s. Nothing to do.`);
     return;
   }
   console.log(`--- Installing Tesseract.js v${TESSERACT_JS_VERSION} + core v${TESSERACT_CORE_VERSION} ---`);
-  await vendorTesseractJs();
-  await vendorTesseractCore();
-  await vendorEnglishLanguageData();
-  console.log('--- Verifying ---');
+  const sources = [
+    ...await collectTesseractJs(),
+    ...await collectTesseractCore(),
+    ...await collectEnglishLanguageData(),
+  ];
+  console.log('\n--- Writing ---');
+  await writeToAllDests(sources);
+  console.log('\n--- Verifying ---');
   await verify();
 
   if (process.argv.includes('--clean-tmp')) {
     await rm(TMP_DIR, { recursive: true, force: true });
     console.log('Cleaned .tmp-vendor/');
   }
+  console.log(`
+Provenance docs are hand-maintained. On a version bump, still to do:
+  - vendor/tesseract/LICENSE.md               (versions, sizes, sha256 list)
+  - photo-editor/js/vendor/tesseract/.notice
+  - THIRD-PARTY.md                            (table rows + disk footprint)
+  - privacy.html                              (the #pdf-to-text size disclosure)`);
   console.log('All done.');
 }
 

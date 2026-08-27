@@ -7,33 +7,74 @@ async function boot(page) {
   await expect(page.locator('html')).toHaveAttribute('data-boot-ready', '1', { timeout: 5000 });
 }
 
+// A realistic probeFile() result, not a sparse one: audioBitrate and
+// audioCopyable are what probeFile actually returns, and without them
+// resolveAudio falls back to its Infinity source-bitrate sentinel, so every
+// fake-driven test would exercise a source no real file can be.
+// Self-consistent by construction, the way probeFile builds it
+// (audioBytes = ceil(audioBitrate * durationSec / 8)):
+// 133_333 x 60 / 8 = 999_997.5, which rounds to the 1_000_000 below (the
+// exactly-consistent bitrate is 133_333.33, not an integer).
+// (audioCodec and audioChannels are deliberately absent — probeFile computes
+// the codec name to answer audioCopyable and returns neither, because
+// nothing downstream reads them.)
 const FAKE_SRC = {
   durationSec: 60, width: 1920, height: 1080, fps: 30,
   audioBytes: 1_000_000, hasAudio: true, sourceBytes: 80_000_000,
+  audioBitrate: 133_333, audioCopyable: true,
+};
+
+// The real field case behind the 60fps tests: 150 s of 1080p60 with a fat
+// audio track. 128_000 x 150 / 8 = 2_400_000 exactly, so this one IS a
+// fixture probeFile could produce. (audioChannels is deliberately absent —
+// Task 5 dropped it from probeFile and nothing reads it.)
+const FAKE_60FPS_SRC = {
+  durationSec: 150, width: 1920, height: 1080, fps: 60,
+  audioBytes: 2_400_000, hasAudio: true, sourceBytes: 178_000_000,
+  audioBitrate: 128_000, audioCopyable: true,
+};
+
+// A fat 320 kbps track over a short clip: 320_000 x 30 / 8 = 1_200_000
+// exactly. Long enough to clear PROBE_MIN_DURATION_SEC, so the calibration
+// probe runs, and loud enough that a probe-driven re-plan has a real audio
+// move available to make.
+const FAKE_320K_SRC = {
+  durationSec: 30, width: 1920, height: 1080, fps: 30,
+  audioBytes: 1_200_000, hasAudio: true, sourceBytes: 60_000_000,
+  audioBitrate: 320_000, audioCopyable: true,
 };
 
 // Drive the UI without WebCodecs: fake the probe (and optionally compress)
-// through the same module instances main.js imported.
-async function installFakeProbe(page, src = FAKE_SRC) {
-  await page.evaluate(async (fake) => {
+// through the same module instances main.js imported. Also pins the audio
+// floor so these UI tests assert against a fixed value (Chromium's real
+// measured 96 kbps) instead of whatever this machine's browser happens to
+// support — main.js calls the real, unmocked probeAudioFloorBps() whenever
+// hasAudio is true, which would otherwise load the real engine and make
+// these "fake probe" tests depend on live AAC encoder capability.
+async function installFakeProbe(page, src = FAKE_SRC, floorBps = 96_000) {
+  await page.evaluate(async ({ fake, floorBps }) => {
     const { _setProbeForTest } = await import('/compress-video/js/probe.js');
     _setProbeForTest(async () => fake);
-  }, src);
+    const { _setAudioFloorForTest } = await import('/compress-video/js/engine.js');
+    _setAudioFloorForTest(floorBps);
+  }, { fake: src, floorBps });
 }
 
 const dummyVideo = { name: 'clip.mp4', mimeType: 'video/mp4', buffer: Buffer.from('not-really-a-video') };
 
 // A compress fake whose done-promises are resolved/rejected from the test
 // side (via window.__pending), not on a timer — so assertions between the
-// first and second pass are deterministic. window.__calls records each
-// call's plan.videoBitrate for the "second pass is actually lower" check.
+// first and second pass are deterministic. window.__calls records the whole
+// decision each call was handed — the bitrate for "second pass is actually
+// lower", and the resolved audio step, which the second pass has to carry
+// forward unchanged.
 async function installTwoPassFake(page) {
   await page.evaluate(async () => {
     const { _setCompressForTest } = await import('/compress-video/js/engine.js');
     window.__calls = [];
     window.__pending = [];
     _setCompressForTest((file, plan) => {
-      window.__calls.push(plan.videoBitrate);
+      window.__calls.push({ videoBitrate: plan.videoBitrate, audio: plan.audio ?? null });
       let resolve, reject;
       const done = new Promise((res, rej) => { resolve = res; reject = rej; });
       window.__pending.push({ resolve, reject });
@@ -109,13 +150,46 @@ async function installCompressFake(page, blobBytes) {
     const { _setCompressForTest } = await import('/compress-video/js/engine.js');
     window.__compressCalls = [];
     _setCompressForTest((file, plan) => {
-      window.__compressCalls.push({ videoBitrate: plan.videoBitrate, out: plan.out, outFps: plan.outFps });
+      window.__compressCalls.push({
+        videoBitrate: plan.videoBitrate, out: plan.out, outFps: plan.outFps,
+        audio: plan.audio ?? null,
+      });
       return {
         done: Promise.resolve(new Blob([new Uint8Array(blobBytes)], { type: 'video/mp4' })),
         cancel: async () => {},
       };
     });
   }, blobBytes);
+}
+
+// A compress fake that fails with one of engine.js's NAMED errors, so the
+// spec can pin the message main.js maps that name to.
+async function installRejectingCompressFake(page, message) {
+  await page.evaluate(async (message) => {
+    const { _setCompressForTest } = await import('/compress-video/js/engine.js');
+    _setCompressForTest(() => {
+      const done = Promise.reject(new Error(message));
+      done.catch(() => {});
+      return { done, cancel: async () => {} };
+    });
+  }, message);
+}
+
+// main.js hides AND disables an audio rung it can't deliver at its label.
+// Read both properties off the DOM rather than asking Playwright whether an
+// <option> is "visible": options inside a closed <select> have no box, so
+// toBeHidden() would pass for every rung and prove nothing.
+function audioOptionState(page, value) {
+  return page.locator(`#audio option[value="${value}"]`)
+    .evaluate(o => ({ hidden: o.hidden, disabled: o.disabled }));
+}
+
+// The Mbps figure the band note is currently promising, as a number.
+async function bandNoteMbps(page) {
+  const text = await page.locator('#band-note').textContent();
+  const m = /About ([\d.]+) Mbps/.exec(text);
+  expect(m, `no "About N Mbps" in band note: ${text}`).not.toBeNull();
+  return parseFloat(m[1]);
 }
 
 test('SEO head: title, canonical, SoftwareApplication JSON-LD, single h1', async ({ page }) => {
@@ -243,16 +317,21 @@ test('auto rescues an impossible source-res target at 480p30; full source pin sh
   // 10 MB target on 1080p60 is unreachable. Auto tries a fps drop to 30
   // before the next resolution step down, and 480p30 is the first (height,
   // fps) pair that clears "soft".
-  await installFakeProbe(page, {
-    durationSec: 150, width: 1920, height: 1080, fps: 60,
-    audioBytes: 2_400_000, hasAudio: true, sourceBytes: 178_000_000,
-  });
+  await installFakeProbe(page, FAKE_60FPS_SRC);
   await page.setInputFiles('#file-input', dummyVideo);
   await expect(page.locator('#resolution')).toHaveValue('auto');
   // 60 fps clears the 40fps gate, so the frame-rate control appears,
   // defaulted to auto alongside the resolution control.
   await expect(page.locator('#framerate-label')).toBeVisible();
   await expect(page.locator('#framerate')).toHaveValue('auto');
+  // This test is about the RESOLUTION and FRAME RATE ladders, so audio is
+  // pinned out of the search rather than left on auto. On auto the 96k rung
+  // frees 600 KB, which lifts 360p30 from bpp 0.05912 (soft) to 0.06375 —
+  // over the 0.06 Acceptable line — and tier 1 then prefers that short
+  // Acceptable pair to the taller soft 480p30 one. That is the pre-existing
+  // tier policy working correctly on a bigger budget, not a fps/resolution
+  // fact, and it is asserted directly in 'auto trades audio down...' below.
+  await page.selectOption('#audio', 'copy');
   await page.locator('#target-mb').fill('10');
 
   await expect(page.locator('#band-label')).toHaveText('Noticeably soft');
@@ -309,11 +388,14 @@ test('manual 30 fps is honored and not credited to Auto', async ({ page }) => {
   // Same field fixture as the 480p30 test: 60 fps clears the 40fps gate,
   // so the frame-rate control is present, and 10 MB is tight enough that
   // dropping to 30 fps actually changes the outcome.
-  await installFakeProbe(page, {
-    durationSec: 150, width: 1920, height: 1080, fps: 60,
-    audioBytes: 2_400_000, hasAudio: true, sourceBytes: 178_000_000,
-  });
+  await installFakeProbe(page, FAKE_60FPS_SRC);
   await page.setInputFiles('#file-input', dummyVideo);
+  // Audio pinned for the same reason as the 480p30 test, and more sharply
+  // here: the invariant under test is "a manually pinned dimension is never
+  // credited to Auto", which reads cleanest when the only auto dimensions
+  // left are the one Auto really chose (resolution) and the one the user
+  // pinned (fps).
+  await page.selectOption('#audio', 'copy');
   await page.locator('#target-mb').fill('10');
   await expect(page.locator('#resolution')).toHaveValue('auto');
 
@@ -326,6 +408,297 @@ test('manual 30 fps is honored and not credited to Auto', async ({ page }) => {
   // only the resolution it actually picked, never the pinned fps.
   await expect(note).not.toContainText('Auto picked 480p at 30 fps');
   await expect(note).toContainText('Auto picked 480p, the best any setting does at this size.');
+});
+
+// ---------- audio -----------------------------------------------------------
+
+test('the Audio control appears only when the source has an audio track', async ({ page }) => {
+  await boot(page);
+  // probeFile's exact no-audio shape, not just hasAudio: false.
+  await installFakeProbe(page, {
+    ...FAKE_SRC, hasAudio: false, audioBytes: 0,
+    audioBitrate: 0, audioCopyable: false,
+  });
+  await page.setInputFiles('#file-input', dummyVideo);
+  await expect(page.locator('#configure')).toBeVisible();
+  await expect(page.locator('#audio-label')).toBeHidden();
+  await expect(page.locator('#summary')).toContainText('no audio track');
+
+  await installFakeProbe(page); // FAKE_SRC has a track
+  await page.setInputFiles('#file-input', dummyVideo);
+  await expect(page.locator('#audio-label')).toBeVisible();
+  await expect(page.locator('#audio')).toHaveValue('auto');
+});
+
+test('audio rungs at or above the source, or under the measured floor, are not offered', async ({ page }) => {
+  await boot(page);
+  // A quiet 100 kbps track: 100_000 x 60 / 8 = 750_000 bytes, self-consistent
+  // the way probeFile builds it.
+  const quietSrc = { ...FAKE_SRC, audioBitrate: 100_000, audioBytes: 750_000 };
+  await installFakeProbe(page, quietSrc, 64_000);
+  await page.setInputFiles('#file-input', dummyVideo);
+  await expect(page.locator('#audio-label')).toBeVisible();
+  // 128k sits ABOVE the source rate, so resolveAudio collapses it to copy —
+  // offering it would put a label on the control that the encoder is never
+  // asked for. The two rungs below the source survive.
+  expect(await audioOptionState(page, '128k')).toEqual({ hidden: true, disabled: true });
+  expect(await audioOptionState(page, '96k')).toEqual({ hidden: false, disabled: false });
+  expect(await audioOptionState(page, '64k-mono')).toEqual({ hidden: false, disabled: false });
+
+  // The same source on Chromium's real MEASURED floor (96 kbps — it refuses
+  // any lower AAC bitrate, mono or stereo). 64k-mono can no longer be
+  // delivered at its label, so it drops out too. This half is the regression
+  // guard for the measured-floor mechanism: a build that reverted to a
+  // hardcoded floor would keep offering a rung this browser cannot encode.
+  await installFakeProbe(page, quietSrc); // default floorBps: 96_000
+  await page.setInputFiles('#file-input', dummyVideo);
+  expect(await audioOptionState(page, '128k')).toEqual({ hidden: true, disabled: true });
+  expect(await audioOptionState(page, '96k')).toEqual({ hidden: false, disabled: false });
+  expect(await audioOptionState(page, '64k-mono')).toEqual({ hidden: true, disabled: true });
+});
+
+test('no AAC encoder: every bitrate rung is gone and the track is copied whole', async ({ page }) => {
+  await boot(page);
+  await installFakeProbe(page, FAKE_SRC, null); // Firefox / WebKit
+  await installFailingProbe(page);
+  await installCompressFake(page, 4_000_000);
+  await page.setInputFiles('#file-input', dummyVideo);
+  for (const id of ['128k', '96k', '64k-mono']) {
+    expect(await audioOptionState(page, id), id).toEqual({ hidden: true, disabled: true });
+  }
+  await expect(page.locator('#audio-note')).toBeVisible();
+  await expect(page.locator('#audio-note')).toContainText("can't re-encode audio");
+
+  // And the planner agrees with the control: even at a target tight enough
+  // that Auto drops to 360p, there is no rung to spend, so the track rides
+  // through as a stream copy rather than a bitrate the browser can't deliver.
+  await page.locator('#target-mb').fill('5');
+  await expect(page.locator('#encode-btn')).toBeEnabled();
+  await page.locator('#encode-btn').click();
+  await expect(page.locator('#result')).toBeVisible();
+  const calls = await page.evaluate(() => window.__compressCalls);
+  expect(calls).toHaveLength(1);
+  expect(calls[0].out.height).toBe(360); // the target really was that tight
+  expect(calls[0].audio.mode).toBe('copy');
+});
+
+test('no AAC encoder and a codec MP4 cannot carry: the control goes, the track goes', async ({ page }) => {
+  await boot(page);
+  // The compound corner: nothing to transcode TO, and nothing to copy.
+  // (audioCopyable false is probeFile's whole answer about the codec — e.g.
+  // FLAC, which MP4 won't carry; the codec name itself is not returned.)
+  await installFakeProbe(page, { ...FAKE_SRC, audioCopyable: false }, null);
+  await installFailingProbe(page);
+  await installCompressFake(page, 20_000_000);
+  await page.setInputFiles('#file-input', dummyVideo);
+  // No choice left to offer, so the control is withdrawn rather than left
+  // showing options none of which can happen.
+  await expect(page.locator('#audio-label')).toBeHidden();
+  await expect(page.locator('#audio-note')).toBeVisible();
+  await expect(page.locator('#audio-note')).toContainText('will have no audio');
+  // resolveAudio reports id 'copy' here, so `forced` is what stops the band
+  // note under-reporting what actually happens to the track.
+  await expect(page.locator('#band-note')).toContainText("audio can't be kept here");
+
+  await page.locator('#encode-btn').click();
+  await expect(page.locator('#result')).toBeVisible();
+  const calls = await page.evaluate(() => window.__compressCalls);
+  expect(calls[0].audio.mode).toBe('remove');
+  expect(calls[0].audio.forced).toBe(true);
+});
+
+test('a codec MP4 cannot carry, WITH an AAC encoder, is converted and says so', async ({ page }) => {
+  await boot(page);
+  await installFakeProbe(page, { ...FAKE_SRC, audioCopyable: false });
+  await installFailingProbe(page);
+  await installCompressFake(page, 20_000_000);
+  await page.setInputFiles('#file-input', dummyVideo);
+  await expect(page.locator('#audio-label')).toBeVisible();
+  // "Keep original" would be a lie: there is no stream copy available, so
+  // the option renames itself to what will really happen.
+  await expect(page.locator('#audio option[value="copy"]')).toHaveText('Keep (converted to AAC)');
+  await expect(page.locator('#band-note')).toContainText('converted to AAC');
+
+  await page.locator('#encode-btn').click();
+  await expect(page.locator('#result')).toBeVisible();
+  const calls = await page.evaluate(() => window.__compressCalls);
+  expect(calls[0].audio.mode).toBe('encode');
+});
+
+test('Remove audio hands the freed bytes to the picture and reaches the engine', async ({ page }) => {
+  await boot(page);
+  await installFakeProbe(page);
+  await installFailingProbe(page);
+  await installCompressFake(page, 20_000_000);
+  await page.setInputFiles('#file-input', dummyVideo);
+  // Derived from the app's own note, not a memorized number: whatever the
+  // planner is promising with the track kept, dropping it must beat.
+  const before = await bandNoteMbps(page);
+  await page.selectOption('#audio', 'none');
+  await expect.poll(() => bandNoteMbps(page)).toBeGreaterThan(before);
+
+  await page.locator('#encode-btn').click();
+  await expect(page.locator('#result')).toBeVisible();
+  const calls = await page.evaluate(() => window.__compressCalls);
+  expect(calls[0].audio.mode).toBe('remove');
+});
+
+test('an unreachable target names the audio lever, and stops once it is used', async ({ page }) => {
+  await boot(page);
+  await installFakeProbe(page);
+  await page.setInputFiles('#file-input', dummyVideo);
+  await page.locator('#target-mb').fill('1'); // < 1 MB audio + floor video
+  await expect(page.locator('#band-label')).toContainText('too small');
+  await expect(page.locator('#band-note')).toContainText('Removing the audio track under Audio lowers it');
+  await expect(page.locator('#encode-btn')).toBeDisabled();
+
+  // Taking that advice is enough on its own here: the freed bytes clear
+  // 360p's floor, so the target stops being unreachable and the sentence
+  // that offered the lever is gone with it.
+  await page.selectOption('#audio', 'none');
+  await expect(page.locator('#band-note')).not.toContainText('Removing the audio track under Audio');
+  await expect(page.locator('#encode-btn')).toBeEnabled();
+});
+
+test('auto trades audio down when the picture visibly gains, and names the rung', async ({ page }) => {
+  await boot(page);
+  await installFakeProbe(page, FAKE_60FPS_SRC);
+  await page.setInputFiles('#file-input', dummyVideo);
+  await page.locator('#target-mb').fill('10');
+  // Per-rung oracle for this fixture (150 s, 1080p60, 2.4 MB audio, 10 MB
+  // target, measured floor 96 kbps), evaluated through planEncode:
+  //   copy      2_400_000 B  copy    480p30 step 2 / bpp 0.03323   360p30 step 2 / 0.05912
+  //   128k      2_400_000 B  encode  (same bytes as copy, so the ladder drops it)
+  //   96k       1_800_000 B  encode  480p30 step 2 / bpp 0.03583   360p30 step 3 / 0.06375  <- wins
+  //   64k-mono  below the 96 kbps floor, collapses back to copy
+  // The 96k rung frees 600 KB, which lifts 360p30 over the 0.06 Acceptable
+  // line; the back-off spends the audio only because it buys that band.
+  const note = page.locator('#band-note');
+  await expect(page.locator('#band-label')).toHaveText('Acceptable quality');
+  await expect(page.locator('#band-meter .band-step.is-filled')).toHaveCount(3);
+  await expect(note).toContainText(
+    'Auto picked 360p at 30 fps with 96 kbps audio for this target. About 0.4 Mbps of video at 640×360.');
+  await expect(note).toContainText(/\d+ kbps( mono)? audio/);
+});
+
+test('below Acceptable, the note stops claiming a best that Remove audio beats', async ({ page }) => {
+  await boot(page);
+  await installFakeProbe(page, FAKE_60FPS_SRC);
+  await page.setInputFiles('#file-input', dummyVideo);
+
+  // 8 MB on this fixture: Auto lands 360p30 with 96 kbps audio at "Noticeably
+  // soft" (step 2) — and Remove audio, which Auto structurally refuses to
+  // pick, reaches Acceptable. The old sentence called that state "the best
+  // any setting does at this size" while the better setting sat in the very
+  // control the sentence is next to.
+  await page.locator('#target-mb').fill('8');
+  const note = page.locator('#band-note');
+  await expect(page.locator('#band-label')).toHaveText('Noticeably soft');
+  await expect(note).toContainText(
+    'Auto picked 360p at 30 fps with 96 kbps audio, the best it does without dropping the sound; Remove audio does better.');
+  await expect(note).not.toContainText('the best any setting does');
+
+  // Not a claim taken on trust: the control the note points at really does
+  // reach a higher band.
+  await page.selectOption('#audio', 'none');
+  await expect(page.locator('#band-label')).toHaveText('Acceptable quality');
+
+  // And the original sentence survives where it is still true: at 6 MB every
+  // setting including removal is stuck on the same band, so there is nothing
+  // better to point at.
+  await page.selectOption('#audio', 'auto');
+  await page.locator('#target-mb').fill('6');
+  await expect(page.locator('#band-label')).toHaveText('Noticeably soft');
+  await expect(note).toContainText('the best any setting does at this size');
+  await expect(note).not.toContainText('Remove audio does better');
+});
+
+test('it stops claiming it even when no rung was admitted and the note names no audio', async ({ page }) => {
+  await boot(page);
+  // A 96 kbps track at Chromium's measured 96 kbps floor: 128k and 96k sit at
+  // or above the source and 64k-mono sits under the floor, so EVERY rung
+  // collapses to copy and the ladder is empty. Auto has no audio move to
+  // report, so the note carries no audio clause at all — the variant where
+  // the false claim was easiest to miss, because nothing in the sentence
+  // mentions sound.
+  // 96_000 x 60 / 8 = 720_000, self-consistent the way probeFile builds it.
+  await installFakeProbe(page, { ...FAKE_SRC, audioBitrate: 96_000, audioBytes: 720_000 });
+  await page.setInputFiles('#file-input', dummyVideo);
+  await page.locator('#target-mb').fill('2');
+
+  for (const id of ['128k', '96k', '64k-mono']) {
+    expect(await audioOptionState(page, id), id).toEqual({ hidden: true, disabled: true });
+  }
+  const note = page.locator('#band-note');
+  await expect(page.locator('#band-label')).toHaveText('Blocky, poor quality');
+  await expect(note).toContainText(
+    'Auto picked 360p, the best it does without dropping the sound; Remove audio does better.');
+  await expect(note).not.toContainText('kbps');
+  await page.selectOption('#audio', 'none');
+  await expect(page.locator('#band-label')).toHaveText('Noticeably soft');
+});
+
+test("the corrected second pass carries the first pass's audio decision", async ({ page }) => {
+  await boot(page);
+  await installFakeProbe(page);
+  await installFailingProbe(page);
+  await installTwoPassFake(page);
+  await page.setInputFiles('#file-input', dummyVideo);
+  // An explicit rung rather than the default copy, so the carried decision
+  // is something distinctive rather than the empty-ish copy record.
+  await page.selectOption('#audio', '96k');
+  await page.locator('.preset[data-mb="25"]').click();
+  await page.locator('#encode-btn').click();
+
+  await waitForCalls(page, 1);
+  await resolvePass(page, 0, 30_000_000);
+  await waitForCalls(page, 2);
+  await resolvePass(page, 1, 20_000_000);
+  await expect(page.locator('#result-line')).toContainText(/under your 25 MB target/);
+
+  const calls = await page.evaluate(() => window.__calls);
+  expect(calls[0].audio).toMatchObject({ id: '96k', mode: 'encode', bps: 96_000 });
+  // The second pass re-plans the VIDEO bitrate only. Re-resolving audio there
+  // would move the byte budget the correction was computed against, so the
+  // corrected pass would aim at a target it no longer describes.
+  expect(calls[1].audio).toEqual(calls[0].audio);
+});
+
+test('an audio track the muxer refuses names Remove audio as the way out', async ({ page }) => {
+  await boot(page);
+  await installFakeProbe(page);
+  await installFailingProbe(page);
+  await installRejectingCompressFake(page, 'audio_unsupported');
+  await page.setInputFiles('#file-input', dummyVideo);
+  await page.locator('#encode-btn').click();
+
+  const err = page.locator('#tool-error');
+  await expect(err).toBeVisible();
+  await expect(err).toContainText('Remove audio');
+  // And the user lands back on the panel that actually has that control.
+  await expect(page.locator('#configure')).toBeVisible();
+  await expect(page.locator('#audio-label')).toBeVisible();
+});
+
+test("the audio note does not leak into the next file's accessible description", async ({ page }) => {
+  await boot(page);
+  // A file that HAS a disclosure: no AAC encoder, so the note is shown.
+  await installFakeProbe(page, FAKE_SRC, null);
+  await page.setInputFiles('#file-input', dummyVideo);
+  await expect(page.locator('#audio-note')).toContainText("can't re-encode audio");
+  // Why the text below has to be empty and not merely hidden.
+  await expect(page.locator('#audio')).toHaveAttribute('aria-describedby', 'audio-note');
+
+  // A second file with nothing to disclose. Hiding the note is NOT enough:
+  // #audio-note is #audio's aria-describedby target, and the
+  // accessible-description algorithm ignores a referenced node's hidden
+  // state — stale text here would be read out as THIS file's disclosure, and
+  // only screen-reader users would ever hear the wrong one.
+  await installFakeProbe(page);
+  await page.setInputFiles('#file-input', dummyVideo);
+  await expect(page.locator('#audio-label')).toBeVisible();
+  await expect(page.locator('#audio-note')).toBeHidden();
+  await expect(page.locator('#audio-note')).toHaveText('');
 });
 
 test('cancel mid-encode returns to configure without an error', async ({ page }) => {
@@ -389,7 +762,7 @@ test('overshoot triggers one corrected second pass with the download live', asyn
 
   const calls = await page.evaluate(() => window.__calls);
   expect(calls).toHaveLength(2);
-  expect(calls[1]).toBeLessThan(calls[0]);
+  expect(calls[1].videoBitrate).toBeLessThan(calls[0].videoBitrate);
 });
 
 test('cancel during the second pass keeps the first result', async ({ page }) => {
@@ -492,6 +865,41 @@ test('a probe that predicts an overshoot re-plans before encoding', async ({ pag
   const probeCalls = await page.evaluate(() => window.__probeCalls);
   expect(probeCalls).toHaveLength(2);
   expect(probeCalls[1].segments).toBe(1);
+});
+
+test('a re-plan that also re-encodes the audio says so, instead of naming only the picture', async ({ page }) => {
+  await boot(page);
+  await installFakeProbe(page, FAKE_320K_SRC);
+  await page.setInputFiles('#file-input', dummyVideo);
+  await page.locator('#target-mb').fill('8');
+  // What the user was last shown: 720p with the fat 320 kbps track copied
+  // through untouched. Read off the DOM, not remembered — the note must not
+  // be crediting Auto with an audio move it hasn't made yet.
+  await expect(page.locator('#band-note')).toContainText('Auto picked 720p');
+  await expect(page.locator('#band-note')).not.toContainText('kbps audio');
+
+  await installCalibrateFake(page);
+  await installCompressFake(page, 7_000_000); // under the 8 MB target
+  await page.locator('#encode-btn').click();
+
+  // Both probes measure the same 0.08 bpp floor at the planned 1280×720
+  // (0.08 x 1280 x 720 x 30 = 2_211_840 bps = 276_480 B/s), so the encoder is
+  // genuinely floor-bound and derivePlan re-plans against that measurement.
+  await waitForProbeCalls(page, 1);
+  await resolveProbe(page, 0, 1_105_920, 4);
+  await waitForProbeCalls(page, 2);
+  await resolveProbe(page, 1, 552_960, 2);
+
+  await expect(page.locator('#result')).toBeVisible();
+  const calls = await page.evaluate(() => window.__compressCalls);
+  // The re-plan really did both things: fewer pixels AND a re-encoded track.
+  expect(calls).toHaveLength(1);
+  expect(calls[0].out.height).toBe(480);
+  expect(calls[0].audio).toMatchObject({ id: '128k', mode: 'encode', bps: 128_000 });
+  // The whole point: a note that reported only the resolution would leave
+  // the user believing their 320 kbps track rode through untouched.
+  await expect(page.locator('#result-line'))
+    .toContainText('The sample check moved this to 854×480 with 128 kbps audio to fit.');
 });
 
 test('a probe that overshoots but responds to a lower bitrate keeps the resolution', async ({ page }) => {
@@ -624,11 +1032,49 @@ test('a floor-bound clip with nowhere left to go skips the futile second pass', 
   expect(compressCalls).toHaveLength(1);
   const line = page.locator('#result-line');
   await expect(line).toContainText(/over your .* target/);
-  // overAdvice() for this exact state (out.height 360, so not >360; fps
-  // already below the 40fps gate) falls through to its last branch.
-  await expect(line).toContainText('a shorter clip or a larger target are the ways out');
+  // overAdvice() for this exact state: out.height is 360, so not >360, and
+  // the fps is already below the 40fps gate — which used to fall through to
+  // the "shorter clip or larger target" last resort. It no longer does,
+  // because the audio lever is now a real way out and sits ahead of that
+  // last resort: FAKE_SRC's copied track is 1_000_000 bytes and the 128k
+  // rung would return 40 KB of it, so audioAdvice() reports the whole
+  // 977 KB the track could free.
+  await expect(line).toContainText('reducing or removing the audio under Audio frees up to 977 KB');
   await expect(line).not.toContainText(/Re-compressing/i);
   await expect(line).not.toContainText(/after a second pass/i);
+});
+
+test('with no rung left to reduce to, the advice offers removal rather than reduction', async ({ page }) => {
+  await boot(page);
+  // Firefox / WebKit: AAC cannot be encoded at all, so every rung collapses
+  // to copy and there is nothing to REDUCE to — only the whole track to
+  // drop. This is the branch those users actually see, and Chromium never
+  // reaches it on its own.
+  await installFakeProbe(page, FAKE_SRC, null);
+  await installFailingProbe(page);
+  await installTwoPassFake(page);
+  await page.setInputFiles('#file-input', dummyVideo);
+  // 360p pinned so overAdvice() falls past its resolution branch, and
+  // FAKE_SRC's 30 fps is under the 40fps gate so the frame-rate branch is
+  // unreachable too — the audio advice is what is left.
+  await page.selectOption('#resolution', '360');
+  await page.locator('#target-mb').fill('5');
+  await expect(page.locator('#encode-btn')).toBeEnabled();
+  await page.locator('#encode-btn').click();
+
+  // Both passes land over the 5 MB target, so the flow reaches its last
+  // resort and spends overAdvice().
+  await waitForCalls(page, 1);
+  await resolvePass(page, 0, 8_000_000);
+  await waitForCalls(page, 2);
+  await resolvePass(page, 1, 7_000_000);
+
+  const line = page.locator('#result-line');
+  await expect(line).toContainText(/still over your 5 MB target after a second pass/);
+  // "frees", not "frees up to": the reduce-or-remove wording would be a
+  // false offer here, because no reduction exists in this browser.
+  await expect(line).toContainText('removing the audio under Audio frees 977 KB');
+  await expect(line).not.toContainText('reducing or removing');
 });
 
 test('short clips skip the probe entirely', async ({ page }) => {
@@ -679,12 +1125,20 @@ test('axe: configure state has no serious violations', async ({ page }) => {
 // Generates a real MP4 IN-PAGE with mediabunny's CanvasSource (no committed
 // binary fixture, no ffmpeg dependency), feeds it back through the tool, and
 // asserts the output lands at or under the target.
-test('e2e: real encode lands at or under the target size', async ({ page, browserName }) => {
-  test.skip(browserName !== 'chromium', 'WebCodecs e2e is gated on chromium');
-  test.slow();
-  await boot(page);
 
-  const fixtureBytes = await page.evaluate(async () => {
+// 3 s at 15 fps of deterministic block-noise: a seeded LCG repaints a grid of
+// 16px blocks with pseudo-random colors every frame. High entropy (unlike a
+// flat fill + rectangle) so the bitrate target is actually exercised rather
+// than undershot. FIXTURE RULE (see compress-images/tests/browser/
+// compress-images.spec.js's noiseCanvas): strengthen the fixture, never
+// loosen an assertion.
+//
+// withAudio adds a real 440 Hz mono tone as an OPUS track: Chromium always
+// has an Opus encoder (its AAC encoder refuses bitrates under 96 kbps, which
+// this fixture has no reason to fight) and Opus fits MP4. Both tracks are
+// added BEFORE start() and fed after it, which is mediabunny's contract.
+async function makeFixtureMp4(page, { withAudio = false } = {}) {
+  const bytes = await page.evaluate(async (withAudio) => {
     const mb = await import('/vendor/mediabunny/mediabunny.min.mjs');
     const canvas = document.createElement('canvas');
     canvas.width = 640; canvas.height = 360;
@@ -696,13 +1150,17 @@ test('e2e: real encode lands at or under the target size', async ({ page, browse
       format: new mb.Mp4OutputFormat(), target: new mb.BufferTarget(),
     });
     output.addVideoTrack(source);
+    let audioSource = null;
+    let audioBuf = null;
+    if (withAudio) {
+      const rate = 48_000;
+      audioBuf = new AudioBuffer({ numberOfChannels: 1, length: rate * 3, sampleRate: rate });
+      const ch = audioBuf.getChannelData(0);
+      for (let s = 0; s < ch.length; s++) ch[s] = Math.sin(2 * Math.PI * 440 * (s / rate)) * 0.3;
+      audioSource = new mb.AudioBufferSource({ codec: 'opus', bitrate: 64_000 });
+      output.addAudioTrack(audioSource);
+    }
     await output.start();
-    // 3 s at 15 fps of deterministic block-noise: a seeded LCG repaints a
-    // grid of 16px blocks with pseudo-random colors every frame. High
-    // entropy (unlike a flat fill + rectangle) so the bitrate target is
-    // actually exercised rather than undershot. FIXTURE RULE (see
-    // compress-images/tests/browser/compress-images.spec.js's noiseCanvas):
-    // strengthen the fixture, never loosen an assertion.
     const block = 16;
     let seed = 0x2f6e2b1 >>> 0;
     const rnd = () => { seed = (seed * 1664525 + 1013904223) >>> 0; return seed / 4294967296; };
@@ -715,16 +1173,50 @@ test('e2e: real encode lands at or under the target size', async ({ page, browse
       }
       await source.add(i / 15, 1 / 15);
     }
+    if (audioSource) {
+      await audioSource.add(audioBuf);
+      audioSource.close();
+    }
     source.close();
     await output.finalize();
     return Array.from(new Uint8Array(output.target.buffer));
-  });
-  expect(fixtureBytes.length).toBeGreaterThan(10_000);
+  }, withAudio);
+  expect(bytes.length).toBeGreaterThan(10_000);
+  return Buffer.from(bytes);
+}
+
+// Re-open finished bytes through mediabunny in-page: the only honest way to
+// say what is or isn't in the file the user actually got.
+async function tracksInFile(page, buffer) {
+  return page.evaluate(async (b64) => {
+    const mb = await import('/vendor/mediabunny/mediabunny.min.mjs');
+    const bin = atob(b64);
+    const bytes = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+    const input = new mb.Input({
+      formats: mb.ALL_FORMATS,
+      source: new mb.BlobSource(new Blob([bytes], { type: 'video/mp4' })),
+    });
+    return {
+      hasAudio: (await input.getPrimaryAudioTrack()) != null,
+      hasVideo: (await input.getPrimaryVideoTrack()) != null,
+    };
+  }, buffer.toString('base64'));
+}
+
+test('e2e: real encode lands at or under the target size', async ({ page, browserName }) => {
+  test.skip(browserName !== 'chromium', 'WebCodecs e2e is gated on chromium');
+  test.slow();
+  await boot(page);
 
   await page.setInputFiles('#file-input', {
-    name: 'fixture.mp4', mimeType: 'video/mp4', buffer: Buffer.from(fixtureBytes),
+    name: 'fixture.mp4', mimeType: 'video/mp4', buffer: await makeFixtureMp4(page),
   });
   await expect(page.locator('#configure')).toBeVisible({ timeout: 15_000 });
+  // This fixture is silent, so the real probe must reach the same conclusion
+  // the fake-driven visibility test reaches — free coverage of that branch
+  // against the actual probeFile.
+  await expect(page.locator('#audio-label')).toBeHidden();
   await page.locator('#target-mb').fill('1');
   await expect(page.locator('#encode-btn')).toBeEnabled();
   await page.locator('#encode-btn').click();
@@ -740,4 +1232,37 @@ test('e2e: real encode lands at or under the target size', async ({ page, browse
   expect(outSize).toBeLessThanOrEqual(1_048_576);
   // Log for the Task 10 calibration pass.
   console.log(`[calibration] target=1048576 actual=${outSize}`);
+});
+
+test('e2e: Remove audio really removes the track from the downloaded file', async ({ page, browserName }) => {
+  test.skip(browserName !== 'chromium', 'WebCodecs e2e is gated on chromium');
+  test.slow();
+  await boot(page);
+
+  await page.setInputFiles('#file-input', {
+    name: 'withsound.mp4', mimeType: 'video/mp4',
+    buffer: await makeFixtureMp4(page, { withAudio: true }),
+  });
+  await expect(page.locator('#configure')).toBeVisible({ timeout: 15_000 });
+  // The REAL probe found the track and the REAL floor probe ran — no fake in
+  // this path, so this is the control's only end-to-end proof.
+  await expect(page.locator('#audio-label')).toBeVisible();
+  await page.selectOption('#audio', 'none');
+  await page.locator('#target-mb').fill('1');
+  await expect(page.locator('#encode-btn')).toBeEnabled();
+  await page.locator('#encode-btn').click();
+
+  const download = page.waitForEvent('download', { timeout: 60_000 });
+  await expect(page.locator('#result')).toBeVisible({ timeout: 60_000 });
+  await page.locator('#download-btn').click();
+  const dl = await download;
+  const fs = await import('node:fs');
+  const outPath = await dl.path();
+  const outSize = fs.statSync(outPath).size;
+  expect(outSize).toBeGreaterThan(0);
+  expect(outSize).toBeLessThanOrEqual(1_048_576);
+
+  const tracks = await tracksInFile(page, fs.readFileSync(outPath));
+  expect(tracks.hasAudio).toBe(false);
+  expect(tracks.hasVideo).toBe(true);
 });

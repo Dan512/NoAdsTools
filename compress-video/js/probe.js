@@ -8,7 +8,12 @@ let testProbe = null; // injected by _setProbeForTest
 /**
  * @param {File} file
  * @returns {Promise<{durationSec:number, width:number, height:number,
- *   fps:number, audioBytes:number, hasAudio:boolean, sourceBytes:number}>}
+ *   fps:number, audioBytes:number, hasAudio:boolean, sourceBytes:number,
+ *   audioBitrate:number, audioCopyable:boolean}>} the source codec NAME is
+ *   deliberately not among these: it is used here to answer audioCopyable
+ *   and nothing downstream ever needs the string itself. Same reason
+ *   audioChannels was dropped. Return it again if a disclosure ever needs
+ *   to say what the source format was.
  * @throws {Error('probe_no_video_track')} for audio-only / unreadable files
  *   (EngineLoadError propagates from the loader).
  */
@@ -28,18 +33,34 @@ export async function probeFile(file) {
 
   let audioBytes = 0;
   let hasAudio = false;
+  let audioBitrate = 0;
+  let audioCopyable = false;
   const audio = await input.getPrimaryAudioTrack();
   if (audio) {
     hasAudio = true;
     const aStats = await audio.computePacketStats(200);
-    // The measured constant the size math subtracts (spec §5): audio is
-    // copied, so its byte count is bitrate × duration, not a guess.
+    // Extrapolated from the first ~200 packets (~4 s of AAC), not the whole
+    // file — the same window the video stats use, for the same reason.
+    // This is the COPY cost; when the codec can't be copied the planner
+    // charges resolveAudio's transcode figure instead (see plan.audioBytes).
     audioBytes = Math.ceil((aStats.averageBitrate * durationSec) / 8);
+    audioBitrate = aStats.averageBitrate;
+    // Local only — it answers audioCopyable and is not returned; see the
+    // note on the @returns above.
+    const audioCodec = audio.codec;
+    // Whether mediabunny can stream-copy this codec into the MP4 output.
+    // When it can't, it transcodes no matter what we ask, and the planner
+    // has to charge for THAT (resolveAudio's forced-re-encode branch).
+    audioCopyable = audioCodec != null
+      && new mb.Mp4OutputFormat().getSupportedAudioCodecs().includes(audioCodec);
   }
   if (!(durationSec > 0) || !(width > 0) || !(height > 0) || !(fps > 0)) {
     throw new Error('probe_no_video_track');
   }
-  return { durationSec, width, height, fps, audioBytes, hasAudio, sourceBytes: file.size };
+  return {
+    durationSec, width, height, fps, audioBytes, hasAudio, sourceBytes: file.size,
+    audioBitrate, audioCopyable,
+  };
 }
 
 // ---------- Test escape hatches ---------------------------------------------
