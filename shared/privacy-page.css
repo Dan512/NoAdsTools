@@ -21,3 +21,66 @@
 .fetch-table td:first-child { white-space: nowrap; font-weight: 600; }
 .fetch-table .nothing { font-weight: 400; }
 .prose .verify-steps li { margin-bottom: var(--space-sm); }
+
+/* Tool pages link straight to /privacy#visit-counter. Without this the sticky
+   topbar covers the heading a reader was sent to, same reason the table rows
+   carry it. */
+.prose h2[id] { scroll-margin-top: 5rem; }
+
+/* The visit counter's payload and its opt-out line, printed verbatim. A block
+   rather than a paragraph because the exact bytes are the disclosure, and
+   scrolling inside the block keeps a long line off the page's own x-axis on a
+   phone. */
+.prose .payload {
+  margin: 0 0 var(--space-md);
+  padding: var(--space-md);
+  overflow-x: auto;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+.prose .payload code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+
+/* The visit-counter opt-out. A real control, in the section that explains what
+   it does, because telling a reader to paste something into a developer
+   console is a disclosure rather than a choice.
+
+   On/off is carried by the status sentence and by a bar down the left edge —
+   shape and words, never hue on its own. The row is padded to a comfortable
+   touch target: this is read on phones as much as anywhere. */
+.prose .optout {
+  margin: 0 0 var(--space-md);
+  padding: var(--space-md);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+}
+.prose .optout.is-off,
+.prose .optout.is-unavailable {
+  box-shadow: inset 3px 0 0 0 var(--text);
+}
+.prose .optout-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  min-height: 2.75rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+.prose .optout-row input[type="checkbox"] {
+  flex: none;
+  width: 1.15rem;
+  height: 1.15rem;
+  cursor: pointer;
+}
+.prose .optout-row input[type="checkbox"]:disabled,
+.prose .optout.is-unavailable .optout-row {
+  cursor: not-allowed;
+}
+.prose .optout-status {
+  margin: var(--space-xs) 0 0;
+  font-size: 0.95rem;
+  color: var(--text-secondary);
+}

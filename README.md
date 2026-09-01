@@ -5,7 +5,12 @@ PDFs, documents and video that run entirely in your browser.
 
 Your files are read from your device, processed there, and handed back. They
 are not uploaded, not queued on a server, and not stored anywhere. There are no
-ads, no analytics, no cookies and no accounts, and there never will be.
+ads, no cookies, no accounts and no analytics service, and there never will be.
+
+The site does count its own page views. The whole message is five fields —
+`site`, `path`, `ref`, `pwa`, `unique` — with no cookie, no identifier and no
+IP address stored, and your browser rather than the server decides what counts.
+[The privacy page prints it in full](https://noadstools.com/privacy#visit-counter).
 
 That claim is easy to make and rarely proved, so this repo and the
 [privacy page](https://noadstools.com/privacy) exist to prove it.

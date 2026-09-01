@@ -19,6 +19,7 @@
   <link rel="stylesheet" href="/shared/privacy-page.css">
 
   <script src="/shared/theme-boot.js"></script>
+  <script type="module" src="/shared/tally.js"></script>
 
 
   <!-- Open Graph -->
@@ -85,7 +86,7 @@
       <h2>The short version</h2>
       <ul>
         <li>Your files never leave your device, and neither does anything you type.</li>
-        <li>There are no ads, no analytics, no telemetry, and no cookies.</li>
+        <li>There are no ads, no cookies, and no analytics service watching you. This site counts its own page views, and the whole message it sends is <a href="#visit-counter">printed below</a>.</li>
         <li>There is no account, and nothing to sign up for.</li>
         <li>Every file the site downloads comes from this domain. There is no third-party CDN.</li>
         <li>The whole thing is open source under the AGPL, so you can read the code that makes these claims true.</li>
@@ -95,10 +96,12 @@
       <p>It means the contents of your files are never sent anywhere. No image, PDF, resume, or piece of text you put into a tool is transmitted off your device.</p>
       <p>It does not mean your browser makes no requests at all. It has to make some, or you would not be reading this page.</p>
       <p>When you load a page here, a web server sends you HTML, CSS, JavaScript and fonts, and that server sees the request, including your IP address, the way every web server on the internet does. Most tools also download a processing engine from this same domain, and only when you actually use the feature that needs it. Those downloads are listed tool by tool below.</p>
+      <p>One small request goes the other way. Every page here sends five fields to a counter so the site knows how many visits it gets, and none of those fields describe you. It is set out field by field in <a href="#visit-counter">The visit counter</a>.</p>
       <p>The distinction that matters: code comes down to your device, and your data never goes up.</p>
 
       <h2>What each tool downloads, and when</h2>
       <p>Everything in this table is served from noadstools.com. Nothing here is fetched from a third party. "On first use" means your browser downloads it once, then caches it.</p>
+      <p>This table is about what comes down to your browser. The one thing that goes out, from every page on the site, is the visit counter described further down.</p>
 
       <div class="fetch-table-wrap">
         <table class="fetch-table">
@@ -151,13 +154,47 @@
       <h2>What this site never does</h2>
       <ul>
         <li>No ads, and none are planned.</li>
-        <li>No analytics or telemetry. No Google Analytics, Plausible, Fathom, Mixpanel, gtag, or fbq.</li>
+        <li>No third-party analytics. No Google Analytics, Plausible, Fathom, Mixpanel, gtag, or fbq, and no script from any of them. The site does its own counting, and <a href="#visit-counter">the entire message is printed below</a>.</li>
         <li>No cookies, and no fingerprinting.</li>
         <li>No third-party CDN. Not even Google Fonts, which logs the IP address of every visitor who loads a font from it. The fonts here are served from this domain.</li>
         <li>No accounts, no email collection, no newsletter.</li>
         <li>No upload of your files, and no "save to the cloud" feature to be tempted by later.</li>
         <li>No selling or sharing of data, because there is no data to sell.</li>
       </ul>
+
+
+      <h2 id="visit-counter">The visit counter</h2>
+      <p>This site counts page views. That is the only thing it measures, and this section is the whole description of it rather than a summary of one.</p>
+      <p>The reason is plain enough: without some idea of whether a tool is used at all, there is no way to tell which ones are worth the work of maintaining. Counting visits answers that. Knowing anything about the people making them does not, so the counter is built not to.</p>
+      <p>When a page here loads, your browser sends one message. This is the entire message, with every field filled in:</p>
+      <pre class="payload"><code>{
+  "site":   "noadstools.com",
+  "path":   "/merge-pdf/",
+  "ref":    "www.google.com",
+  "pwa":    false,
+  "unique": true
+}</code></pre>
+      <ul>
+        <li><code>path</code> is the page you opened, with any query string and anchor removed before it is sent.</li>
+        <li><code>ref</code> is the domain that linked you here, and only the domain. Arriving from a search records that the search engine sent you, never what you typed into it. Following a link from one page here to another records nothing, and typing the address or using a bookmark leaves it blank.</li>
+        <li><code>pwa</code> says whether the page was opened from a home-screen icon rather than a browser tab.</li>
+        <li><code>unique</code> says whether this is your first visit today.</li>
+      </ul>
+      <p>There is nothing else in it. No cookie, no session, no account, no advertising identifier, and no fingerprint of your browser or device. Nothing is added on the way, and the server stores neither your IP address nor your user agent.</p>
+      <p><strong>Your browser is what decides, not the server.</strong> It refuses to send a second message for the same page within half an hour, so a screen left refreshing in a shop window counts once rather than hundreds of times. It sets <code>unique</code> by keeping today's date in localStorage and comparing. Both decisions happen on your device precisely because a server that could make them would need to recognise you to do it, and this one cannot: two visits from the same person and two visits from strangers look identical to it.</p>
+      <p>The message goes to <code>tally-15838356607.us-central1.run.app</code>, a small service of ours running on Google Cloud Run and shared with the sibling site NoAdsWeather. It is the only address on the whole site that is not noadstools.com, it can receive nothing but those five fields, and the browser's own security policy on every page here forbids sending it anything else. As with any request on the internet, the network and the host can see the connection and your IP address while it happens. The service does not record either, and the request logs that would otherwise have kept your IP are excluded from retention.</p>
+      <p><strong>If you would rather not be counted, switch it off here.</strong> The choice is kept in this browser, applies to every page on the site, and lasts until you clear your site data. Switching it off also deletes the two dates the counter had stored, so nothing of it is left behind.</p>
+      <div class="optout" id="tally-optout" hidden>
+        <label class="optout-row" for="tally-optout-input">
+          <input type="checkbox" id="tally-optout-input">
+          <span>Count anonymous visits from this browser</span>
+        </label>
+        <p class="optout-status" id="tally-optout-status" role="status"></p>
+      </div>
+      <noscript>
+        <p class="optout"><strong>JavaScript is switched off in this browser, so nothing here is being counted at all.</strong> The counter is JavaScript: with it disabled the message is never built and never sent. The checkbox that normally sits here needs JavaScript to save your choice.</p>
+      </noscript>
+      <p>A content blocker stops the request just as well. Nothing on the site depends on the counter, so blocking it breaks nothing.</p>
 
       <h2>Metadata in the files you get back</h2>
       <p>Photos from a phone or camera carry EXIF metadata, which often includes the GPS coordinates of where the shot was taken. PDFs carry document properties. Since that metadata is a privacy question in its own right, here is what the tools do with it.</p>
@@ -173,9 +210,11 @@
       <p><strong>One tool can read another tool's saved documents, and exactly one does.</strong> The cover letter generator has a "Use my details from a resume" option that reads the <code>noadstools:resume:*</code> keys saved by the resume builder in this same browser, so it can copy across your name, email, phone and location instead of making you type them twice. It only reads them. It never writes to or deletes a resume, and the control is hidden entirely when you have no resume saved. Nothing is sent anywhere in either direction.</p>
       <p>The "Clear my data" buttons are scoped to their own tool. Clearing your letters removes only the <code>noadstools:letter:*</code> keys and leaves any saved resume alone, and the reverse is also true.</p>
       <p><strong>The photo editor also stores consent flags</strong> so it does not ask twice about the same large download: <code>noadstools_bgremove_consent</code>, <code>noadstools_heic_consent</code>, <code>noadstools_face_detect_consent</code>, and <code>noadstools_text_detect_consent_v1</code>. Alongside those it keeps a few editor preferences under <code>noadstools:settings:photo-editor</code>, <code>noadstools_target_size</code>, <code>noadstools_upload_ready</code>, and <code>noadstools_watermark</code>. None of them contain image data.</p>
+      <p><strong>The visit counter keeps three keys</strong>, and they are the only reason it can make its decisions on your device instead of on a server. <code>tallyRecent</code> holds the times of the pages counted in the last half hour, <code>lastTallyDay</code> holds today's date so a repeat visit is not counted as a new person, and <code>tallySkip</code> is the opt-out flag described above. All three are dates and times, and none of them identify you.</p>
       <p>You can inspect or delete all of it through your browser's site-data controls, or in DevTools under Application, then Local Storage.</p>
 
       <h2>Requests that only happen if you click</h2>
+      <p>Beyond the files each page loads and the one counter message, every remaining request needs a deliberate click, and there are two of them.</p>
       <ul>
         <li>The source repository on GitHub, if you click a "Source" link.</li>
         <li>The Ko-fi tip page, if you choose to support the site.</li>
@@ -189,8 +228,9 @@
         <li>Open your browser's developer tools and select the Network tab. In Chrome, Edge and Firefox that is <kbd>F12</kbd>, or <kbd>Cmd</kbd> + <kbd>Option</kbd> + <kbd>I</kbd> on a Mac.</li>
         <li>Use the tool normally. Add a file, run it, download the result.</li>
         <li>Read the list of requests. You will see files coming from noadstools.com. You will not see a request carrying your file anywhere.</li>
+        <li>You will see one request that is not to noadstools.com: a POST to <code>tally-15838356607.us-central1.run.app</code>, a few hundred bytes long. Click it and read the payload. It is the five fields printed above, and it is the only outgoing message on the page.</li>
       </ol>
-      <p>Two things worth knowing while you look. Requests with the "Fetch/XHR" or "Script" type that arrive when you first use a feature are the engines listed above. And the useful column is the size and direction of the request: a tool that uploaded your photo would have to send a request as large as the photo, and there is not one.</p>
+      <p>Two things worth knowing while you look. Requests with the "Fetch/XHR" or "Script" type that arrive when you first use a feature are the engines listed above. And the useful column is the size and direction of the request: a tool that uploaded your photo would have to send a request as large as the photo, and there is not one. The counter message is the size of a short sentence, which is the point of printing it here in full.</p>
       <p>If you want to go further, the entire site is open source and you can read the code that does the work.</p>
 
       <p>If you find something here that does not match what your Network tab shows, that is a bug worth reporting in the <a href="https://github.com/Dan512/NoAdsTools/issues" target="_blank" rel="noopener">issue tracker</a>.</p>

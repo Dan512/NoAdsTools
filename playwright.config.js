@@ -7,6 +7,10 @@ export default defineConfig({
   // copies of every spec against the shared dev server and add phantom reds.
   testIgnore: ['**/.claude/**', '**/node_modules/**', '**/.tmp*/**'],
   fullyParallel: true,
+  // Reaps orphaned WebKitNetworkProcess.exe on Windows. Without it, a webkit
+  // worker intermittently deadlocks in teardown and the run stalls 5 minutes
+  // then exits 1 with every assertion green. See the file for the full why.
+  globalSetup: './scripts/webkit-orphan-reaper.js',
   retries: 0,
   use: { baseURL: 'http://localhost:4173', trace: 'on-first-retry' },
   webServer: {

@@ -1,6 +1,8 @@
-// shared/privacy-page.js — theme toggle for the standalone /privacy page.
+// shared/privacy-page.js — theme toggle + the visit-counter opt-out for the
+// standalone /privacy page.
 // Extracted from an inline <script> so the CSP can stay hash-based with a
 // single allowed inline snippet (the pre-paint theme setter in <head>).
+import { readOptOut, setOptOut } from './tally.js';
 /* Theme toggle. Mirrors bindThemeToggle() + applyThemeButtonIcon() in
    shared/settings.js, writing the same GLOBAL_KEY so the choice round-trips
    with the rest of the site. Inline rather than importing settings.js
@@ -49,4 +51,59 @@
     if (mql.addEventListener) mql.addEventListener('change', paintIcon);
     else if (mql.addListener) mql.addListener(paintIcon);
   } catch (e) { /* older browsers */ }
+})();
+
+/* The visit-counter opt-out.
+
+   It lives here rather than in the shared settings popover because the popover
+   is deliberately absent from every tool page (each tool's spec asserts
+   #settings-toggle has count 0), and /privacy is the one page the whole site
+   links to. It is also the honest place for it: the control sits inside the
+   paragraphs that explain what it turns off.
+
+   The block starts hidden and is only revealed once this runs, so a reader
+   without JavaScript is never shown a checkbox that could not save anything —
+   the <noscript> paragraph next to it explains that nothing is counted in that
+   case anyway. State is carried by WORDS in the status line and a bar on the
+   block, never by colour alone. */
+(function () {
+  var box = document.getElementById('tally-optout');
+  var input = document.getElementById('tally-optout-input');
+  var status = document.getElementById('tally-optout-status');
+  if (!box || !input || !status) return;
+
+  var store = null;
+  try { store = window.localStorage; } catch (e) { /* blocked */ }
+
+  function paint(state) {
+    if (!state.available) {
+      input.checked = true;
+      input.disabled = true;
+      box.classList.add('is-unavailable');
+      status.innerHTML = '<strong>This browser is blocking site storage</strong>, '
+        + 'so a choice cannot be saved here. Visits from it still count as views, '
+        + 'and never as unique visitors. A content blocker will stop the request itself.';
+      return;
+    }
+    input.checked = !state.skipped;
+    box.classList.toggle('is-off', state.skipped);
+    status.innerHTML = state.skipped
+      ? 'Counting is <strong>off</strong> in this browser. Nothing is sent from here, '
+        + 'and the dates the counter had stored have been deleted.'
+      : 'Counting is <strong>on</strong> in this browser. Each page you open here '
+        + 'sends the message above, once per half hour.';
+  }
+
+  paint(readOptOut(store));
+
+  input.addEventListener('change', function () {
+    var wanted = !input.checked; // checked means "count me"
+    if (!setOptOut(store, wanted)) {
+      paint({ available: false, skipped: false });
+      return;
+    }
+    paint(readOptOut(store));
+  });
+
+  box.hidden = false;
 })();
