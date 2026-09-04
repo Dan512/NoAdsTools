@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <title>Privacy — How NoAdsTools Works Without Uploading Your Files · NoAdsTools</title>
-  <meta name="description" content="Every file you open in a NoAdsTools tool is processed in your browser. This page lists exactly what each of the 21 tools downloads, when it downloads it, what is kept in local storage, and how to verify all of it yourself.">
+  <meta name="description" content="Every file you open in a NoAdsTools tool is processed in your browser. This page lists exactly what each of the 22 tools downloads, when it downloads it, what is kept in local storage, and how to verify all of it yourself.">
   <link rel="canonical" href="https://noadstools.com/privacy">
 
   <link rel="icon" type="image/png" sizes="32x32"   href="/photo-editor/img/favicon-light-32.png"  media="(prefers-color-scheme: light)">
@@ -115,6 +115,7 @@
             <tr id="cover-letter-generator"><td><a href="/cover-letter-generator/">Cover Letter Generator</a></td><td class="nothing">Nothing at all.</td><td>Never. Same print-based PDF as the resume builder.</td></tr>
             <tr id="qr-code-generator"><td><a href="/qr-code-generator/">QR Code Generator</a></td><td>The qrcodegen encoder, about 42&nbsp;KB.</td><td>With the page, so the tool works with the network off.</td></tr>
             <tr id="compress-video"><td><a href="/compress-video/">Compress Video</a></td><td>The mediabunny video engine, about 660&nbsp;KB.</td><td>When you add a video. The encoding itself uses your browser's built-in codecs; nothing else is fetched, so once the engine has arrived you can disconnect and keep compressing.</td></tr>
+            <tr id="split-audio"><td><a href="/split-audio/">Split Audio</a></td><td>The mediabunny audio engine, about 660&nbsp;KB (the same file Compress Video uses). JSZip, about 97&nbsp;KB.</td><td>The engine when you add a file. JSZip only if you press "Download all (ZIP)". Cutting uses no other download, so once the engine has arrived you can disconnect and keep splitting; Download all also needs the ZIP packer to have arrived.</td></tr>
             <tr id="remove-exif"><td><a href="/remove-exif/">Remove EXIF</a></td><td>JSZip, about 97&nbsp;KB.</td><td>Only if you click "Download ZIP".</td></tr>
             <tr id="crop-image"><td><a href="/crop-image/">Crop Image</a></td><td>JSZip, about 97&nbsp;KB.</td><td>Only if you click "Download all (ZIP)".</td></tr>
             <tr id="favicon-generator"><td><a href="/favicon-generator/">Favicon Generator</a></td><td>JSZip, about 97&nbsp;KB.</td><td>Only if you click "Download package".</td></tr>

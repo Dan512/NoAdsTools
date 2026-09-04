@@ -1,26 +1,18 @@
-// compress-video/js/engine.js — lazy mediabunny loader + the compress
-// operation. This module is the seam a future ffmpeg.wasm fallback would
-// slot in behind: main.js only ever calls hasWebCodecs()/startCompress()
-// (and probe/preview go through loadMediabunny()).
+// compress-video/js/engine.js — the compress operation over mediabunny.
+// This module is the seam a future ffmpeg.wasm fallback would slot in
+// behind: main.js only ever calls hasWebCodecs()/startCompress() (and
+// probe/preview go through loadMediabunny()).
 //
-// mediabunny (MPL-2.0, ~660 KB min ESM) is vendored at
-// /vendor/mediabunny/mediabunny.min.mjs and dynamic-imported on first use —
-// 0 bytes at page boot. A failed load must not poison the cache: the
-// promise resets on rejection so the next attempt retries, and the retry
-// cache-busts the specifier so the browser's per-specifier module map
-// (which caches a failed import() for the life of the document) can't
-// replay the old rejection without a real re-fetch.
+// The lazy loader lives in /shared/mediabunny-loader.js (shared with
+// split-audio) and is re-exported here so main.js, probe.js, preview.js,
+// and calibrate.js keep their existing imports. The path is
+// RELATIVE, not /shared/..., because engine.test.js imports this file
+// from Node, where an absolute URL specifier cannot resolve.
 import { KEY_FRAME_INTERVAL_SEC } from './calibrate.js';
+import { loadMediabunny, EngineLoadError, _resetLoaderForTest } from '../../shared/mediabunny-loader.js';
+export { loadMediabunny, EngineLoadError };
 
-let cached = null;        // Promise<module>
-let attempt = 0;          // bumped on every attempt; arms the next call as a retry
 let testCompress = null;  // injected by _setCompressForTest
-
-// One class so main.js can split "our asset failed to load" (retryable,
-// never the file's fault) from "this file can't be processed".
-export class EngineLoadError extends Error {
-  constructor() { super('engine_load_failed'); this.name = 'EngineLoadError'; }
-}
 
 /**
  * Named-error pre-flight over mediabunny's discardedTracks. A discarded
@@ -106,9 +98,10 @@ export async function probeAudioFloorBps() {
         }
         return null;
       })
-      // Same discipline as loadMediabunny above: a failed ENGINE LOAD must
-      // not poison the answer, or a document that recovers keeps reporting
-      // "no AAC encoder" and the planner silently degrades (or drops) audio.
+      // Same discipline as /shared/mediabunny-loader.js's loadMediabunny: a
+      // failed ENGINE LOAD must not poison the answer, or a document that
+      // recovers keeps reporting "no AAC encoder" and the planner silently
+      // degrades (or drops) audio.
       .catch(() => { audioFloorProbe = null; return null; });
   }
   return audioFloorProbe;
@@ -116,20 +109,6 @@ export async function probeAudioFloorBps() {
 
 export function hasWebCodecs() {
   return typeof VideoEncoder === 'function' && typeof VideoDecoder === 'function';
-}
-
-export async function loadMediabunny() {
-  if (cached) return cached;
-  // The browser module map caches a FAILED import per-specifier for the
-  // life of the document, so a bare retry would replay the cached
-  // rejection without touching the network. A fresh query string forces a
-  // real re-fetch; the first attempt keeps the bare, HTTP-cacheable URL.
-  const url = '/vendor/mediabunny/mediabunny.min.mjs' + (attempt ? `?retry=${attempt}` : '');
-  attempt += 1;
-  cached = import(url)
-    .catch(() => { throw new EngineLoadError(); });
-  cached.catch(() => { cached = null; });
-  return cached;
 }
 
 /**
@@ -216,6 +195,6 @@ export function _setAudioFloorForTest(v) { testAudioFloor = v; }
 
 /** Clears the cached module promise, the retry-attempt counter, and the test hooks. */
 export function _resetForTest() {
-  cached = null; attempt = 0; testCompress = null;
+  _resetLoaderForTest(); testCompress = null;
   audioFloorProbe = null; testAudioFloor = undefined;
 }

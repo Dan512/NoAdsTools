@@ -1,0 +1,100 @@
+/* split-audio/split-audio.css — tool-only styles. Tokens and chrome come
+   from /shared/shell.css. EVERY rule is scoped under #tool: a bare
+   .toolbar/.actions would leak onto the injected topbar (playbook §4). */
+
+#tool { width: 100%; max-width: 52rem; margin: 0 auto; box-sizing: border-box; padding: var(--space-2xl) var(--space-xl) var(--space-4xl); }
+#tool h1 { margin: 0 0 var(--space-sm); font-size: var(--t-2xl); font-weight: 600; }
+#tool .tool-lead { margin: 0 0 var(--space-xl); color: var(--text-secondary); font-size: var(--t-lg); max-width: 70ch; }
+
+#tool .dropzone { border: 2px dashed var(--border, currentColor); border-radius: 8px; padding: 1.5rem 1rem; text-align: center; }
+#tool .dropzone.is-drag { border-style: solid; }
+#tool .dropzone[aria-disabled="true"] { opacity: 0.5; }
+/* Visually-hidden clip pattern for the file input (never display:none, WCAG 2.1.1). */
+#tool .file-label { display: inline-block; cursor: pointer; text-decoration: underline; position: relative; }
+#tool .file-label input {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap; border: 0;
+}
+#tool .file-label:focus-within { outline: 2px solid currentColor; outline-offset: 2px; }
+#tool .engine-note, #tool .dropzone-hint, #tool .note, #tool .shortcuts { font-size: 0.85rem; opacity: 0.8; }
+#tool .shortcuts { margin: 0.25rem 0 0.5rem; }
+
+#tool .tool-error { border: 1px solid var(--border, currentColor); border-left-width: 4px; border-radius: 6px; padding: 0.6rem 0.9rem; margin-top: 1rem; font-weight: 500; }
+#tool .summary { margin: 1rem 0 0.5rem; font-size: 0.95rem; overflow-wrap: anywhere; }
+
+/* --- Toolbar ------------------------------------------------------------ */
+#tool .toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem 1rem; }
+#tool .transport, #tool .zoom { display: inline-flex; align-items: center; gap: 0.35rem; }
+#tool .transport button, #tool .zoom button { min-width: 2.4rem; }
+#tool .time-readout { font-variant-numeric: tabular-nums; margin-left: 0.5rem; white-space: nowrap; }
+#tool #play-btn[aria-pressed="true"] { font-weight: 700; }
+
+/* --- Timeline ----------------------------------------------------------- */
+/* One canvas at the frame's width. touch-action:none so pointer drags are
+   ours on touch; overflow:hidden + width:100% keep the intrinsic-size trap
+   (playbook: crop-image) from widening #tool on phones. */
+#tool .timeline-frame {
+  position: relative; width: 100%; height: 140px; box-sizing: border-box;
+  border: 1px solid var(--border, currentColor); border-radius: var(--radius-control, 6px);
+  overflow: hidden; touch-action: none; user-select: none; background: var(--surface);
+}
+#tool .timeline-frame canvas { display: block; width: 100%; height: 100%; }
+#tool .timeline-frame:focus-within, #tool .timeline-frame.is-focus { outline: 2px solid var(--focus-ring, currentColor); outline-offset: 2px; }
+#tool #audio { display: none; }
+
+/* --- Split mode (segmented; snapped so axe never samples a mid-transition frame) */
+#tool .mode-row { display: flex; flex-wrap: wrap; gap: 0.35rem; margin-top: 1rem; }
+#tool .mode-btn {
+  border: 1px solid var(--border-strong); background: var(--surface); color: inherit; font: inherit;
+  font-size: var(--t-sm); padding: var(--space-sm) var(--space-lg); border-radius: var(--radius-control, 6px);
+  transition: none; cursor: pointer;
+}
+#tool .mode-btn:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+/* Active: glyph + weight + fill together carry the state, never hue alone. */
+#tool .mode-btn[aria-pressed="true"] { background: var(--accent); color: var(--accent-contrast); border-color: var(--accent); font-weight: 700; }
+#tool .mode-btn[aria-pressed="true"]::before { content: "\2713\00a0"; }
+#tool .mode-panel { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem 0.75rem; margin-top: 0.75rem; }
+#tool .mode-panel label { display: inline-flex; align-items: center; gap: 0.4rem; }
+#tool .mode-panel input[type="number"] { width: 5.5rem; padding: 0.3rem 0.4rem; }
+#tool .mode-panel input[type="range"] { width: 10rem; }
+#tool .mode-panel output { font-variant-numeric: tabular-nums; min-width: 4.5rem; }
+#tool .mode-panel .note { flex-basis: 100%; margin: 0; }
+
+/* --- Segment list -------------------------------------------------------- */
+#tool .list-head { display: flex; align-items: baseline; justify-content: space-between; margin-top: 1.25rem; }
+#tool .list-title { margin: 0; font-size: var(--t-lg); font-weight: 600; }
+/* position:relative is load-bearing: shell.css's .visually-hidden is
+   position:absolute, and a static scroll container does NOT clip an
+   abs-positioned descendant whose containing block is further up. The
+   header's hidden "Actions" span therefore escaped this wrapper and pushed
+   documentElement.scrollWidth to 490px at 375px wide (playbook §4 overflow). */
+#tool .segments-wrap { overflow-x: auto; margin-top: 0.5rem; position: relative; }
+#tool .segments { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+#tool .segments th, #tool .segments td { text-align: left; padding: 0.35rem 0.5rem; border-bottom: 1px solid var(--border, currentColor); vertical-align: middle; white-space: nowrap; }
+#tool .segments th { font-size: var(--t-sm); color: var(--text-secondary); font-weight: 600; }
+#tool .segments input { width: 6.5rem; padding: 0.25rem 0.35rem; font: inherit; font-variant-numeric: tabular-nums; }
+#tool .segments input[readonly] { border-color: transparent; background: transparent; }
+#tool .segments input[aria-invalid="true"] { border: 2px solid var(--danger, currentColor); }
+#tool .segments .row-actions { display: flex; gap: 0.35rem; }
+#tool .segments .row-error { font-size: var(--t-sm); white-space: normal; }
+#tool .segments tr.is-selected td:first-child { font-weight: 700; text-decoration: underline; }
+#tool .seg-num { display: inline-block; min-width: 1.6em; padding: 0 0.3em; border: 1px solid currentColor; border-radius: 999px; text-align: center; font-size: var(--t-sm); }
+#tool .actions { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 1rem; }
+
+/* --- Deep page ------------------------------------------------------------ */
+#tool .tool-copy { margin-top: var(--space-3xl); max-width: 70ch; }
+#tool .faq dt { font-weight: 600; margin-top: var(--space-lg); }
+#tool .faq dd { margin: var(--space-xs) 0 0; color: var(--text-secondary); }
+#tool .faq dd p { margin: var(--space-sm) 0 0; }
+#tool .faq dd p:first-child { margin-top: 0; }
+
+@media (max-width: 600px) {
+  #tool .timeline-frame { height: 100px; }
+  #tool .toolbar { gap: 0.5rem; }
+  #tool .segments .row-actions { flex-direction: column; }
+  #tool .mode-panel label { flex-wrap: wrap; }
+  #tool .mode-panel input[type="range"] { width: 100%; max-width: 10rem; min-width: 0; }
+}
+
+/* [hidden] must beat any display we set. */
+#tool [hidden] { display: none !important; }
